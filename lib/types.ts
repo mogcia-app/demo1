@@ -140,14 +140,14 @@ export const DEFAULT_EQUIPMENT_CATEGORIES: Omit<EquipmentCategory, 'id'>[] = [
 
 // サンプル機材データ
 export const SAMPLE_EQUIPMENT: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>[] = [
-  { name: '音響システム A', category: '音響', quantity: 5, description: 'メイン音響システム' },
-  { name: '音響システム B', category: '音響', quantity: 3, description: 'サブ音響システム' },
-  { name: 'マイクセット C', category: '音響', quantity: 10, description: 'ワイヤレスマイク' },
-  { name: '照明器具 D', category: '照明', quantity: 8, description: 'LED照明' },
-  { name: '照明器具 E', category: '照明', quantity: 6, description: 'スポットライト' },
-  { name: 'レーザー照明 F', category: '照明', quantity: 2, description: 'レーザーショー用' },
-  { name: 'プロジェクター G', category: '映像', quantity: 4, description: '4Kプロジェクター' },
-  { name: '大型スクリーン H', category: '映像', quantity: 3, description: '300インチスクリーン' },
-  { name: 'ケーブルセット I', category: '配線', quantity: 20, description: '各種ケーブル' },
-  { name: '電源タップ J', category: '配線', quantity: 15, description: '延長コード' }
+  { name: '音響システム A', category: '音響', quantity: 5, stock: 5, status: 'available', tags: [], description: 'メイン音響システム' },
+  { name: '音響システム B', category: '音響', quantity: 3, stock: 3, status: 'available', tags: [], description: 'サブ音響システム' },
+  { name: 'マイクセット C', category: '音響', quantity: 10, stock: 10, status: 'available', tags: [], description: 'ワイヤレスマイク' },
+  { name: '照明器具 D', category: '照明', quantity: 8, stock: 8, status: 'available', tags: [], description: 'LED照明' },
+  { name: '照明器具 E', category: '照明', quantity: 6, stock: 6, status: 'available', tags: [], description: 'スポットライト' },
+  { name: 'レーザー照明 F', category: '照明', quantity: 2, stock: 2, status: 'available', tags: [], description: 'レーザーショー用' },
+  { name: 'プロジェクター G', category: '映像', quantity: 4, stock: 4, status: 'available', tags: [], description: '4Kプロジェクター' },
+  { name: '大型スクリーン H', category: '映像', quantity: 3, stock: 3, status: 'available', tags: [], description: '300インチスクリーン' },
+  { name: 'ケーブルセット I', category: '配線', quantity: 20, stock: 20, status: 'available', tags: [], description: '各種ケーブル' },
+  { name: '電源タップ J', category: '配線', quantity: 15, stock: 15, status: 'available', tags: [], description: '延長コード' }
 ]
