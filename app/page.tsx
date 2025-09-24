@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical } from 'lucide-react'
 import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
-import { signInWithEmail, signUpWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
+import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
 import { initializeAllData } from '../lib/initData'
@@ -12,7 +12,7 @@ import { initializeAllData } from '../lib/initData'
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [isLoginMode, setIsLoginMode] = useState(true)
+  const [isLoginMode] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
@@ -70,11 +70,7 @@ export default function Home() {
     setAuthError('')
 
     try {
-      if (isLoginMode) {
-        await signInWithEmail(email, password)
-      } else {
-        await signUpWithEmail(email, password)
-      }
+      await signInWithEmail(email, password)
     } catch (error: any) {
       console.error('認証エラー:', error)
       setAuthError(error.message)
@@ -278,9 +274,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.authContainer}>
           <h1 className={styles.title}>機材管理システム</h1>
-          <p className={styles.subtitle}>
-            {isLoginMode ? 'ログインしてください' : 'アカウントを作成してください'}
-          </p>
+          <p className={styles.subtitle}>ログインしてください</p>
           
           <form onSubmit={handleAuth} className={styles.authForm}>
             <div className={styles.inputGroup}>
@@ -291,7 +285,7 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={styles.input}
-                placeholder="example@company.co.jp"
+                placeholder="test@example.com"
                 disabled={isLoading}
               />
             </div>
@@ -321,27 +315,10 @@ export default function Home() {
               disabled={isLoading}
             >
               <User className={styles.icon} />
-              {isLoading ? '処理中...' : (isLoginMode ? 'ログイン' : 'アカウント作成')}
+              {isLoading ? '処理中...' : 'ログイン'}
             </button>
           </form>
 
-          <div className={styles.authSwitch}>
-            <p>
-              {isLoginMode ? 'アカウントをお持ちでない場合' : '既にアカウントをお持ちの場合'}
-            </p>
-            <button 
-              className={styles.switchButton}
-              onClick={() => {
-                setIsLoginMode(!isLoginMode)
-                setAuthError('')
-                setEmail('')
-                setPassword('')
-              }}
-              disabled={isLoading}
-            >
-              {isLoginMode ? 'アカウント作成' : 'ログイン'}
-            </button>
-          </div>
         </div>
       </main>
     )
