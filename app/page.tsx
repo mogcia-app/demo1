@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical } from 'lucide-react'
+import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Eye, EyeOff } from 'lucide-react'
 import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
 import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
@@ -15,6 +15,7 @@ export default function Home() {
   const [isLoginMode] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [authError, setAuthError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set([1, 2, 3, 4]))
@@ -292,15 +293,25 @@ export default function Home() {
             
             <div className={styles.inputGroup}>
               <label htmlFor="password" className={styles.label}>パスワード</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles.input}
-                placeholder="6文字以上"
-                disabled={isLoading}
-              />
+              <div className={styles.passwordContainer}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={styles.input}
+                  placeholder="6文字以上"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? <EyeOff className={styles.eyeIcon} /> : <Eye className={styles.eyeIcon} />}
+                </button>
+              </div>
             </div>
 
             {authError && (

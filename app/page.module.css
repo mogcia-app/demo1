@@ -99,7 +99,7 @@
   width: 100%;
   padding: 1rem 1.25rem;
   border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.8);
   color: #111827;
   font-size: 1rem;
@@ -129,6 +129,45 @@
   font-weight: 400;
 }
 
+/* パスワード表示機能 */
+.passwordContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover:not(:disabled) {
+  color: #374151;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.passwordToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
 .errorMessage {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   color: #dc2626;
@@ -155,10 +194,10 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 1.25rem 2rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #374151 0%, #4b5563 50%, #6b7280 100%);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 4px;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
@@ -182,7 +221,7 @@
 }
 
 .authButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 50%, #9ca3af 100%);
   transform: translateY(-2px);
   box-shadow: 
     0 12px 35px -8px rgba(59, 130, 246, 0.5),
