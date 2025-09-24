@@ -24,13 +24,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && p
     // 既に接続済みの場合はエラーを無視
   }
 
-  // Auth エミュレーター
-  try {
-    connectAuthEmulator(auth, 'http://localhost:9099')
-  } catch (error) {
-    // 既に接続済みの場合はエラーを無視
-  }
-
   // Functions エミュレーター
   try {
     connectFunctionsEmulator(functions, 'localhost', 5001)
@@ -44,6 +37,13 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && p
   } catch (error) {
     // 既に接続済みの場合はエラーを無視
   }
+  
+  // Auth エミュレーターは無効化（本番のFirebase Authを使用）
+  // try {
+  //   connectAuthEmulator(auth, 'http://localhost:9099')
+  // } catch (error) {
+  //   // 既に接続済みの場合はエラーを無視
+  // }
 }
 
 export default app

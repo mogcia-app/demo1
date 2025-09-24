@@ -1,0 +1,105 @@
+/* ドラッグ可能な機材コンポーネント */
+.draggableEquipment {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.draggableEquipment:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.draggableEquipment.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #9ca3af;
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.gripIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.equipmentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.equipmentName {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.equipmentCategory {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.stockInfo {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ドラッグ中のグローバルスタイル */
+.dragging * {
+  pointer-events: none;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .draggableEquipment {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .equipmentName {
+    font-size: 0.8rem;
+  }
+
+  .equipmentCategory,
+  .stockInfo {
+    font-size: 0.7rem;
+  }
+
+  .dragHandle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .gripIcon {
+    width: 14px;
+    height: 14px;
+  }
+}

@@ -1,94 +1,715 @@
-import Image from 'next/image'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical } from 'lucide-react'
+import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
+import { signInWithEmail, signUpWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
+import { useEvents } from '../lib/hooks/useFirestore'
+import { Event } from '../lib/types'
+import { initializeAllData } from '../lib/initData'
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [isLoginMode, setIsLoginMode] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set([1, 2, 3, 4]))
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showAddEquipment, setShowAddEquipment] = useState<number | null>(null)
+  const [newEquipmentName, setNewEquipmentName] = useState('')
+  const [newEquipmentStock, setNewEquipmentStock] = useState(0)
+  const [eventDates, setEventDates] = useState<{[key: string]: {startDate: string, endDate: string, isMultiDay: boolean}}>({})
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
+  const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
+  const [eventEquipment, setEventEquipment] = useState<{[key: string]: string[]}>({})
+  const { events, loading, error } = useEvents()
+
+  // 認証状態の確認
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      if (user && isCompanyUser(user)) {
+        setUser(user)
+        setIsAuthenticated(true)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  // デバッグ用: 一時的に認証をスキップ（400エラーを回避）
+  useEffect(() => {
+    // 開発環境では認証をスキップしてテスト
+    if (process.env.NODE_ENV === 'development') {
+      console.log('デバッグモード: 認証をスキップします')
+      console.log('Firebase設定:', {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      })
+      setIsAuthenticated(true)
+      setUser({ uid: 'demo-user', email: 'demo@example.com', displayName: 'Demo User' })
+    }
+  }, [])
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      setAuthError('メールアドレスとパスワードを入力してください')
+      return
+    }
+
+    setIsLoading(true)
+    setAuthError('')
+
+    try {
+      if (isLoginMode) {
+        await signInWithEmail(email, password)
+      } else {
+        await signUpWithEmail(email, password)
+      }
+    } catch (error: any) {
+      console.error('認証エラー:', error)
+      setAuthError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOutUser()
+    } catch (error) {
+      console.error('ログアウトエラー:', error)
+    }
+  }
+
+  const handleInitializeData = async () => {
+    if (!user) return
+    
+    try {
+      await initializeAllData(user.uid)
+      alert('データの初期化が完了しました！')
+    } catch (error) {
+      console.error('初期化エラー:', error)
+      alert('初期化に失敗しました。もう一度お試しください。')
+    }
+  }
+
+  // 機材グループのサンプルデータ
+  const equipmentGroups = [
+    {
+      id: 1,
+      name: '機材GRP1',
+      equipment: Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        name: `${i + 1} 機材の名前が入ります`,
+        stock: Math.floor(Math.random() * 25)
+      }))
+    },
+    {
+      id: 2,
+      name: '機材GRP2',
+      equipment: Array.from({ length: 20 }, (_, i) => ({
+        id: i + 21,
+        name: `${i + 21} 機材の名前が入ります`,
+        stock: Math.floor(Math.random() * 25)
+      }))
+    },
+    {
+      id: 3,
+      name: '機材GRP3',
+      equipment: Array.from({ length: 20 }, (_, i) => ({
+        id: i + 41,
+        name: `${i + 41} 機材の名前が入ります`,
+        stock: Math.floor(Math.random() * 25)
+      }))
+    },
+    {
+      id: 4,
+      name: '機材GRP4',
+      equipment: Array.from({ length: 20 }, (_, i) => ({
+        id: i + 61,
+        name: `${i + 61} 機材の名前が入ります`,
+        stock: Math.floor(Math.random() * 25)
+      }))
+    }
+  ]
+
+  const toggleGroup = (groupId: number) => {
+    const newExpanded = new Set(expandedGroups)
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId)
+    } else {
+      newExpanded.add(groupId)
+    }
+    setExpandedGroups(newExpanded)
+  }
+
+  const toggleEvent = (eventId: string) => {
+    const newExpanded = new Set(expandedEvents)
+    if (newExpanded.has(eventId)) {
+      newExpanded.delete(eventId)
+    } else {
+      newExpanded.add(eventId)
+    }
+    setExpandedEvents(newExpanded)
+  }
+
+  // 機材検索機能
+  const filteredEquipmentGroups = equipmentGroups.map(group => ({
+    ...group,
+    equipment: group.equipment.filter(equipment => 
+      equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.id.toString().includes(searchTerm)
+    )
+  }))
+
+  // 機材追加機能
+  const handleAddEquipment = (groupId: number) => {
+    if (newEquipmentName.trim() && newEquipmentStock >= 0) {
+      // 実際の実装では、Firestoreに保存
+      console.log('機材追加:', { groupId, name: newEquipmentName, stock: newEquipmentStock })
+      setNewEquipmentName('')
+      setNewEquipmentStock(0)
+      setShowAddEquipment(null)
+      alert('機材が追加されました！')
+    }
+  }
+
+  const cancelAddEquipment = () => {
+    setNewEquipmentName('')
+    setNewEquipmentStock(0)
+    setShowAddEquipment(null)
+  }
+
+  // 連日使用の日付管理
+  const handleDateChange = (eventId: string, field: 'startDate' | 'endDate', value: string) => {
+    setEventDates(prev => ({
+      ...prev,
+      [eventId]: {
+        ...prev[eventId],
+        [field]: value,
+        isMultiDay: field === 'startDate' ? 
+          (prev[eventId]?.endDate ? value !== prev[eventId].endDate : false) :
+          (prev[eventId]?.startDate ? prev[eventId].startDate !== value : false)
+      }
+    }))
+  }
+
+  const toggleMultiDay = (eventId: string) => {
+    setEventDates(prev => ({
+      ...prev,
+      [eventId]: {
+        ...prev[eventId],
+        isMultiDay: !prev[eventId]?.isMultiDay,
+        endDate: !prev[eventId]?.isMultiDay ? prev[eventId]?.startDate || '' : prev[eventId]?.endDate || ''
+      }
+    }))
+  }
+
+  const getEventDates = (eventId: string) => {
+    return eventDates[eventId] || { startDate: '', endDate: '', isMultiDay: false }
+  }
+
+  // カレンダー表示用の機材データを準備
+  const calendarEquipment = equipmentGroups.flatMap(group => 
+    group.equipment.map((item, index) => ({
+      id: `${group.id}-${index}`,
+      name: item.name,
+      category: group.name,
+      stock: item.stock
+    }))
+  )
+
+  // スケジュール追加ハンドラー
+  const handleAddSchedule = (equipmentId: string, eventName: string, startDate: string, endDate: string) => {
+    console.log('スケジュール追加:', { equipmentId, eventName, startDate, endDate })
+    // ここでFirestoreにスケジュールを保存する処理を実装
+  }
+
+  // ドラッグ開始
+  const handleDragStart = (equipment: any) => {
+    setDraggedEquipment(equipment)
+  }
+
+  // ドラッグ終了
+  const handleDragEnd = () => {
+    setDraggedEquipment(null)
+  }
+
+  // ドロップ処理
+  const handleDrop = (eventId: string, e: React.DragEvent) => {
+    e.preventDefault()
+    
+    if (!draggedEquipment) return
+
+    // 既存の機材リストを取得
+    const currentEquipment = eventEquipment[eventId] || []
+    
+    // 重複チェック
+    if (!currentEquipment.includes(draggedEquipment.name)) {
+      setEventEquipment(prev => ({
+        ...prev,
+        [eventId]: [...currentEquipment, draggedEquipment.name]
+      }))
+    }
+    
+    setDraggedEquipment(null)
+  }
+
+  // 機材削除
+  const removeEquipment = (eventId: string, equipmentName: string) => {
+    setEventEquipment(prev => ({
+      ...prev,
+      [eventId]: (prev[eventId] || []).filter(name => name !== equipmentName)
+    }))
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.authContainer}>
+          <h1 className={styles.title}>機材管理システム</h1>
+          <p className={styles.subtitle}>
+            {isLoginMode ? 'ログインしてください' : 'アカウントを作成してください'}
+          </p>
+          
+          <form onSubmit={handleAuth} className={styles.authForm}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="email" className={styles.label}>メールアドレス</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={styles.input}
+                placeholder="example@company.co.jp"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div className={styles.inputGroup}>
+              <label htmlFor="password" className={styles.label}>パスワード</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={styles.input}
+                placeholder="6文字以上"
+                disabled={isLoading}
+              />
+            </div>
+
+            {authError && (
+              <div className={styles.errorMessage}>
+                {authError}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className={styles.authButton}
+              disabled={isLoading}
+            >
+              <User className={styles.icon} />
+              {isLoading ? '処理中...' : (isLoginMode ? 'ログイン' : 'アカウント作成')}
+            </button>
+          </form>
+
+          <div className={styles.authSwitch}>
+            <p>
+              {isLoginMode ? 'アカウントをお持ちでない場合' : '既にアカウントをお持ちの場合'}
+            </p>
+            <button 
+              className={styles.switchButton}
+              onClick={() => {
+                setIsLoginMode(!isLoginMode)
+                setAuthError('')
+                setEmail('')
+                setPassword('')
+              }}
+              disabled={isLoading}
+            >
+              {isLoginMode ? 'アカウント作成' : 'ログイン'}
+            </button>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (loading) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.authContainer}>
+          <h1 className={styles.title}>機材管理システム</h1>
+          <p className={styles.subtitle}>読み込み中...</p>
+        </div>
+      </main>
+    )
+  }
+
+  if (error) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.authContainer}>
+          <h1 className={styles.title}>機材管理システム</h1>
+          <p className={styles.subtitle}>エラーが発生しました: {error}</p>
+          <button className={styles.loginButton} onClick={() => window.location.reload()}>
+            再読み込み
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+      {/* ヘッダー */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <h1 className={styles.title}>機材管理システム</h1>
+          <div className={styles.headerActions}>
+            <div className={styles.viewToggle}>
+              <button 
+                className={`${styles.viewButton} ${viewMode === 'list' ? styles.active : ''}`}
+                onClick={() => setViewMode('list')}
+                title="リスト表示"
+              >
+                <Calendar className={styles.icon} />
+              </button>
+              <button 
+                className={`${styles.viewButton} ${viewMode === 'calendar' ? styles.active : ''}`}
+                onClick={() => setViewMode('calendar')}
+                title="カレンダー表示"
+              >
+                <Grid3X3 className={styles.icon} />
+              </button>
+            </div>
+            <button className={styles.iconButton}>
+              <Settings className={styles.icon} />
+            </button>
+            <button className={styles.iconButton} onClick={handleLogout}>
+              <LogOut className={styles.icon} />
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      {/* メインコンテンツ */}
+      <div className={styles.content}>
+        {viewMode === 'calendar' ? (
+          <EquipmentSchedule 
+            equipment={calendarEquipment}
+            onAddSchedule={handleAddSchedule}
+          />
+        ) : (
+          <div className={styles.layout}>
+          {/* 左側: 機材グループ */}
+          <div className={styles.equipmentSection}>
+            <div className={styles.equipmentHeader}>
+              <h2 className={styles.sectionTitle}>機材グループ</h2>
+              <div className={styles.searchContainer}>
+                <input
+                  type="text"
+                  placeholder="機材名またはNoで検索..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles.searchInput}
+                />
+              </div>
+            </div>
+            {filteredEquipmentGroups.map((group) => (
+              <div key={group.id} className={styles.equipmentGroup}>
+                <div 
+                  className={styles.groupHeader}
+                  onClick={() => toggleGroup(group.id)}
+                >
+                  <span className={styles.groupName}>{group.name}</span>
+                  <div className={styles.groupActions}>
+                    <button 
+                      className={styles.addButton}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowAddEquipment(group.id)
+                      }}
+                      title="機材を追加"
+                    >
+                      <Plus className={styles.icon} />
+                    </button>
+                    <span className={styles.groupToggle}>
+                      {expandedGroups.has(group.id) ? (
+                        <ChevronUp className={styles.icon} />
+                      ) : (
+                        <ChevronDown className={styles.icon} />
+                      )}
+                    </span>
+                  </div>
+                </div>
+                {expandedGroups.has(group.id) && (
+                  <div className={styles.equipmentTable}>
+                    <div className={styles.tableHeader}>
+                      <div className={styles.tableCell}>No</div>
+                      <div className={styles.tableCell}>機材名</div>
+                      <div className={styles.tableCell}>在庫</div>
+                      <div className={styles.tableCell}>操作</div>
+                    </div>
+                    {group.equipment.map((equipment) => (
+                      <div key={equipment.id} className={styles.tableRow}>
+                        <div className={styles.tableCell}>#{equipment.id}</div>
+                        <div className={styles.tableCell}>{equipment.name}</div>
+                        <div className={styles.tableCell}>{equipment.stock}</div>
+                        <div className={styles.tableCell}>
+                          <div
+                            className={styles.draggableItem}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/plain', JSON.stringify({
+                                name: equipment.name,
+                                category: group.name,
+                                stock: equipment.stock
+                              }))
+                              handleDragStart({
+                                name: equipment.name,
+                                category: group.name,
+                                stock: equipment.stock
+                              })
+                            }}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <GripVertical className={styles.dragIcon} />
+                            <span className={styles.dragText}>ドラッグ</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* 機材追加フォーム */}
+                {showAddEquipment === group.id && (
+                  <div className={styles.addEquipmentForm}>
+                    <div className={styles.formRow}>
+                      <input
+                        type="text"
+                        placeholder="機材名を入力"
+                        value={newEquipmentName}
+                        onChange={(e) => setNewEquipmentName(e.target.value)}
+                        className={styles.formInput}
+                      />
+                      <input
+                        type="number"
+                        placeholder="在庫数"
+                        value={newEquipmentStock}
+                        onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
+                        className={styles.formInput}
+                        min="0"
+                      />
+                    </div>
+                    <div className={styles.formActions}>
+                      <button 
+                        className={styles.saveButton}
+                        onClick={() => handleAddEquipment(group.id)}
+                      >
+                        追加
+                      </button>
+                      <button 
+                        className={styles.cancelButton}
+                        onClick={cancelAddEquipment}
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+          {/* 右側: 現場管理 */}
+          <div className={styles.eventsSection}>
+            <div className={styles.eventsHeader}>
+              <h2 className={styles.sectionTitle}>現場管理</h2>
+              <button className={styles.createEventButton}>
+                <Plus className={styles.icon} />
+                新しい現場を登録
+              </button>
+            </div>
+            
+            {events.length === 0 && (
+              <div className={styles.emptyState}>
+                <p>登録された現場がありません</p>
+                <button 
+                  className={styles.initButton}
+                  onClick={handleInitializeData}
+                >
+                  サンプルデータを初期化
+                </button>
+              </div>
+            )}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+            <div className={styles.eventsList}>
+              {events.map((event) => (
+                <div key={event.id} className={styles.eventCard}>
+                  <div 
+                    className={styles.eventHeader}
+                    onClick={() => toggleEvent(event.id)}
+                  >
+                    <div className={styles.eventTitle}>
+                      <h3>{event.siteName}</h3>
+                      <div className={styles.eventMeta}>
+                        <div className={styles.eventDate}>
+                          <Calendar className={styles.icon} />
+                          {event.startDate === event.endDate 
+                            ? event.startDate 
+                            : `${event.startDate} - ${event.endDate}`
+                          }
+                        </div>
+                        <div className={styles.eventLocation}>
+                          <MapPin className={styles.icon} />
+                          場所情報
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.eventToggle}>
+                      {expandedEvents.has(event.id) ? (
+                        <ChevronUp className={styles.icon} />
+                      ) : (
+                        <ChevronDown className={styles.icon} />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {expandedEvents.has(event.id) && (
+                    <div className={styles.eventDetails}>
+                      <div className={styles.inputSection}>
+                        <h4>機材選択</h4>
+                        <div 
+                          className={styles.equipmentInput}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => handleDrop(event.id, e)}
+                        >
+                          <input 
+                            type="text" 
+                            placeholder="機材Noを入力またはドラッグ&ドロップ"
+                            className={styles.equipmentInputField}
+                          />
+                          <div className={styles.equipmentList}>
+                            {(eventEquipment[event.id] || []).map((equipmentName, index) => (
+                              <div key={index} className={styles.equipmentTag}>
+                                <span className={styles.equipmentTagName}>{equipmentName}</span>
+                                <button 
+                                  className={styles.equipmentTagRemove}
+                                  onClick={() => removeEquipment(event.id, equipmentName)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.inputSection}>
+                        <h4>機材の他に記載したいもの</h4>
+                        <textarea 
+                          placeholder="備考やメモを入力してください"
+                          className={styles.textarea}
+                        />
+                      </div>
+                      
+                      <div className={styles.inputSection}>
+                        <h4>日付、現場名（タイトル）</h4>
+                        <div className={styles.dateSection}>
+                          <div className={styles.dateToggle}>
+                            <label className={styles.checkboxLabel}>
+                              <input 
+                                type="checkbox" 
+                                checked={getEventDates(event.id).isMultiDay}
+                                onChange={() => toggleMultiDay(event.id)}
+                                className={styles.checkbox}
+                              />
+                              <span className={styles.checkboxText}>連日使用</span>
+                            </label>
+                          </div>
+                          <div className={styles.dateInputs}>
+                            <div className={styles.dateInputGroup}>
+                              <label className={styles.dateLabel}>
+                                {getEventDates(event.id).isMultiDay ? '開始日' : '日付'}
+                              </label>
+                              <input 
+                                type="date" 
+                                value={getEventDates(event.id).startDate}
+                                onChange={(e) => handleDateChange(event.id, 'startDate', e.target.value)}
+                                className={styles.dateInput}
+                              />
+                            </div>
+                            {getEventDates(event.id).isMultiDay && (
+                              <div className={styles.dateInputGroup}>
+                                <label className={styles.dateLabel}>終了日</label>
+                                <input 
+                                  type="date" 
+                                  value={getEventDates(event.id).endDate}
+                                  onChange={(e) => handleDateChange(event.id, 'endDate', e.target.value)}
+                                  className={styles.dateInput}
+                                  min={getEventDates(event.id).startDate}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.datePreview}>
+                            {getEventDates(event.id).startDate && (
+                              <span className={styles.datePreviewText}>
+                                {getEventDates(event.id).isMultiDay && getEventDates(event.id).endDate ? 
+                                  `${getEventDates(event.id).startDate} 〜 ${getEventDates(event.id).endDate}` :
+                                  getEventDates(event.id).startDate
+                                }
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <input 
+                          type="text" 
+                          placeholder="現場名を入力"
+                          className={styles.siteNameInput}
+                        />
+                      </div>
+                      
+                      <div className={styles.inputSection}>
+                        <h4>使用者、場所（Googleマップ紐付け）</h4>
+                        <input 
+                          type="text" 
+                          placeholder="使用者名を入力"
+                          className={styles.userInput}
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="場所を入力（Googleマップ連携）"
+                          className={styles.locationInput}
+                        />
+                      </div>
+                      
+                      <div className={styles.eventActions}>
+                        <button className={styles.actionButton}>保存</button>
+                        <button className={styles.actionButton}>削除</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        )}
       </div>
     </main>
   )

@@ -1,17 +1,133 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // タスクコレクションのルール
+    // 認証されたユーザーのみアクセス可能
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // ユーザーのロールを取得
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // 管理者またはマネージャーのみ
+    function isAdminOrManager() {
+      return isAuthenticated() && getUserRole() in ['admin', 'manager'];
+    }
+    
+    // 管理者のみ
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    // 自分のデータかどうか
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // イベントコレクションのルール
+    match /events/{eventId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成: 認証されたユーザーのみ（作成者は自分）
+      allow create: if isAuthenticated() && 
+        request.resource.data.createdBy == request.auth.uid;
+      
+      // 更新: 作成者または管理者・マネージャー
+      allow update: if isAuthenticated() && 
+        (resource.data.createdBy == request.auth.uid || isAdminOrManager());
+      
+      // 削除: 作成者または管理者のみ
+      allow delete: if isAuthenticated() && 
+        (resource.data.createdBy == request.auth.uid || isAdmin());
+    }
+    
+    // 機材コレクションのルール
+    match /equipment/{equipmentId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成・更新・削除: 管理者・マネージャーのみ
+      allow create, update, delete: if isAdminOrManager();
+    }
+    
+    // 機材カテゴリーコレクションのルール
+    match /equipmentCategories/{categoryId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成・更新・削除: 管理者・マネージャーのみ
+      allow create, update, delete: if isAdminOrManager();
+    }
+    
+    // ユーザーコレクションのルール
+    match /users/{userId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成: 認証されたユーザーのみ（自分のデータのみ）
+      allow create: if isAuthenticated() && 
+        request.resource.data.uid == request.auth.uid;
+      
+      // 更新: 自分のデータまたは管理者
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      
+      // 削除: 管理者のみ
+      allow delete: if isAdmin();
+    }
+    
+    // スケジュールコレクションのルール
+    match /schedules/{scheduleId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成: 認証されたユーザーのみ
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // 更新: 作成者または管理者・マネージャー
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdminOrManager());
+      
+      // 削除: 作成者または管理者・マネージャー
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdminOrManager());
+    }
+    
+    // メンテナンス記録コレクションのルール
+    match /maintenanceRecords/{recordId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成・更新・削除: 管理者・マネージャーのみ
+      allow create, update, delete: if isAdminOrManager();
+    }
+    
+    // 監査ログコレクションのルール
+    match /auditLogs/{logId} {
+      // 読み取り: 管理者のみ
+      allow read: if isAdmin();
+      
+      // 作成: システム（Functions経由）のみ
+      allow create: if false;
+      
+      // 更新・削除: 禁止
+      allow update, delete: if false;
+    }
+    
+    // タスクコレクションのルール（既存）
     match /tasks/{taskId} {
       // 読み取り: 全員許可（デモ用）
       allow read: if true;
       
       // 作成・更新・削除: 全員許可（デモ用）
-      // 本番環境では適切な認証ルールを設定してください
       allow create, update, delete: if true;
     }
     
-    // 処理済みデータコレクションのルール
+    // 処理済みデータコレクションのルール（既存）
     match /processedData/{docId} {
       // 読み取り: 全員許可（デモ用）
       allow read: if true;
