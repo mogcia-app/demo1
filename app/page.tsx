@@ -24,6 +24,9 @@ export default function Home() {
   const [showAddEquipment, setShowAddEquipment] = useState<string | null>(null)
   const [newEquipmentName, setNewEquipmentName] = useState('')
   const [newEquipmentStock, setNewEquipmentStock] = useState(0)
+  const [showAddGroup, setShowAddGroup] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const [eventDates, setEventDates] = useState<{[key: string]: {startDate: string, endDate: string, isMultiDay: boolean}}>({})
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
@@ -138,7 +141,35 @@ export default function Home() {
     )
   }))
 
-  // 機材追加機能
+  // グループ追加機能
+  const handleAddGroup = () => {
+    if (newGroupName.trim()) {
+      // 実際の実装では、Firestoreに保存
+      console.log('グループ追加:', { name: newGroupName })
+      setNewGroupName('')
+      setShowAddGroup(false)
+      alert('グループが追加されました！')
+    }
+  }
+
+  const cancelAddGroup = () => {
+    setNewGroupName('')
+    setShowAddGroup(false)
+  }
+
+  // 機材追加機能（シンプル版）
+  const handleAddEquipmentSimple = () => {
+    if (newEquipmentName.trim() && newEquipmentStock >= 0 && selectedGroupId) {
+      // 実際の実装では、Firestoreに保存
+      console.log('機材追加:', { groupId: selectedGroupId, name: newEquipmentName, stock: newEquipmentStock })
+      setNewEquipmentName('')
+      setNewEquipmentStock(0)
+      setSelectedGroupId('')
+      alert('機材が追加されました！')
+    }
+  }
+
+  // 機材追加機能（従来版）
   const handleAddEquipment = (groupId: string) => {
     if (newEquipmentName.trim() && newEquipmentStock >= 0) {
       // 実際の実装では、Firestoreに保存
@@ -383,6 +414,84 @@ export default function Home() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.searchInput}
                 />
+              </div>
+              
+              {/* グループ追加ボタン */}
+              <div className={styles.addGroupSection}>
+                <button 
+                  className={styles.addGroupButton}
+                  onClick={() => setShowAddGroup(true)}
+                >
+                  <Plus className={styles.icon} />
+                  グループを追加
+                </button>
+              </div>
+
+              {/* グループ追加フォーム */}
+              {showAddGroup && (
+                <div className={styles.addGroupForm}>
+                  <input
+                    type="text"
+                    placeholder="グループ名を入力"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    className={styles.formInput}
+                  />
+                  <div className={styles.formActions}>
+                    <button 
+                      className={styles.saveButton}
+                      onClick={handleAddGroup}
+                    >
+                      追加
+                    </button>
+                    <button 
+                      className={styles.cancelButton}
+                      onClick={cancelAddGroup}
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* シンプルな機材追加フォーム */}
+              <div className={styles.simpleAddEquipmentSection}>
+                <h3 className={styles.subSectionTitle}>機材を追加</h3>
+                <div className={styles.simpleForm}>
+                  <select
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                    className={styles.groupSelect}
+                  >
+                    <option value="">グループを選択</option>
+                    {equipmentGroups.map(group => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="機材名"
+                    value={newEquipmentName}
+                    onChange={(e) => setNewEquipmentName(e.target.value)}
+                    className={styles.formInput}
+                  />
+                  <input
+                    type="number"
+                    placeholder="在庫数"
+                    value={newEquipmentStock}
+                    onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
+                    className={styles.formInput}
+                    min="0"
+                  />
+                  <button 
+                    className={styles.addButton}
+                    onClick={handleAddEquipmentSimple}
+                    disabled={!selectedGroupId || !newEquipmentName.trim()}
+                  >
+                    <Plus className={styles.icon} />
+                    追加
+                  </button>
+                </div>
               </div>
             </div>
             {filteredEquipmentGroups.map((group) => (
