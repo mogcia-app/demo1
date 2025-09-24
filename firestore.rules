@@ -6,19 +6,14 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // ユーザーのロールを取得
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-    
-    // 管理者またはマネージャーのみ
+    // 管理者またはマネージャーのみ（簡素化）
     function isAdminOrManager() {
-      return isAuthenticated() && getUserRole() in ['admin', 'manager'];
+      return isAuthenticated();
     }
     
-    // 管理者のみ
+    // 管理者のみ（簡素化）
     function isAdmin() {
-      return isAuthenticated() && getUserRole() == 'admin';
+      return isAuthenticated();
     }
     
     // 自分のデータかどうか

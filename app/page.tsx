@@ -5,7 +5,7 @@ import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin,
 import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
 import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
-import { useEvents } from '../lib/hooks/useFirestore'
+import { useEvents, useEquipment, useEquipmentCategories } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
 import { initializeAllData } from '../lib/initData'
 
@@ -18,10 +18,10 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false)
   const [authError, setAuthError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set([1, 2, 3, 4]))
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAddEquipment, setShowAddEquipment] = useState<number | null>(null)
+  const [showAddEquipment, setShowAddEquipment] = useState<string | null>(null)
   const [newEquipmentName, setNewEquipmentName] = useState('')
   const [newEquipmentStock, setNewEquipmentStock] = useState(0)
   const [eventDates, setEventDates] = useState<{[key: string]: {startDate: string, endDate: string, isMultiDay: boolean}}>({})
@@ -29,6 +29,8 @@ export default function Home() {
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
   const [eventEquipment, setEventEquipment] = useState<{[key: string]: string[]}>({})
   const { events, loading, error } = useEvents()
+  const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
+  const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
 
   // 認証状態の確認
   useEffect(() => {
@@ -100,47 +102,14 @@ export default function Home() {
     }
   }
 
-  // 機材グループのサンプルデータ
-  const equipmentGroups = [
-    {
-      id: 1,
-      name: '機材GRP1',
-      equipment: Array.from({ length: 20 }, (_, i) => ({
-        id: i + 1,
-        name: `${i + 1} 機材の名前が入ります`,
-        stock: Math.floor(Math.random() * 25)
-      }))
-    },
-    {
-      id: 2,
-      name: '機材GRP2',
-      equipment: Array.from({ length: 20 }, (_, i) => ({
-        id: i + 21,
-        name: `${i + 21} 機材の名前が入ります`,
-        stock: Math.floor(Math.random() * 25)
-      }))
-    },
-    {
-      id: 3,
-      name: '機材GRP3',
-      equipment: Array.from({ length: 20 }, (_, i) => ({
-        id: i + 41,
-        name: `${i + 41} 機材の名前が入ります`,
-        stock: Math.floor(Math.random() * 25)
-      }))
-    },
-    {
-      id: 4,
-      name: '機材GRP4',
-      equipment: Array.from({ length: 20 }, (_, i) => ({
-        id: i + 61,
-        name: `${i + 61} 機材の名前が入ります`,
-        stock: Math.floor(Math.random() * 25)
-      }))
-    }
-  ]
+  // 機材グループをFirestoreから取得したデータで構築
+  const equipmentGroups = categories.map(category => ({
+    id: category.id,
+    name: category.name,
+    equipment: equipment.filter(eq => eq.category === category.id)
+  }))
 
-  const toggleGroup = (groupId: number) => {
+  const toggleGroup = (groupId: string) => {
     const newExpanded = new Set(expandedGroups)
     if (newExpanded.has(groupId)) {
       newExpanded.delete(groupId)
@@ -170,7 +139,7 @@ export default function Home() {
   }))
 
   // 機材追加機能
-  const handleAddEquipment = (groupId: number) => {
+  const handleAddEquipment = (groupId: string) => {
     if (newEquipmentName.trim() && newEquipmentStock >= 0) {
       // 実際の実装では、Firestoreに保存
       console.log('機材追加:', { groupId, name: newEquipmentName, stock: newEquipmentStock })
