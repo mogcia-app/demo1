@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, MapPin, Edit, Trash2, ExternalLink } from 'lucide-react'
 import styles from './page.module.css'
 import { useEvent } from '../../../lib/hooks/useFirestore'
-import { useAuthStateChange, isCompanyUser } from '../../../lib/auth'
+import { onAuthStateChange, isCompanyUser } from '../../../lib/auth'
 
 export default function EventDetailPage() {
   const params = useParams()
@@ -16,7 +16,7 @@ export default function EventDetailPage() {
 
   // 認証状態の確認
   useEffect(() => {
-    const unsubscribe = useAuthStateChange((user) => {
+    const unsubscribe = onAuthStateChange((user) => {
       if (user && isCompanyUser(user)) {
         setIsAuthenticated(true)
       } else {
@@ -87,6 +87,7 @@ export default function EventDetailPage() {
     switch (status) {
       case 'draft': return '#6c757d'
       case 'confirmed': return '#28a745'
+      case 'in_progress': return '#ffc107'
       case 'completed': return '#17a2b8'
       case 'cancelled': return '#dc3545'
       default: return '#6c757d'
@@ -97,6 +98,7 @@ export default function EventDetailPage() {
     switch (status) {
       case 'draft': return '下書き'
       case 'confirmed': return '確定'
+      case 'in_progress': return '進行中'
       case 'completed': return '完了'
       case 'cancelled': return 'キャンセル'
       default: return '不明'
@@ -184,11 +186,11 @@ export default function EventDetailPage() {
             </div>
           ) : (
             <div className={styles.equipmentList}>
-              {event.equipment.map((equipment) => (
-                <div key={equipment.id} className={styles.equipmentItem}>
+              {event.equipment.map((equipment, index) => (
+                <div key={equipment.equipmentId || index} className={styles.equipmentItem}>
                   <div className={styles.equipmentInfo}>
-                    <h3 className={styles.equipmentName}>{equipment.name}</h3>
-                    <span className={styles.equipmentCategory}>{equipment.category}</span>
+                    <h3 className={styles.equipmentName}>{equipment.equipmentName}</h3>
+                    <span className={styles.equipmentCategory}>機材ID: {equipment.equipmentId}</span>
                   </div>
                   <div className={styles.equipmentQuantity}>
                     ×{equipment.quantity}
@@ -215,8 +217,8 @@ export default function EventDetailPage() {
 
         {/* メタ情報 */}
         <div className={styles.metaInfo}>
-          <p>作成日: {event.createdAt.toLocaleDateString('ja-JP')}</p>
-          <p>最終更新: {event.updatedAt.toLocaleDateString('ja-JP')}</p>
+          <p>作成日: {event.createdAt?.toLocaleDateString('ja-JP') || '不明'}</p>
+          <p>最終更新: {event.updatedAt?.toLocaleDateString('ja-JP') || '不明'}</p>
         </div>
       </div>
     </main>
