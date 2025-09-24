@@ -72,8 +72,6 @@ export const onAuthStateChange = (callback: (user: User | null) => void) => {
 export const isCompanyUser = (user: User | null): boolean => {
   if (!user?.email) return false
   
-  // デモ環境では全て許可、本番ではドメイン制限
-  if (process.env.NODE_ENV === 'development') return true
-  
-  return user.email.endsWith('@company.co.jp')
+  // 全てのユーザーを許可（ドメイン制限なし）
+  return true
 }
