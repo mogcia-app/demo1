@@ -1271,6 +1271,50 @@
   align-items: end;
 }
 
+.equipmentNumberInput {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equipmentNumberLabel {
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.equipmentHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equipmentNumber {
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.maxEquipmentWarning {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.375rem;
+  color: #92400e;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 .groupSelect {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
@@ -1532,5 +1576,20 @@
   
   .draggableItem {
     align-self: center;
+  }
+  
+  .equipmentNumberInput {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .equipmentNumberLabel {
+    text-align: center;
+  }
+  
+  .equipmentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 }

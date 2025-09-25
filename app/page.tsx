@@ -28,6 +28,7 @@ export default function Home() {
   const [showAddGroup, setShowAddGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [selectedGroupId, setSelectedGroupId] = useState<string>('')
+  const [nextEquipmentNumber, setNextEquipmentNumber] = useState<number>(1)
   const [eventDates, setEventDates] = useState<{[key: string]: {startDate: string, endDate: string, isMultiDay: boolean}}>({})
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
@@ -184,12 +185,33 @@ export default function Home() {
     setShowAddGroup(false)
   }
 
+  // 次の機材番号を取得
+  const getNextEquipmentNumber = () => {
+    const allEquipment = equipmentGroups.flatMap(group => group.equipment)
+    const maxNumber = allEquipment.length > 0 ? Math.max(...allEquipment.map(eq => eq.id)) : 0
+    return maxNumber + 1
+  }
+
+  // 選択されたグループの機材数を取得
+  const getSelectedGroupEquipmentCount = () => {
+    if (!selectedGroupId) return 0
+    const selectedGroup = equipmentGroups.find(group => group.id === selectedGroupId)
+    return selectedGroup ? selectedGroup.equipment.length : 0
+  }
+
   // 機材追加機能（シンプル版）
   const handleAddEquipmentSimple = async () => {
     if (newEquipmentName.trim() && newEquipmentStock >= 0 && selectedGroupId) {
+      // グループの機材数チェック（最大20件）
+      if (getSelectedGroupEquipmentCount() >= 20) {
+        alert('1つのグループには最大20件までしか登録できません。')
+        return
+      }
+
       try {
-        const selectedGroup = categories.find(cat => cat.id === selectedGroupId)
+        const equipmentNumber = getNextEquipmentNumber()
         await addEquipment({
+          id: equipmentNumber,
           name: newEquipmentName.trim(),
           category: selectedGroupId,
           stock: newEquipmentStock,
@@ -201,7 +223,8 @@ export default function Home() {
         setNewEquipmentName('')
         setNewEquipmentStock(0)
         setSelectedGroupId('')
-        alert('機材が追加されました！')
+        setNextEquipmentNumber(equipmentNumber + 1)
+        alert(`機材が追加されました！（#${equipmentNumber}）`)
       } catch (error) {
         console.error('機材追加エラー:', error)
         alert('機材の追加に失敗しました。')
@@ -508,33 +531,47 @@ export default function Home() {
                     >
                       <option value="">グループを選択</option>
                       {equipmentGroups.map(group => (
-                        <option key={group.id} value={group.id}>{group.name}</option>
+                        <option key={group.id} value={group.id}>
+                          {group.name} ({group.equipment.length}/20)
+                        </option>
                       ))}
                     </select>
+                    <div className={styles.equipmentNumberInput}>
+                      <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
+                      <input
+                        type="text"
+                        placeholder="機材名"
+                        value={newEquipmentName}
+                        onChange={(e) => setNewEquipmentName(e.target.value)}
+                        className={styles.formInput}
+                      />
+                    </div>
                     <input
                       type="text"
-                      placeholder="機材名"
-                      value={newEquipmentName}
-                      onChange={(e) => setNewEquipmentName(e.target.value)}
-                      className={styles.formInput}
-                    />
-                    <input
-                      type="number"
                       placeholder="在庫数"
                       value={newEquipmentStock}
-                      onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setNewEquipmentStock(value === '' ? 0 : Number(value))
+                        }
+                      }}
                       className={styles.formInput}
-                      min="0"
                     />
                     <button 
                       className={styles.addButton}
                       onClick={handleAddEquipmentSimple}
-                      disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading}
+                      disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
                     >
                       <Plus className={styles.icon} />
                       {addEquipmentLoading ? '追加中...' : '追加'}
                     </button>
                   </div>
+                  {selectedGroupId && getSelectedGroupEquipmentCount() >= 20 && (
+                    <div className={styles.maxEquipmentWarning}>
+                      このグループは最大20件まで登録可能です
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -575,7 +612,10 @@ export default function Home() {
                           group.equipment.map((equipment) => (
                             <div key={equipment.id} className={styles.equipmentItem}>
                               <div className={styles.equipmentInfo}>
-                                <span className={styles.equipmentName}>{equipment.name}</span>
+                                <div className={styles.equipmentHeader}>
+                                  <span className={styles.equipmentNumber}>#{equipment.id}</span>
+                                  <span className={styles.equipmentName}>{equipment.name}</span>
+                                </div>
                                 <span className={styles.equipmentStock}>在庫: {equipment.stock}</span>
                               </div>
                               <div
