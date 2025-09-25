@@ -1994,3 +1994,74 @@
   font-weight: 600;
   color: #374151;
 }
+
+.equipmentInputContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.addEquipmentButton {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.addEquipmentButton:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.addEquipmentButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.groupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.groupHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.groupHeader:hover {
+  background: #e5e7eb;
+}
+
+.deleteGroupButton {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #dc2626;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+
+.deleteGroupButton:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}

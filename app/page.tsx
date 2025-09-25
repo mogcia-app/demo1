@@ -42,12 +42,14 @@ export default function Home() {
   const [newEventName, setNewEventName] = useState('')
   const [newEventStartDate, setNewEventStartDate] = useState('')
   const [newEventEndDate, setNewEventEndDate] = useState('')
+  const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
   const { events, loading, error } = useEvents()
   const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
   const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
   const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
   const { addDocument: addEquipment, loading: addEquipmentLoading } = useFirestoreOperations('equipment')
   const { addDocument: addEvent, loading: addEventLoading } = useFirestoreOperations('events')
+  const { deleteDocument: deleteCategory, loading: deleteCategoryLoading } = useFirestoreOperations('equipmentCategories')
 
   // 認証状態の確認
   useEffect(() => {
@@ -193,6 +195,34 @@ export default function Home() {
   const cancelAddGroup = () => {
     setNewGroupName('')
     setShowAddGroup(false)
+  }
+
+  // グループ削除機能
+  const handleDeleteGroup = async (groupId: string) => {
+    const group = equipmentGroups.find(g => g.id === groupId)
+    if (!group) return
+
+    if (confirm(`グループ「${group.name}」を削除しますか？\nこのグループに含まれる機材も全て削除されます。`)) {
+      try {
+        // グループ内の機材を削除
+        const groupEquipment = equipment.filter(eq => eq.category === groupId)
+        for (const equipmentItem of groupEquipment) {
+          const equipmentQuery = query(collection(db, 'equipment'), where('id', '==', equipmentItem.id))
+          const equipmentSnapshot = await getDocs(equipmentQuery)
+          for (const equipmentDoc of equipmentSnapshot.docs) {
+            await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
+          }
+        }
+
+        // グループを削除
+        await deleteCategory(groupId)
+        
+        alert('グループと機材を削除しました')
+      } catch (error) {
+        console.error('グループ削除エラー:', error)
+        alert('グループの削除に失敗しました')
+      }
+    }
   }
 
   // 次の機材番号を取得
@@ -396,6 +426,44 @@ export default function Home() {
       ...prev,
       [eventId]: (prev[eventId] || []).filter(name => name !== equipmentName)
     }))
+  }
+
+  // 機材No入力処理
+  const handleEquipmentInput = (eventId: string, value: string) => {
+    setEquipmentInputValue(prev => ({
+      ...prev,
+      [eventId]: value
+    }))
+  }
+
+  // 機材No入力で機材を追加
+  const handleAddEquipmentByNumber = (eventId: string) => {
+    const inputValue = equipmentInputValue[eventId] || ''
+    const equipmentNumber = inputValue.replace('#', '').trim()
+    
+    if (!equipmentNumber) return
+
+    // 機材番号で機材を検索
+    const allEquipment = equipmentGroups.flatMap(group => group.equipment)
+    const foundEquipment = allEquipment.find(eq => eq.id === equipmentNumber)
+    
+    if (foundEquipment) {
+      const currentEquipment = eventEquipment[eventId] || []
+      if (!currentEquipment.includes(foundEquipment.name)) {
+        setEventEquipment(prev => ({
+          ...prev,
+          [eventId]: [...currentEquipment, foundEquipment.name]
+        }))
+        setEquipmentInputValue(prev => ({
+          ...prev,
+          [eventId]: ''
+        }))
+      } else {
+        alert('この機材は既に追加されています')
+      }
+    } else {
+      alert(`機材No #${equipmentNumber} が見つかりません`)
+    }
   }
 
   // 現場保存（Google Calendar連携）
@@ -753,15 +821,27 @@ export default function Home() {
               ) : (
                 filteredEquipmentGroups.map((group) => (
                   <div key={group.id} className={styles.equipmentGroup}>
-                    <div 
-                      className={styles.groupHeader}
-                      onClick={() => toggleGroup(group.id)}
-                    >
-                      <span className={styles.groupTitle}>{group.name}</span>
-                      <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
-                      <span className={styles.toggleButton}>
-                        {expandedGroups.has(group.id) ? '-' : '+'}
-                      </span>
+                    <div className={styles.groupHeader}>
+                      <div 
+                        className={styles.groupHeaderContent}
+                        onClick={() => toggleGroup(group.id)}
+                      >
+                        <span className={styles.groupTitle}>{group.name}</span>
+                        <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
+                        <span className={styles.toggleButton}>
+                          {expandedGroups.has(group.id) ? '-' : '+'}
+                        </span>
+                      </div>
+                      <button 
+                        className={styles.deleteGroupButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteGroup(group.id)
+                        }}
+                        title="グループを削除"
+                      >
+                        ×
+                      </button>
                     </div>
                     {expandedGroups.has(group.id) && (
                       <div className={styles.equipmentTable}>
@@ -924,11 +1004,27 @@ export default function Home() {
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={(e) => handleDrop(event.id, e)}
                         >
-                          <input 
-                            type="text" 
-                            placeholder="機材Noを入力またはドラッグ&ドロップ"
-                            className={styles.equipmentInputField}
-                          />
+                          <div className={styles.equipmentInputContainer}>
+                            <input 
+                              type="text" 
+                              placeholder="機材Noを入力（例: #1）またはドラッグ&ドロップ"
+                              className={styles.equipmentInputField}
+                              value={equipmentInputValue[event.id] || ''}
+                              onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleAddEquipmentByNumber(event.id)
+                                }
+                              }}
+                            />
+                            <button 
+                              className={styles.addEquipmentButton}
+                              onClick={() => handleAddEquipmentByNumber(event.id)}
+                              disabled={!equipmentInputValue[event.id]?.trim()}
+                            >
+                              追加
+                            </button>
+                          </div>
                           <div className={styles.equipmentList}>
                             {(eventEquipment[event.id] || []).map((equipmentName, index) => (
                               <div key={index} className={styles.equipmentTag}>
