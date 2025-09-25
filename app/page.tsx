@@ -11,7 +11,7 @@ import { initializeAllData, removeAllGroups } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/google/calendar'
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/google/calendar-client'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
