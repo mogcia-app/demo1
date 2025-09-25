@@ -471,141 +471,116 @@ export default function Home() {
           />
         ) : (
           <div className={styles.layout}>
-          {/* 左側: 機材グループ */}
+          {/* 左側: 機材管理 */}
           <div className={styles.equipmentSection}>
             <div className={styles.equipmentHeader}>
-              <div className={styles.headerTop}>
-                <h2 className={styles.sectionTitle}>機材管理</h2>
-                <button 
-                  className={styles.addGroupButton}
-                  onClick={() => setShowAddGroup(true)}
-                >
-                  <Plus className={styles.icon} />
-                  グループ追加
-                </button>
-              </div>
-              
-              <div className={styles.searchContainer}>
+              <h2 className={styles.sectionTitle}>機材管理</h2>
+              <button 
+                className={styles.addGroupButton}
+                onClick={() => setShowAddGroup(true)}
+              >
+                <Plus className={styles.icon} />
+                グループ追加
+              </button>
+            </div>
+
+            {/* グループ追加フォーム */}
+            {showAddGroup && (
+              <div className={styles.addGroupForm}>
                 <input
                   type="text"
-                  placeholder="機材名で検索..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={styles.searchInput}
+                  placeholder="グループ名を入力"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  className={styles.formInput}
+                  autoFocus
                 />
-              </div>
-
-              {/* グループ追加フォーム */}
-              {showAddGroup && (
-                <div className={styles.addGroupForm}>
-                  <div className={styles.formRow}>
-                    <input
-                      type="text"
-                      placeholder="グループ名を入力"
-                      value={newGroupName}
-                      onChange={(e) => setNewGroupName(e.target.value)}
-                      className={styles.formInput}
-                      autoFocus
-                    />
-                    <div className={styles.formActions}>
-                      <button 
-                        className={styles.saveButton}
-                        onClick={handleAddGroup}
-                        disabled={addCategoryLoading || !newGroupName.trim()}
-                      >
-                        {addCategoryLoading ? '追加中...' : '追加'}
-                      </button>
-                      <button 
-                        className={styles.cancelButton}
-                        onClick={cancelAddGroup}
-                      >
-                        キャンセル
-                      </button>
-                    </div>
-                  </div>
+                <div className={styles.formActions}>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleAddGroup}
+                    disabled={addCategoryLoading || !newGroupName.trim()}
+                  >
+                    {addCategoryLoading ? '追加中...' : '追加'}
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={cancelAddGroup}
+                  >
+                    キャンセル
+                  </button>
                 </div>
-              )}
-
-              {/* 機材追加フォーム */}
-              {equipmentGroups.length > 0 && (
-                <div className={styles.addEquipmentSection}>
-                  <h3 className={styles.sectionSubtitle}>機材を追加</h3>
-                  <div className={styles.addEquipmentForm}>
-                    <div className={styles.formRow}>
-                      <select
-                        value={selectedGroupId}
-                        onChange={(e) => setSelectedGroupId(e.target.value)}
-                        className={styles.groupSelect}
-                      >
-                        <option value="">グループを選択</option>
-                        {equipmentGroups.map(group => (
-                          <option key={group.id} value={group.id}>
-                            {group.name} ({group.equipment.length}/20)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={styles.formRow}>
-                      <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
-                      <input
-                        type="text"
-                        placeholder="機材名"
-                        value={newEquipmentName}
-                        onChange={(e) => setNewEquipmentName(e.target.value)}
-                        className={styles.formInput}
-                      />
-                      <input
-                        type="text"
-                        placeholder="在庫数"
-                        value={newEquipmentStock}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          if (value === '' || /^\d+$/.test(value)) {
-                            setNewEquipmentStock(value === '' ? 0 : Number(value))
-                          }
-                        }}
-                        className={styles.formInput}
-                      />
-                    </div>
-                    <div className={styles.formRow}>
-                      <button 
-                        className={styles.addButton}
-                        onClick={handleAddEquipmentSimple}
-                        disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
-                      >
-                        <Plus className={styles.icon} />
-                        {addEquipmentLoading ? '追加中...' : '追加'}
-                      </button>
-                    </div>
-                  </div>
-                  {selectedGroupId && getSelectedGroupEquipmentCount() >= 20 && (
-                    <div className={styles.maxEquipmentWarning}>
-                      このグループは最大20件まで登録可能です
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* 機材グループテーブル */}
-            {filteredEquipmentGroups.length === 0 ? (
-              <div className={styles.emptyState}>
-                <p>機材グループがありません</p>
-                <p className={styles.emptyStateSubtext}>「グループ追加」ボタンから新しいグループを作成してください</p>
               </div>
-            ) : (
-              <div className={styles.equipmentGroupsContainer}>
-                {filteredEquipmentGroups.map((group) => (
-                  <div key={group.id} className={styles.equipmentGroupTable}>
-                    <div className={styles.groupTableHeader}>
-                      <span className={styles.groupTableTitle}>機材GRP{group.id}</span>
-                      <span className={styles.groupTableSubtitle}>(+で開いて、-で閉じる) 在庫</span>
-                      <button 
-                        className={styles.groupToggleButton}
-                        onClick={() => toggleGroup(group.id)}
-                      >
+            )}
+
+            {/* 機材追加フォーム */}
+            {equipmentGroups.length > 0 && (
+              <div className={styles.addEquipmentForm}>
+                <h3>機材を追加</h3>
+                <select
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  className={styles.groupSelect}
+                >
+                  <option value="">グループを選択</option>
+                  {equipmentGroups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.equipment.length}/20)
+                    </option>
+                  ))}
+                </select>
+                <div className={styles.equipmentInputRow}>
+                  <span className={styles.equipmentNumber}>#{getNextEquipmentNumber()}</span>
+                  <input
+                    type="text"
+                    placeholder="機材名"
+                    value={newEquipmentName}
+                    onChange={(e) => setNewEquipmentName(e.target.value)}
+                    className={styles.formInput}
+                  />
+                  <input
+                    type="text"
+                    placeholder="在庫数"
+                    value={newEquipmentStock}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '' || /^\d+$/.test(value)) {
+                        setNewEquipmentStock(value === '' ? 0 : Number(value))
+                      }
+                    }}
+                    className={styles.formInput}
+                  />
+                  <button 
+                    className={styles.addButton}
+                    onClick={handleAddEquipmentSimple}
+                    disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
+                  >
+                    <Plus className={styles.icon} />
+                    追加
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 機材グループ一覧 */}
+            <div className={styles.equipmentGroups}>
+              {filteredEquipmentGroups.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>機材グループがありません</p>
+                  <p>「グループ追加」ボタンから新しいグループを作成してください</p>
+                </div>
+              ) : (
+                filteredEquipmentGroups.map((group) => (
+                  <div key={group.id} className={styles.equipmentGroup}>
+                    <div 
+                      className={styles.groupHeader}
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <span className={styles.groupTitle}>機材GRP{group.id}</span>
+                      <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
+                      <span className={styles.toggleButton}>
                         {expandedGroups.has(group.id) ? '-' : '+'}
-                      </button>
+                      </span>
                     </div>
                     {expandedGroups.has(group.id) && (
                       <div className={styles.equipmentTable}>
@@ -633,9 +608,9 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
 
           {/* 右側: 現場管理 */}
