@@ -19,6 +19,11 @@ export interface CalendarEventData {
 
 export const createCalendarEvent = async (eventData: CalendarEventData) => {
   try {
+    // 終了日が開始日と同じ場合は翌日に設定
+    const endDate = eventData.startDate === eventData.endDate 
+      ? new Date(new Date(eventData.startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      : eventData.endDate
+
     const event = {
       summary: `現場: ${eventData.siteName}`,
       description: `
@@ -32,11 +37,9 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
       location: eventData.location || '',
       start: {
         date: eventData.startDate,
-        timeZone: 'Asia/Tokyo',
       },
       end: {
-        date: eventData.endDate,
-        timeZone: 'Asia/Tokyo',
+        date: endDate,
       },
       visibility: 'public',
       guestsCanSeeOtherGuests: false,
@@ -65,6 +68,11 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
 
 export const updateCalendarEvent = async (eventId: string, eventData: CalendarEventData) => {
   try {
+    // 終了日が開始日と同じ場合は翌日に設定
+    const endDate = eventData.startDate === eventData.endDate 
+      ? new Date(new Date(eventData.startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      : eventData.endDate
+
     const event = {
       summary: `現場: ${eventData.siteName}`,
       description: `
@@ -78,11 +86,9 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
       location: eventData.location || '',
       start: {
         date: eventData.startDate,
-        timeZone: 'Asia/Tokyo',
       },
       end: {
-        date: eventData.endDate,
-        timeZone: 'Asia/Tokyo',
+        date: endDate,
       },
     }
 
