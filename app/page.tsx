@@ -11,6 +11,7 @@ import { initializeAllData, removeAllGroups } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/google/calendar'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -35,6 +36,8 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
   const [eventEquipment, setEventEquipment] = useState<{[key: string]: string[]}>({})
+  const [calendarEventIds, setCalendarEventIds] = useState<{[key: string]: string}>({})
+  const [eventDetails, setEventDetails] = useState<{[key: string]: {description: string, location: string, user: string}}>({})
   const { events, loading, error } = useEvents()
   const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
   const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
@@ -388,6 +391,76 @@ export default function Home() {
       ...prev,
       [eventId]: (prev[eventId] || []).filter(name => name !== equipmentName)
     }))
+  }
+
+  // 現場保存（Google Calendar連携）
+  const handleSaveEvent = async (eventId: string) => {
+    const event = events.find(e => e.id === eventId)
+    if (!event) return
+
+    const dates = getEventDates(eventId)
+    const details = eventDetails[eventId] || { description: '', location: '', user: '' }
+    const equipment = eventEquipment[eventId] || []
+
+    // 詳細ページのURLを生成
+    const eventUrl = `${window.location.origin}/events/${eventId}`
+
+    try {
+      const calendarData = {
+        siteName: event.siteName,
+        startDate: dates.startDate,
+        endDate: dates.endDate,
+        description: details.description,
+        location: details.location,
+        eventUrl: eventUrl
+      }
+
+      let result
+      if (calendarEventIds[eventId]) {
+        // 既存のイベントを更新
+        result = await updateCalendarEvent(calendarEventIds[eventId], calendarData)
+      } else {
+        // 新しいイベントを作成
+        result = await createCalendarEvent(calendarData)
+        if (result.success && result.eventId) {
+          setCalendarEventIds(prev => ({
+            ...prev,
+            [eventId]: result.eventId
+          }))
+        }
+      }
+
+      if (result.success) {
+        alert(`現場が保存されました！\nGoogleカレンダー: ${result.eventUrl || result.calendarUrl}`)
+      } else {
+        alert(`保存に失敗しました: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('現場保存エラー:', error)
+      alert('現場の保存に失敗しました')
+    }
+  }
+
+  // 現場削除（Google Calendar連携）
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('この現場を削除しますか？')) return
+
+    try {
+      if (calendarEventIds[eventId]) {
+        const result = await deleteCalendarEvent(calendarEventIds[eventId])
+        if (result.success) {
+          setCalendarEventIds(prev => {
+            const newIds = { ...prev }
+            delete newIds[eventId]
+            return newIds
+          })
+        }
+      }
+      alert('現場を削除しました')
+    } catch (error) {
+      console.error('現場削除エラー:', error)
+      alert('現場の削除に失敗しました')
+    }
   }
 
   if (!isAuthenticated) {
@@ -781,6 +854,14 @@ export default function Home() {
                         <textarea 
                           placeholder="備考やメモを入力してください"
                           className={styles.textarea}
+                          value={eventDetails[event.id]?.description || ''}
+                          onChange={(e) => setEventDetails(prev => ({
+                            ...prev,
+                            [event.id]: {
+                              ...prev[event.id],
+                              description: e.target.value
+                            }
+                          }))}
                         />
                       </div>
                       
@@ -847,17 +928,43 @@ export default function Home() {
                           type="text" 
                           placeholder="使用者名を入力"
                           className={styles.userInput}
+                          value={eventDetails[event.id]?.user || ''}
+                          onChange={(e) => setEventDetails(prev => ({
+                            ...prev,
+                            [event.id]: {
+                              ...prev[event.id],
+                              user: e.target.value
+                            }
+                          }))}
                         />
                         <input 
                           type="text" 
                           placeholder="場所を入力（Googleマップ連携）"
                           className={styles.locationInput}
+                          value={eventDetails[event.id]?.location || ''}
+                          onChange={(e) => setEventDetails(prev => ({
+                            ...prev,
+                            [event.id]: {
+                              ...prev[event.id],
+                              location: e.target.value
+                            }
+                          }))}
                         />
                       </div>
                       
                       <div className={styles.eventActions}>
-                        <button className={styles.actionButton}>保存</button>
-                        <button className={styles.actionButton}>削除</button>
+                        <button 
+                          className={styles.actionButton}
+                          onClick={() => handleSaveEvent(event.id)}
+                        >
+                          {calendarEventIds[event.id] ? '更新' : '保存'}
+                        </button>
+                        <button 
+                          className={styles.actionButton}
+                          onClick={() => handleDeleteEvent(event.id)}
+                        >
+                          削除
+                        </button>
                       </div>
                     </div>
                   )}
