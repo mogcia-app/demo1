@@ -188,7 +188,7 @@ export default function Home() {
   // 次の機材番号を取得
   const getNextEquipmentNumber = () => {
     const allEquipment = equipmentGroups.flatMap(group => group.equipment)
-    const maxNumber = allEquipment.length > 0 ? Math.max(...allEquipment.map(eq => eq.id)) : 0
+    const maxNumber = allEquipment.length > 0 ? Math.max(...allEquipment.map(eq => Number(eq.id))) : 0
     return maxNumber + 1
   }
 
