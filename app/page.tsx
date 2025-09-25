@@ -541,7 +541,7 @@ export default function Home() {
                   <input
                     type="text"
                     placeholder="在庫数"
-                    value={newEquipmentStock}
+                    value={newEquipmentStock === 0 ? '' : newEquipmentStock}
                     onChange={(e) => {
                       const value = e.target.value
                       if (value === '' || /^\d+$/.test(value)) {
@@ -576,7 +576,7 @@ export default function Home() {
                       className={styles.groupHeader}
                       onClick={() => toggleGroup(group.id)}
                     >
-                      <span className={styles.groupTitle}>機材GRP{group.id}</span>
+                      <span className={styles.groupTitle}>{group.name}</span>
                       <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
                       <span className={styles.toggleButton}>
                         {expandedGroups.has(group.id) ? '-' : '+'}
