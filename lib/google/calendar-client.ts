@@ -76,3 +76,25 @@ export const deleteCalendarEvent = async (eventId: string) => {
     }
   }
 }
+
+export const getCalendarInfo = async () => {
+  try {
+    const response = await fetch('/api/calendar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'info'
+      })
+    })
+
+    return await response.json()
+  } catch (error) {
+    console.error('Calendar API 情報取得エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}

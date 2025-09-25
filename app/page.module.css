@@ -436,6 +436,25 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
+.checkCalendarButton {
+  padding: 0.875rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+
+.checkCalendarButton:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 .initButton {
   padding: 0.75rem 1.5rem;
   background: #6b7280;

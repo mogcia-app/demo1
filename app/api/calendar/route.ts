@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../../../lib/google/calendar'
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarInfo } from '../../../lib/google/calendar'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
         break
       case 'delete':
         result = await deleteCalendarEvent(eventId)
+        break
+      case 'info':
+        result = await getCalendarInfo()
         break
       default:
         return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 })

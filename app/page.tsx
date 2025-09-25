@@ -11,7 +11,7 @@ import { initializeAllData, removeAllGroups } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/google/calendar-client'
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarInfo } from '../lib/google/calendar-client'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -497,7 +497,7 @@ export default function Home() {
         eventUrl: eventUrl
       }
 
-      let result: { success: boolean; eventId?: string | null; eventUrl?: string | null; calendarUrl?: string; error?: string }
+      let result: { success: boolean; eventId?: string | null; eventUrl?: string | null; calendarUrl?: string; calendarId?: string; error?: string }
       if (calendarEventIds[eventId]) {
         // 既存のイベントを更新
         result = await updateCalendarEvent(calendarEventIds[eventId], calendarData)
@@ -515,8 +515,10 @@ export default function Home() {
       if (result.success) {
         const calendarUrl = result.eventUrl || result.calendarUrl || 'Googleカレンダーで確認してください'
         console.log('現場保存成功！')
+        console.log('使用したカレンダーID:', result.calendarId || 'primary')
         console.log('GoogleカレンダーURL:', calendarUrl)
         console.log('詳細ページURL:', eventUrl)
+        console.log('イベントID:', result.eventId)
         alert(`現場が保存されました！\nGoogleカレンダー: ${calendarUrl}`)
       } else {
         console.error('現場保存失敗:', result.error)
@@ -547,6 +549,23 @@ export default function Home() {
     } catch (error) {
       console.error('現場削除エラー:', error)
       alert('現場の削除に失敗しました')
+    }
+  }
+
+  // カレンダー情報を確認する関数
+  const handleCheckCalendar = async () => {
+    try {
+      const result = await getCalendarInfo()
+      if (result.success) {
+        console.log('カレンダー情報:', result.calendarInfo)
+        alert(`カレンダー情報を取得しました！\nカレンダーID: ${result.calendarId}\n詳細はコンソールを確認してください。`)
+      } else {
+        console.error('カレンダー情報取得失敗:', result.error)
+        alert(`カレンダー情報の取得に失敗しました: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('カレンダー情報確認エラー:', error)
+      alert('カレンダー情報の確認に失敗しました')
     }
   }
 
@@ -906,6 +925,12 @@ export default function Home() {
               >
                 <Plus className={styles.icon} />
                 新しい現場を登録
+              </button>
+              <button 
+                className={styles.checkCalendarButton}
+                onClick={handleCheckCalendar}
+              >
+                カレンダー情報確認
               </button>
             </div>
 

@@ -60,16 +60,23 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
       guestsCanModify: false,
     }
 
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary'
+    console.log('使用するカレンダーID:', calendarId)
+    console.log('作成するイベント:', JSON.stringify(event, null, 2))
+
     const response = await calendar.events.insert({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
+      calendarId: calendarId,
       requestBody: event,
     })
+
+    console.log('Google Calendar API レスポンス:', JSON.stringify(response.data, null, 2))
 
     return {
       success: true,
       eventId: response.data.id,
       eventUrl: response.data.htmlLink,
-      calendarUrl: `https://calendar.google.com/calendar/event?eid=${response.data.id}`
+      calendarUrl: `https://calendar.google.com/calendar/event?eid=${response.data.id}`,
+      calendarId: calendarId
     }
   } catch (error) {
     console.error('Google Calendar API エラー:', error)
@@ -130,6 +137,7 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
       success: true,
       eventId: response.data.id,
       eventUrl: response.data.htmlLink,
+      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary'
     }
   } catch (error) {
     console.error('Google Calendar API 更新エラー:', error)
@@ -152,6 +160,32 @@ export const deleteCalendarEvent = async (eventId: string) => {
     }
   } catch (error) {
     console.error('Google Calendar API 削除エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+// カレンダー情報を確認する関数
+export const getCalendarInfo = async () => {
+  try {
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary'
+    console.log('確認するカレンダーID:', calendarId)
+    
+    const response = await calendar.calendars.get({
+      calendarId: calendarId,
+    })
+    
+    console.log('カレンダー情報:', JSON.stringify(response.data, null, 2))
+    
+    return {
+      success: true,
+      calendarId: calendarId,
+      calendarInfo: response.data
+    }
+  } catch (error) {
+    console.error('カレンダー情報取得エラー:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
