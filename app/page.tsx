@@ -9,6 +9,8 @@ import { useEvents, useEquipment, useEquipmentCategories } from '../lib/hooks/us
 import { Event } from '../lib/types'
 import { initializeAllData, removeAllGroups } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -203,6 +205,25 @@ export default function Home() {
     if (!selectedGroupId) return 0
     const selectedGroup = equipmentGroups.find(group => group.id === selectedGroupId)
     return selectedGroup ? selectedGroup.equipment.length : 0
+  }
+
+  // 個別機材削除
+  const handleDeleteEquipment = async (equipmentId: string) => {
+    if (confirm('この機材を削除しますか？')) {
+      try {
+        const equipmentQuery = query(collection(db, 'equipment'), where('id', '==', equipmentId))
+        const equipmentSnapshot = await getDocs(equipmentQuery)
+        
+        for (const equipmentDoc of equipmentSnapshot.docs) {
+          await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
+        }
+        
+        alert('機材を削除しました')
+      } catch (error) {
+        console.error('機材削除エラー:', error)
+        alert('機材の削除に失敗しました')
+      }
+    }
   }
 
   // 機材追加機能（シンプル版）
@@ -587,6 +608,7 @@ export default function Home() {
                         <div className={styles.tableHeader}>
                           <div className={styles.tableCell}>機材名</div>
                           <div className={styles.tableCell}>在庫</div>
+                          <div className={styles.tableCell}>操作</div>
                         </div>
                         {group.equipment.length === 0 ? (
                           <div className={styles.emptyEquipment}>
@@ -601,6 +623,14 @@ export default function Home() {
                               </div>
                               <div className={styles.tableCell}>
                                 <span className={styles.equipmentStock}>{equipment.stock}</span>
+                              </div>
+                              <div className={styles.tableCell}>
+                                <button 
+                                  className={styles.deleteButton}
+                                  onClick={() => handleDeleteEquipment(equipment.id)}
+                                >
+                                  削除
+                                </button>
                               </div>
                             </div>
                           ))
