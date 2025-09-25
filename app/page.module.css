@@ -1968,3 +1968,13 @@
 .deleteButton:hover {
   background: #dc2626;
 }
+
+.debugInfo {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}

@@ -613,10 +613,20 @@ export default function Home() {
                     className={styles.addButton}
                     onClick={handleAddEquipmentSimple}
                     disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
+                    title={`グループ選択: ${selectedGroupId ? 'OK' : '未選択'}, 機材名: ${newEquipmentName.trim() ? 'OK' : '未入力'}, ローディング: ${addEquipmentLoading ? '中' : '完了'}, グループ機材数: ${getSelectedGroupEquipmentCount()}/20`}
                   >
                     <Plus className={styles.icon} />
-                    追加
+                    {addEquipmentLoading ? '追加中...' : '追加'}
                   </button>
+                </div>
+                {/* デバッグ情報 */}
+                <div className={styles.debugInfo}>
+                  <small>
+                    グループ: {selectedGroupId ? '選択済み' : '未選択'} | 
+                    機材名: {newEquipmentName.trim() ? '入力済み' : '未入力'} | 
+                    在庫: {newEquipmentStock} | 
+                    グループ機材数: {getSelectedGroupEquipmentCount()}/20
+                  </small>
                 </div>
               </div>
             )}
