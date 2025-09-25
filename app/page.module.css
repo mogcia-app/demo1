@@ -1978,3 +1978,19 @@
   color: #6b7280;
   border: 1px solid #e5e7eb;
 }
+
+.createEventForm {
+  margin: 1rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.createEventForm h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+}

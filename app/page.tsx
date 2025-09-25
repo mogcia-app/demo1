@@ -38,11 +38,16 @@ export default function Home() {
   const [eventEquipment, setEventEquipment] = useState<{[key: string]: string[]}>({})
   const [calendarEventIds, setCalendarEventIds] = useState<{[key: string]: string}>({})
   const [eventDetails, setEventDetails] = useState<{[key: string]: {description: string, location: string, user: string}}>({})
+  const [showCreateEvent, setShowCreateEvent] = useState(false)
+  const [newEventName, setNewEventName] = useState('')
+  const [newEventStartDate, setNewEventStartDate] = useState('')
+  const [newEventEndDate, setNewEventEndDate] = useState('')
   const { events, loading, error } = useEvents()
   const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
   const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
   const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
   const { addDocument: addEquipment, loading: addEquipmentLoading } = useFirestoreOperations('equipment')
+  const { addDocument: addEvent, loading: addEventLoading } = useFirestoreOperations('events')
 
   // 認証状態の確認
   useEffect(() => {
@@ -464,6 +469,39 @@ export default function Home() {
     }
   }
 
+  // 新しい現場作成
+  const handleCreateEvent = async () => {
+    if (!newEventName.trim() || !newEventStartDate) {
+      alert('現場名と開始日を入力してください')
+      return
+    }
+
+    try {
+      const eventData = {
+        siteName: newEventName.trim(),
+        startDate: newEventStartDate,
+        endDate: newEventEndDate || newEventStartDate,
+        equipment: [],
+        description: '',
+        location: '',
+        user: ''
+      }
+
+      await addEvent(eventData)
+      
+      // フォームをリセット
+      setNewEventName('')
+      setNewEventStartDate('')
+      setNewEventEndDate('')
+      setShowCreateEvent(false)
+      
+      alert('新しい現場を作成しました！')
+    } catch (error) {
+      console.error('現場作成エラー:', error)
+      alert('現場の作成に失敗しました')
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <main className={styles.main}>
@@ -769,11 +807,68 @@ export default function Home() {
           <div className={styles.eventsSection}>
             <div className={styles.eventsHeader}>
               <h2 className={styles.sectionTitle}>現場管理</h2>
-              <button className={styles.createEventButton}>
+              <button 
+                className={styles.createEventButton}
+                onClick={() => setShowCreateEvent(true)}
+              >
                 <Plus className={styles.icon} />
                 新しい現場を登録
               </button>
             </div>
+
+            {/* 新しい現場作成フォーム */}
+            {showCreateEvent && (
+              <div className={styles.createEventForm}>
+                <h3>新しい現場を作成</h3>
+                <div className={styles.formRow}>
+                  <input
+                    type="text"
+                    placeholder="現場名を入力"
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                    className={styles.formInput}
+                    autoFocus
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <input
+                    type="date"
+                    placeholder="開始日"
+                    value={newEventStartDate}
+                    onChange={(e) => setNewEventStartDate(e.target.value)}
+                    className={styles.formInput}
+                  />
+                  <input
+                    type="date"
+                    placeholder="終了日（任意）"
+                    value={newEventEndDate}
+                    onChange={(e) => setNewEventEndDate(e.target.value)}
+                    className={styles.formInput}
+                    min={newEventStartDate}
+                  />
+                </div>
+                <div className={styles.formActions}>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleCreateEvent}
+                    disabled={addEventLoading || !newEventName.trim() || !newEventStartDate}
+                  >
+                    {addEventLoading ? '作成中...' : '作成'}
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setShowCreateEvent(false)
+                      setNewEventName('')
+                      setNewEventStartDate('')
+                      setNewEventEndDate('')
+                    }}
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            )}
             
             {events.length === 0 && (
               <div className={styles.emptyState}>
