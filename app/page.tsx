@@ -639,24 +639,6 @@ export default function Home() {
               </div>
             )}
 
-            {equipmentGroups.length === 0 && (
-              <div className={styles.emptyState}>
-                <p>機材グループがありません</p>
-                <p className={styles.emptyStateSubtext}>「グループを追加」ボタンから新しいグループを作成してください</p>
-              </div>
-            )}
-
-            {equipmentGroups.length > 0 && (
-              <div className={styles.defaultGroupsWarning}>
-                <p>機材グループが表示されています</p>
-                <button 
-                  className={styles.removeDefaultButton}
-                  onClick={handleRemoveAllGroups}
-                >
-                  全グループを削除
-                </button>
-              </div>
-            )}
 
             <div className={styles.eventsList}>
               {events.map((event) => (
