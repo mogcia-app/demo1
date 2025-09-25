@@ -1318,6 +1318,67 @@
   margin-top: 0.5rem;
 }
 
+/* デフォルトグループ警告のスタイル */
+.defaultGroupsWarning {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.defaultGroupsWarning p {
+  color: #92400e;
+  font-weight: 500;
+  margin: 0;
+}
+
+.removeDefaultButton {
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeDefaultButton:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.clearButton {
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearButton:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
 /* モバイル対応の追加スタイル */
 @media (max-width: 768px) {
   .simpleForm {

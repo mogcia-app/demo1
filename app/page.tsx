@@ -7,7 +7,7 @@ import styles from './page.module.css'
 import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents, useEquipment, useEquipmentCategories } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
-import { initializeAllData } from '../lib/initData'
+import { initializeAllData, removeAllGroups } from '../lib/initData'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -104,6 +104,22 @@ export default function Home() {
       alert('初期化に失敗しました。もう一度お試しください。')
     }
   }
+
+  const handleRemoveAllGroups = async () => {
+    if (!user) return
+    
+    if (confirm('全ての機材グループを削除しますか？この操作は元に戻せません。')) {
+      try {
+        await removeAllGroups()
+        alert('全ての機材グループを削除しました！')
+        window.location.reload()
+      } catch (error) {
+        console.error('機材グループ削除エラー:', error)
+        alert('機材グループの削除に失敗しました。')
+      }
+    }
+  }
+
 
   // 機材グループをFirestoreから取得したデータで構築
   const equipmentGroups = categories.map(category => ({
@@ -627,6 +643,18 @@ export default function Home() {
               <div className={styles.emptyState}>
                 <p>機材グループがありません</p>
                 <p className={styles.emptyStateSubtext}>「グループを追加」ボタンから新しいグループを作成してください</p>
+              </div>
+            )}
+
+            {equipmentGroups.length > 0 && (
+              <div className={styles.defaultGroupsWarning}>
+                <p>機材グループが表示されています</p>
+                <button 
+                  className={styles.removeDefaultButton}
+                  onClick={handleRemoveAllGroups}
+                >
+                  全グループを削除
+                </button>
               </div>
             )}
 
