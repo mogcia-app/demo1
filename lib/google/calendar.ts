@@ -60,7 +60,7 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
     }
 
     const response = await calendar.events.insert({
-      calendarId: 'primary',
+      calendarId: '3dd362fe785ceadafe32b3e2ee3587a67843115f8b1747f1ad01e776c738cf39@group.calendar.google.com',
       requestBody: event,
     })
 
@@ -119,7 +119,7 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
     }
 
     const response = await calendar.events.update({
-      calendarId: 'primary',
+      calendarId: '3dd362fe785ceadafe32b3e2ee3587a67843115f8b1747f1ad01e776c738cf39@group.calendar.google.com',
       eventId: eventId,
       requestBody: event,
     })
@@ -141,7 +141,7 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
 export const deleteCalendarEvent = async (eventId: string) => {
   try {
     await calendar.events.delete({
-      calendarId: 'primary',
+      calendarId: '3dd362fe785ceadafe32b3e2ee3587a67843115f8b1747f1ad01e776c738cf39@group.calendar.google.com',
       eventId: eventId,
     })
 
