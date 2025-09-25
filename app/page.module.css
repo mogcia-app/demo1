@@ -1611,3 +1611,135 @@
     gap: 0.25rem;
   }
 }
+
+/* 機材グループテーブルのスタイル */
+.equipmentGroupsContainer {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.equipmentGroupTable {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  overflow: hidden;
+}
+
+.groupTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.groupTableHeader:hover {
+  background: #e5e7eb;
+}
+
+.groupTableTitle {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+.groupTableSubtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  flex: 1;
+  text-align: center;
+}
+
+.groupToggleButton {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background: white;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.groupToggleButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.equipmentTable {
+  width: 100%;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background: #f9fafb;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.tableHeader .tableCell {
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.equipmentNumber {
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.equipmentName {
+  color: #1f2937;
+  flex: 1;
+}
+
+.equipmentStock {
+  color: #374151;
+  font-weight: 500;
+}
+
+.emptyEquipment {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+  grid-column: 1 / -1;
+}

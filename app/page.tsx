@@ -586,68 +586,46 @@ export default function Home() {
                 </div>
               )}
             </div>
+            
+            {/* 機材グループテーブル */}
             {filteredEquipmentGroups.length === 0 ? (
               <div className={styles.emptyState}>
                 <p>機材グループがありません</p>
                 <p className={styles.emptyStateSubtext}>「グループ追加」ボタンから新しいグループを作成してください</p>
               </div>
             ) : (
-              <div className={styles.groupsList}>
+              <div className={styles.equipmentGroupsContainer}>
                 {filteredEquipmentGroups.map((group) => (
-                  <div key={group.id} className={styles.equipmentGroup}>
-                    <div 
-                      className={styles.groupHeader}
-                      onClick={() => toggleGroup(group.id)}
-                    >
-                      <div className={styles.groupInfo}>
-                        <span className={styles.groupName}>{group.name}</span>
-                        <span className={styles.groupCount}>({group.equipment.length}件)</span>
-                      </div>
-                      <div className={styles.groupActions}>
-                        <span className={styles.groupToggle}>
-                          {expandedGroups.has(group.id) ? (
-                            <ChevronUp className={styles.icon} />
-                          ) : (
-                            <ChevronDown className={styles.icon} />
-                          )}
-                        </span>
-                      </div>
+                  <div key={group.id} className={styles.equipmentGroupTable}>
+                    <div className={styles.groupTableHeader}>
+                      <span className={styles.groupTableTitle}>機材GRP{group.id}</span>
+                      <span className={styles.groupTableSubtitle}>(+で開いて、-で閉じる) 在庫</span>
+                      <button 
+                        className={styles.groupToggleButton}
+                        onClick={() => toggleGroup(group.id)}
+                      >
+                        {expandedGroups.has(group.id) ? '-' : '+'}
+                      </button>
                     </div>
                     {expandedGroups.has(group.id) && (
-                      <div className={styles.equipmentList}>
+                      <div className={styles.equipmentTable}>
+                        <div className={styles.tableHeader}>
+                          <div className={styles.tableCell}>機材名</div>
+                          <div className={styles.tableCell}>在庫</div>
+                        </div>
                         {group.equipment.length === 0 ? (
                           <div className={styles.emptyEquipment}>
                             <p>このグループに機材がありません</p>
                           </div>
                         ) : (
                           group.equipment.map((equipment) => (
-                            <div key={equipment.id} className={styles.equipmentItem}>
-                              <div className={styles.equipmentInfo}>
-                                <div className={styles.equipmentHeader}>
-                                  <span className={styles.equipmentNumber}>#{equipment.id}</span>
-                                  <span className={styles.equipmentName}>{equipment.name}</span>
-                                </div>
-                                <span className={styles.equipmentStock}>在庫: {equipment.stock}</span>
+                            <div key={equipment.id} className={styles.tableRow}>
+                              <div className={styles.tableCell}>
+                                <span className={styles.equipmentNumber}>#{equipment.id}</span>
+                                <span className={styles.equipmentName}>{equipment.name}</span>
                               </div>
-                              <div
-                                className={styles.draggableItem}
-                                draggable
-                                onDragStart={(e) => {
-                                  e.dataTransfer.setData('text/plain', JSON.stringify({
-                                    name: equipment.name,
-                                    category: group.name,
-                                    stock: equipment.stock
-                                  }))
-                                  handleDragStart({
-                                    name: equipment.name,
-                                    category: group.name,
-                                    stock: equipment.stock
-                                  })
-                                }}
-                                onDragEnd={handleDragEnd}
-                                title="ドラッグして現場に追加"
-                              >
-                                <GripVertical className={styles.dragIcon} />
+                              <div className={styles.tableCell}>
+                                <span className={styles.equipmentStock}>{equipment.stock}</span>
                               </div>
                             </div>
                           ))
