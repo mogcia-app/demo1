@@ -523,49 +523,56 @@ export default function Home() {
               {/* 機材追加フォーム */}
               {equipmentGroups.length > 0 && (
                 <div className={styles.addEquipmentSection}>
+                  <h3 className={styles.sectionSubtitle}>機材を追加</h3>
                   <div className={styles.addEquipmentForm}>
-                    <select
-                      value={selectedGroupId}
-                      onChange={(e) => setSelectedGroupId(e.target.value)}
-                      className={styles.groupSelect}
-                    >
-                      <option value="">グループを選択</option>
-                      {equipmentGroups.map(group => (
-                        <option key={group.id} value={group.id}>
-                          {group.name} ({group.equipment.length}/20)
-                        </option>
-                      ))}
-                    </select>
-                    <div className={styles.equipmentNumberInput}>
-                      <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
+                    <div className={styles.formRow}>
+                      <select
+                        value={selectedGroupId}
+                        onChange={(e) => setSelectedGroupId(e.target.value)}
+                        className={styles.groupSelect}
+                      >
+                        <option value="">グループを選択</option>
+                        {equipmentGroups.map(group => (
+                          <option key={group.id} value={group.id}>
+                            {group.name} ({group.equipment.length}/20)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={styles.formRow}>
+                      <div className={styles.equipmentNumberInput}>
+                        <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
+                        <input
+                          type="text"
+                          placeholder="機材名"
+                          value={newEquipmentName}
+                          onChange={(e) => setNewEquipmentName(e.target.value)}
+                          className={styles.formInput}
+                        />
+                      </div>
                       <input
                         type="text"
-                        placeholder="機材名"
-                        value={newEquipmentName}
-                        onChange={(e) => setNewEquipmentName(e.target.value)}
+                        placeholder="在庫数"
+                        value={newEquipmentStock}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (value === '' || /^\d+$/.test(value)) {
+                            setNewEquipmentStock(value === '' ? 0 : Number(value))
+                          }
+                        }}
                         className={styles.formInput}
                       />
                     </div>
-                    <input
-                      type="text"
-                      placeholder="在庫数"
-                      value={newEquipmentStock}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        if (value === '' || /^\d+$/.test(value)) {
-                          setNewEquipmentStock(value === '' ? 0 : Number(value))
-                        }
-                      }}
-                      className={styles.formInput}
-                    />
-                    <button 
-                      className={styles.addButton}
-                      onClick={handleAddEquipmentSimple}
-                      disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
-                    >
-                      <Plus className={styles.icon} />
-                      {addEquipmentLoading ? '追加中...' : '追加'}
-                    </button>
+                    <div className={styles.formRow}>
+                      <button 
+                        className={styles.addButton}
+                        onClick={handleAddEquipmentSimple}
+                        disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
+                      >
+                        <Plus className={styles.icon} />
+                        {addEquipmentLoading ? '追加中...' : '追加'}
+                      </button>
+                    </div>
                   </div>
                   {selectedGroupId && getSelectedGroupEquipmentCount() >= 20 && (
                     <div className={styles.maxEquipmentWarning}>

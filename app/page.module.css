@@ -1256,6 +1256,10 @@
   align-items: center;
 }
 
+.formRow:last-child {
+  justify-content: flex-end;
+}
+
 .addEquipmentSection {
   margin: 1rem 0;
   padding: 1rem;
@@ -1265,16 +1269,23 @@
 }
 
 .addEquipmentForm {
-  display: grid;
-  grid-template-columns: 1fr 1fr 100px auto;
-  gap: 0.75rem;
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sectionSubtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
 }
 
 .equipmentNumberInput {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
 }
 
 .equipmentNumberLabel {
