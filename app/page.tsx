@@ -8,6 +8,7 @@ import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '
 import { useEvents, useEquipment, useEquipmentCategories } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
 import { initializeAllData, removeAllGroups } from '../lib/initData'
+import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -34,6 +35,8 @@ export default function Home() {
   const { events, loading, error } = useEvents()
   const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
   const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
+  const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
+  const { addDocument: addEquipment, loading: addEquipmentLoading } = useFirestoreOperations('equipment')
 
   // 認証状態の確認
   useEffect(() => {
@@ -158,13 +161,21 @@ export default function Home() {
   }))
 
   // グループ追加機能
-  const handleAddGroup = () => {
+  const handleAddGroup = async () => {
     if (newGroupName.trim()) {
-      // 実際の実装では、Firestoreに保存
-      console.log('グループ追加:', { name: newGroupName })
-      setNewGroupName('')
-      setShowAddGroup(false)
-      alert('グループが追加されました！')
+      try {
+        await addCategory({
+          name: newGroupName.trim(),
+          color: '#3b82f6', // デフォルトの青色
+          order: categories.length + 1
+        })
+        setNewGroupName('')
+        setShowAddGroup(false)
+        alert('グループが追加されました！')
+      } catch (error) {
+        console.error('グループ追加エラー:', error)
+        alert('グループの追加に失敗しました。')
+      }
     }
   }
 
@@ -174,14 +185,27 @@ export default function Home() {
   }
 
   // 機材追加機能（シンプル版）
-  const handleAddEquipmentSimple = () => {
+  const handleAddEquipmentSimple = async () => {
     if (newEquipmentName.trim() && newEquipmentStock >= 0 && selectedGroupId) {
-      // 実際の実装では、Firestoreに保存
-      console.log('機材追加:', { groupId: selectedGroupId, name: newEquipmentName, stock: newEquipmentStock })
-      setNewEquipmentName('')
-      setNewEquipmentStock(0)
-      setSelectedGroupId('')
-      alert('機材が追加されました！')
+      try {
+        const selectedGroup = categories.find(cat => cat.id === selectedGroupId)
+        await addEquipment({
+          name: newEquipmentName.trim(),
+          category: selectedGroupId,
+          stock: newEquipmentStock,
+          quantity: newEquipmentStock,
+          status: 'available',
+          tags: [],
+          description: ''
+        })
+        setNewEquipmentName('')
+        setNewEquipmentStock(0)
+        setSelectedGroupId('')
+        alert('機材が追加されました！')
+      } catch (error) {
+        console.error('機材追加エラー:', error)
+        alert('機材の追加に失敗しました。')
+      }
     }
   }
 
@@ -454,12 +478,13 @@ export default function Home() {
                     className={styles.formInput}
                   />
                   <div className={styles.formActions}>
-                    <button 
-                      className={styles.saveButton}
-                      onClick={handleAddGroup}
-                    >
-                      追加
-                    </button>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleAddGroup}
+                    disabled={addCategoryLoading}
+                  >
+                    {addCategoryLoading ? '追加中...' : '追加'}
+                  </button>
                     <button 
                       className={styles.cancelButton}
                       onClick={cancelAddGroup}
@@ -502,10 +527,10 @@ export default function Home() {
                   <button 
                     className={styles.addButton}
                     onClick={handleAddEquipmentSimple}
-                    disabled={!selectedGroupId || !newEquipmentName.trim()}
+                    disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading}
                   >
                     <Plus className={styles.icon} />
-                    追加
+                    {addEquipmentLoading ? '追加中...' : '追加'}
                   </button>
                 </div>
               </div>
