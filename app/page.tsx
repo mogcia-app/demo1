@@ -415,7 +415,7 @@ export default function Home() {
         eventUrl: eventUrl
       }
 
-      let result
+      let result: { success: boolean; eventId?: string | null; eventUrl?: string | null; calendarUrl?: string; error?: string }
       if (calendarEventIds[eventId]) {
         // 既存のイベントを更新
         result = await updateCalendarEvent(calendarEventIds[eventId], calendarData)
@@ -425,13 +425,14 @@ export default function Home() {
         if (result.success && result.eventId) {
           setCalendarEventIds(prev => ({
             ...prev,
-            [eventId]: result.eventId
+            [eventId]: result.eventId!
           }))
         }
       }
 
       if (result.success) {
-        alert(`現場が保存されました！\nGoogleカレンダー: ${result.eventUrl || result.calendarUrl}`)
+        const calendarUrl = result.eventUrl || result.calendarUrl || 'Googleカレンダーで確認してください'
+        alert(`現場が保存されました！\nGoogleカレンダー: ${calendarUrl}`)
       } else {
         alert(`保存に失敗しました: ${result.error}`)
       }
