@@ -211,17 +211,28 @@ export default function Home() {
   const handleDeleteEquipment = async (equipmentId: string) => {
     if (confirm('この機材を削除しますか？')) {
       try {
+        console.log('削除対象の機材ID:', equipmentId)
+        
+        // 機材IDで検索
         const equipmentQuery = query(collection(db, 'equipment'), where('id', '==', equipmentId))
         const equipmentSnapshot = await getDocs(equipmentQuery)
         
+        console.log('検索結果:', equipmentSnapshot.docs.length, '件')
+        
+        if (equipmentSnapshot.docs.length === 0) {
+          alert('機材が見つかりませんでした')
+          return
+        }
+        
         for (const equipmentDoc of equipmentSnapshot.docs) {
+          console.log('削除中:', equipmentDoc.id, equipmentDoc.data())
           await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
         }
         
         alert('機材を削除しました')
       } catch (error) {
         console.error('機材削除エラー:', error)
-        alert('機材の削除に失敗しました')
+        alert('機材の削除に失敗しました: ' + (error as Error).message)
       }
     }
   }
