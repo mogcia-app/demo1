@@ -217,7 +217,7 @@ export default function Home() {
       try {
         const equipmentNumber = getNextEquipmentNumber()
         await addEquipment({
-          id: equipmentNumber,
+          id: String(equipmentNumber),
           name: newEquipmentName.trim(),
           category: selectedGroupId,
           stock: newEquipmentStock,
