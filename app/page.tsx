@@ -478,11 +478,20 @@ export default function Home() {
     // 詳細ページのURLを生成
     const eventUrl = `${window.location.origin}/events/${eventId}`
 
+    // 日付のデバッグ情報
+    console.log('現場保存デバッグ:', {
+      siteName: event.siteName,
+      startDate: dates.startDate,
+      endDate: dates.endDate,
+      startDateValid: dates.startDate && !isNaN(new Date(dates.startDate).getTime()),
+      endDateValid: dates.endDate && !isNaN(new Date(dates.endDate).getTime())
+    })
+
     try {
       const calendarData = {
         siteName: event.siteName,
         startDate: dates.startDate,
-        endDate: dates.endDate,
+        endDate: dates.endDate || dates.startDate,
         description: details.description,
         location: details.location,
         eventUrl: eventUrl

@@ -19,27 +19,40 @@ export interface CalendarEventData {
 
 export const createCalendarEvent = async (eventData: CalendarEventData) => {
   try {
+    // 日付の形式を確認・修正
+    const startDate = eventData.startDate
+    const endDate = eventData.endDate || eventData.startDate
+    
+    // 日付が有効かチェック
+    if (!startDate || isNaN(new Date(startDate).getTime())) {
+      throw new Error('開始日が無効です')
+    }
+    
+    if (!endDate || isNaN(new Date(endDate).getTime())) {
+      throw new Error('終了日が無効です')
+    }
+
     // 終了日が開始日と同じ場合は翌日に設定
-    const endDate = eventData.startDate === eventData.endDate 
-      ? new Date(new Date(eventData.startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      : eventData.endDate
+    const finalEndDate = startDate === endDate 
+      ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      : endDate
 
     const event = {
       summary: `現場: ${eventData.siteName}`,
       description: `
 現場名: ${eventData.siteName}
-開始日: ${eventData.startDate}
-終了日: ${eventData.endDate}
+開始日: ${startDate}
+終了日: ${endDate}
 ${eventData.description ? `備考: ${eventData.description}` : ''}
 
 詳細・機材一覧はこちら: ${eventData.eventUrl}
       `.trim(),
       location: eventData.location || '',
       start: {
-        date: eventData.startDate,
+        date: startDate,
       },
       end: {
-        date: endDate,
+        date: finalEndDate,
       },
       visibility: 'public',
       guestsCanSeeOtherGuests: false,
@@ -68,27 +81,40 @@ ${eventData.description ? `備考: ${eventData.description}` : ''}
 
 export const updateCalendarEvent = async (eventId: string, eventData: CalendarEventData) => {
   try {
+    // 日付の形式を確認・修正
+    const startDate = eventData.startDate
+    const endDate = eventData.endDate || eventData.startDate
+    
+    // 日付が有効かチェック
+    if (!startDate || isNaN(new Date(startDate).getTime())) {
+      throw new Error('開始日が無効です')
+    }
+    
+    if (!endDate || isNaN(new Date(endDate).getTime())) {
+      throw new Error('終了日が無効です')
+    }
+
     // 終了日が開始日と同じ場合は翌日に設定
-    const endDate = eventData.startDate === eventData.endDate 
-      ? new Date(new Date(eventData.startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      : eventData.endDate
+    const finalEndDate = startDate === endDate 
+      ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      : endDate
 
     const event = {
       summary: `現場: ${eventData.siteName}`,
       description: `
 現場名: ${eventData.siteName}
-開始日: ${eventData.startDate}
-終了日: ${eventData.endDate}
+開始日: ${startDate}
+終了日: ${endDate}
 ${eventData.description ? `備考: ${eventData.description}` : ''}
 
 詳細・機材一覧はこちら: ${eventData.eventUrl}
       `.trim(),
       location: eventData.location || '',
       start: {
-        date: eventData.startDate,
+        date: startDate,
       },
       end: {
-        date: endDate,
+        date: finalEndDate,
       },
     }
 
