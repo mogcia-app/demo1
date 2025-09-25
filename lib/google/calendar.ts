@@ -1,9 +1,8 @@
 import { google } from 'googleapis'
-import path from 'path'
 
 // Google Calendar APIの設定
 const auth = new google.auth.GoogleAuth({
-  keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH || path.join(process.cwd(), 'lib/google/service-account-key.json'),
+  credentials: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ? JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY) : undefined,
   scopes: ['https://www.googleapis.com/auth/calendar']
 })
 
