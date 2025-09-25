@@ -188,7 +188,13 @@ export default function Home() {
   // 次の機材番号を取得
   const getNextEquipmentNumber = () => {
     const allEquipment = equipmentGroups.flatMap(group => group.equipment)
-    const maxNumber = allEquipment.length > 0 ? Math.max(...allEquipment.map(eq => Number(eq.id))) : 0
+    if (allEquipment.length === 0) return 1
+    
+    const numbers = allEquipment.map(eq => {
+      const id = Number(eq.id)
+      return isNaN(id) ? 0 : id
+    })
+    const maxNumber = Math.max(...numbers)
     return maxNumber + 1
   }
 
@@ -540,16 +546,14 @@ export default function Home() {
                       </select>
                     </div>
                     <div className={styles.formRow}>
-                      <div className={styles.equipmentNumberInput}>
-                        <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
-                        <input
-                          type="text"
-                          placeholder="機材名"
-                          value={newEquipmentName}
-                          onChange={(e) => setNewEquipmentName(e.target.value)}
-                          className={styles.formInput}
-                        />
-                      </div>
+                      <span className={styles.equipmentNumberLabel}>#{getNextEquipmentNumber()}</span>
+                      <input
+                        type="text"
+                        placeholder="機材名"
+                        value={newEquipmentName}
+                        onChange={(e) => setNewEquipmentName(e.target.value)}
+                        className={styles.formInput}
+                      />
                       <input
                         type="text"
                         placeholder="在庫数"
