@@ -514,8 +514,12 @@ export default function Home() {
 
       if (result.success) {
         const calendarUrl = result.eventUrl || result.calendarUrl || 'Googleカレンダーで確認してください'
+        console.log('現場保存成功！')
+        console.log('GoogleカレンダーURL:', calendarUrl)
+        console.log('詳細ページURL:', eventUrl)
         alert(`現場が保存されました！\nGoogleカレンダー: ${calendarUrl}`)
       } else {
+        console.error('現場保存失敗:', result.error)
         alert(`保存に失敗しました: ${result.error}`)
       }
     } catch (error) {

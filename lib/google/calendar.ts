@@ -38,14 +38,15 @@ export const createCalendarEvent = async (eventData: CalendarEventData) => {
       : endDate
 
     const event = {
-      summary: `現場: ${eventData.siteName}`,
+      summary: `🔧 ${eventData.siteName}`,
       description: `
+【現場管理システム】
 現場名: ${eventData.siteName}
 開始日: ${startDate}
 終了日: ${endDate}
 ${eventData.description ? `備考: ${eventData.description}` : ''}
 
-詳細・機材一覧はこちら: ${eventData.eventUrl}
+📋 詳細・機材一覧はこちら: ${eventData.eventUrl}
       `.trim(),
       location: eventData.location || '',
       start: {
@@ -100,14 +101,15 @@ export const updateCalendarEvent = async (eventId: string, eventData: CalendarEv
       : endDate
 
     const event = {
-      summary: `現場: ${eventData.siteName}`,
+      summary: `🔧 ${eventData.siteName}`,
       description: `
+【現場管理システム】
 現場名: ${eventData.siteName}
 開始日: ${startDate}
 終了日: ${endDate}
 ${eventData.description ? `備考: ${eventData.description}` : ''}
 
-詳細・機材一覧はこちら: ${eventData.eventUrl}
+📋 詳細・機材一覧はこちら: ${eventData.eventUrl}
       `.trim(),
       location: eventData.location || '',
       start: {
