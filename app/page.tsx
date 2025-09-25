@@ -207,6 +207,25 @@ export default function Home() {
     return selectedGroup ? selectedGroup.equipment.length : 0
   }
 
+  // 全機材データをクリア（一時的）
+  const handleClearAllEquipment = async () => {
+    if (confirm('全ての機材データを削除しますか？この操作は取り消せません。')) {
+      try {
+        const equipmentQuery = query(collection(db, 'equipment'))
+        const equipmentSnapshot = await getDocs(equipmentQuery)
+        
+        for (const equipmentDoc of equipmentSnapshot.docs) {
+          await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
+        }
+        
+        alert('全ての機材データを削除しました')
+      } catch (error) {
+        console.error('機材データ削除エラー:', error)
+        alert('機材データの削除に失敗しました')
+      }
+    }
+  }
+
   // 個別機材削除
   const handleDeleteEquipment = async (equipmentId: string) => {
     if (confirm('この機材を削除しますか？')) {
@@ -507,13 +526,21 @@ export default function Home() {
           <div className={styles.equipmentSection}>
             <div className={styles.equipmentHeader}>
               <h2 className={styles.sectionTitle}>機材管理</h2>
-              <button 
-                className={styles.addGroupButton}
-                onClick={() => setShowAddGroup(true)}
-              >
-                <Plus className={styles.icon} />
-                グループ追加
-              </button>
+              <div className={styles.headerButtons}>
+                <button 
+                  className={styles.clearButton}
+                  onClick={handleClearAllEquipment}
+                >
+                  全機材削除
+                </button>
+                <button 
+                  className={styles.addGroupButton}
+                  onClick={() => setShowAddGroup(true)}
+                >
+                  <Plus className={styles.icon} />
+                  グループ追加
+                </button>
+              </div>
             </div>
 
             {/* グループ追加フォーム */}
