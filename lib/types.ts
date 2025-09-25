@@ -129,25 +129,8 @@ export const COLLECTIONS = {
   AUDIT_LOGS: 'auditLogs'
 } as const
 
-// 機材カテゴリーのデフォルト値
-export const DEFAULT_EQUIPMENT_CATEGORIES: Omit<EquipmentCategory, 'id'>[] = [
-  { name: '音響', color: '#1976d2', order: 1 },
-  { name: '照明', color: '#d32f2f', order: 2 },
-  { name: '映像', color: '#388e3c', order: 3 },
-  { name: '配線', color: '#f57c00', order: 4 },
-  { name: 'その他', color: '#7b1fa2', order: 5 }
-]
+// 機材カテゴリーのデフォルト値（空の配列に変更）
+export const DEFAULT_EQUIPMENT_CATEGORIES: Omit<EquipmentCategory, 'id'>[] = []
 
-// サンプル機材データ
-export const SAMPLE_EQUIPMENT: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>[] = [
-  { name: '音響システム A', category: '音響', quantity: 5, stock: 5, status: 'available', tags: [], description: 'メイン音響システム' },
-  { name: '音響システム B', category: '音響', quantity: 3, stock: 3, status: 'available', tags: [], description: 'サブ音響システム' },
-  { name: 'マイクセット C', category: '音響', quantity: 10, stock: 10, status: 'available', tags: [], description: 'ワイヤレスマイク' },
-  { name: '照明器具 D', category: '照明', quantity: 8, stock: 8, status: 'available', tags: [], description: 'LED照明' },
-  { name: '照明器具 E', category: '照明', quantity: 6, stock: 6, status: 'available', tags: [], description: 'スポットライト' },
-  { name: 'レーザー照明 F', category: '照明', quantity: 2, stock: 2, status: 'available', tags: [], description: 'レーザーショー用' },
-  { name: 'プロジェクター G', category: '映像', quantity: 4, stock: 4, status: 'available', tags: [], description: '4Kプロジェクター' },
-  { name: '大型スクリーン H', category: '映像', quantity: 3, stock: 3, status: 'available', tags: [], description: '300インチスクリーン' },
-  { name: 'ケーブルセット I', category: '配線', quantity: 20, stock: 20, status: 'available', tags: [], description: '各種ケーブル' },
-  { name: '電源タップ J', category: '配線', quantity: 15, stock: 15, status: 'available', tags: [], description: '延長コード' }
-]
+// サンプル機材データ（空の配列に変更）
+export const SAMPLE_EQUIPMENT: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>[] = []

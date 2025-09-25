@@ -623,6 +623,13 @@ export default function Home() {
               </div>
             )}
 
+            {equipmentGroups.length === 0 && (
+              <div className={styles.emptyState}>
+                <p>機材グループがありません</p>
+                <p className={styles.emptyStateSubtext}>「グループを追加」ボタンから新しいグループを作成してください</p>
+              </div>
+            )}
+
             <div className={styles.eventsList}>
               {events.map((event) => (
                 <div key={event.id} className={styles.eventCard}>

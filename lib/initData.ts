@@ -75,11 +75,7 @@ export const initializeSampleEvents = async (userId: string) => {
           siteName: '東京ドーム イベント会場',
           startDate: '2024-01-15',
           endDate: '2024-01-17',
-          equipment: [
-            { id: 'eq1', name: '音響システム A', category: '音響', quantity: 2 },
-            { id: 'eq2', name: '照明器具 B', category: '照明', quantity: 4 },
-            { id: 'eq3', name: 'マイクセット C', category: '音響', quantity: 6 }
-          ],
+          equipment: [],
           description: '大型イベント会場での音響・照明機材セットアップ',
           status: 'confirmed' as const,
           createdBy: userId,
@@ -90,10 +86,7 @@ export const initializeSampleEvents = async (userId: string) => {
           siteName: '横浜アリーナ コンサート',
           startDate: '2024-01-20',
           endDate: '2024-01-20',
-          equipment: [
-            { id: 'eq4', name: '大型スピーカー D', category: '音響', quantity: 8 },
-            { id: 'eq5', name: 'レーザー照明 E', category: '照明', quantity: 2 }
-          ],
+          equipment: [],
           description: 'コンサート会場での大型音響システム設置',
           status: 'confirmed' as const,
           createdBy: userId,

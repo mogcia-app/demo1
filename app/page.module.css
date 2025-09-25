@@ -1311,6 +1311,13 @@
   transform: none;
 }
 
+/* 空の状態のスタイル */
+.emptyStateSubtext {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
 /* モバイル対応の追加スタイル */
 @media (max-width: 768px) {
   .simpleForm {
