@@ -445,201 +445,168 @@ export default function Home() {
           {/* 左側: 機材グループ */}
           <div className={styles.equipmentSection}>
             <div className={styles.equipmentHeader}>
-              <h2 className={styles.sectionTitle}>機材グループ</h2>
-              <div className={styles.searchContainer}>
-                <input
-                  type="text"
-                  placeholder="機材名またはNoで検索..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={styles.searchInput}
-                />
-              </div>
-              
-              {/* グループ追加ボタン */}
-              <div className={styles.addGroupSection}>
+              <div className={styles.headerTop}>
+                <h2 className={styles.sectionTitle}>機材管理</h2>
                 <button 
                   className={styles.addGroupButton}
                   onClick={() => setShowAddGroup(true)}
                 >
                   <Plus className={styles.icon} />
-                  グループを追加
+                  グループ追加
                 </button>
+              </div>
+              
+              <div className={styles.searchContainer}>
+                <input
+                  type="text"
+                  placeholder="機材名で検索..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles.searchInput}
+                />
               </div>
 
               {/* グループ追加フォーム */}
               {showAddGroup && (
                 <div className={styles.addGroupForm}>
-                  <input
-                    type="text"
-                    placeholder="グループ名を入力"
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    className={styles.formInput}
-                  />
-                  <div className={styles.formActions}>
-                  <button 
-                    className={styles.saveButton}
-                    onClick={handleAddGroup}
-                    disabled={addCategoryLoading}
-                  >
-                    {addCategoryLoading ? '追加中...' : '追加'}
-                  </button>
-                    <button 
-                      className={styles.cancelButton}
-                      onClick={cancelAddGroup}
-                    >
-                      キャンセル
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* シンプルな機材追加フォーム */}
-              <div className={styles.simpleAddEquipmentSection}>
-                <h3 className={styles.subSectionTitle}>機材を追加</h3>
-                <div className={styles.simpleForm}>
-                  <select
-                    value={selectedGroupId}
-                    onChange={(e) => setSelectedGroupId(e.target.value)}
-                    className={styles.groupSelect}
-                  >
-                    <option value="">グループを選択</option>
-                    {equipmentGroups.map(group => (
-                      <option key={group.id} value={group.id}>{group.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="機材名"
-                    value={newEquipmentName}
-                    onChange={(e) => setNewEquipmentName(e.target.value)}
-                    className={styles.formInput}
-                  />
-                  <input
-                    type="number"
-                    placeholder="在庫数"
-                    value={newEquipmentStock}
-                    onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
-                    className={styles.formInput}
-                    min="0"
-                  />
-                  <button 
-                    className={styles.addButton}
-                    onClick={handleAddEquipmentSimple}
-                    disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading}
-                  >
-                    <Plus className={styles.icon} />
-                    {addEquipmentLoading ? '追加中...' : '追加'}
-                  </button>
-                </div>
-              </div>
-            </div>
-            {filteredEquipmentGroups.map((group) => (
-              <div key={group.id} className={styles.equipmentGroup}>
-                <div 
-                  className={styles.groupHeader}
-                  onClick={() => toggleGroup(group.id)}
-                >
-                  <span className={styles.groupName}>{group.name}</span>
-                  <div className={styles.groupActions}>
-                    <button 
-                      className={styles.addButton}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowAddEquipment(group.id)
-                      }}
-                      title="機材を追加"
-                    >
-                      <Plus className={styles.icon} />
-                    </button>
-                    <span className={styles.groupToggle}>
-                      {expandedGroups.has(group.id) ? (
-                        <ChevronUp className={styles.icon} />
-                      ) : (
-                        <ChevronDown className={styles.icon} />
-                      )}
-                    </span>
-                  </div>
-                </div>
-                {expandedGroups.has(group.id) && (
-                  <div className={styles.equipmentTable}>
-                    <div className={styles.tableHeader}>
-                      <div className={styles.tableCell}>No</div>
-                      <div className={styles.tableCell}>機材名</div>
-                      <div className={styles.tableCell}>在庫</div>
-                      <div className={styles.tableCell}>操作</div>
-                    </div>
-                    {group.equipment.map((equipment) => (
-                      <div key={equipment.id} className={styles.tableRow}>
-                        <div className={styles.tableCell}>#{equipment.id}</div>
-                        <div className={styles.tableCell}>{equipment.name}</div>
-                        <div className={styles.tableCell}>{equipment.stock}</div>
-                        <div className={styles.tableCell}>
-                          <div
-                            className={styles.draggableItem}
-                            draggable
-                            onDragStart={(e) => {
-                              e.dataTransfer.setData('text/plain', JSON.stringify({
-                                name: equipment.name,
-                                category: group.name,
-                                stock: equipment.stock
-                              }))
-                              handleDragStart({
-                                name: equipment.name,
-                                category: group.name,
-                                stock: equipment.stock
-                              })
-                            }}
-                            onDragEnd={handleDragEnd}
-                          >
-                            <GripVertical className={styles.dragIcon} />
-                            <span className={styles.dragText}>ドラッグ</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* 機材追加フォーム */}
-                {showAddEquipment === group.id && (
-                  <div className={styles.addEquipmentForm}>
-                    <div className={styles.formRow}>
-                      <input
-                        type="text"
-                        placeholder="機材名を入力"
-                        value={newEquipmentName}
-                        onChange={(e) => setNewEquipmentName(e.target.value)}
-                        className={styles.formInput}
-                      />
-                      <input
-                        type="number"
-                        placeholder="在庫数"
-                        value={newEquipmentStock}
-                        onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
-                        className={styles.formInput}
-                        min="0"
-                      />
-                    </div>
+                  <div className={styles.formRow}>
+                    <input
+                      type="text"
+                      placeholder="グループ名を入力"
+                      value={newGroupName}
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                      className={styles.formInput}
+                      autoFocus
+                    />
                     <div className={styles.formActions}>
                       <button 
                         className={styles.saveButton}
-                        onClick={() => handleAddEquipment(group.id)}
+                        onClick={handleAddGroup}
+                        disabled={addCategoryLoading || !newGroupName.trim()}
                       >
-                        追加
+                        {addCategoryLoading ? '追加中...' : '追加'}
                       </button>
                       <button 
                         className={styles.cancelButton}
-                        onClick={cancelAddEquipment}
+                        onClick={cancelAddGroup}
                       >
                         キャンセル
                       </button>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* 機材追加フォーム */}
+              {equipmentGroups.length > 0 && (
+                <div className={styles.addEquipmentSection}>
+                  <div className={styles.addEquipmentForm}>
+                    <select
+                      value={selectedGroupId}
+                      onChange={(e) => setSelectedGroupId(e.target.value)}
+                      className={styles.groupSelect}
+                    >
+                      <option value="">グループを選択</option>
+                      {equipmentGroups.map(group => (
+                        <option key={group.id} value={group.id}>{group.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="機材名"
+                      value={newEquipmentName}
+                      onChange={(e) => setNewEquipmentName(e.target.value)}
+                      className={styles.formInput}
+                    />
+                    <input
+                      type="number"
+                      placeholder="在庫数"
+                      value={newEquipmentStock}
+                      onChange={(e) => setNewEquipmentStock(Number(e.target.value))}
+                      className={styles.formInput}
+                      min="0"
+                    />
+                    <button 
+                      className={styles.addButton}
+                      onClick={handleAddEquipmentSimple}
+                      disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading}
+                    >
+                      <Plus className={styles.icon} />
+                      {addEquipmentLoading ? '追加中...' : '追加'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {filteredEquipmentGroups.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>機材グループがありません</p>
+                <p className={styles.emptyStateSubtext}>「グループ追加」ボタンから新しいグループを作成してください</p>
               </div>
-            ))}
+            ) : (
+              <div className={styles.groupsList}>
+                {filteredEquipmentGroups.map((group) => (
+                  <div key={group.id} className={styles.equipmentGroup}>
+                    <div 
+                      className={styles.groupHeader}
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <div className={styles.groupInfo}>
+                        <span className={styles.groupName}>{group.name}</span>
+                        <span className={styles.groupCount}>({group.equipment.length}件)</span>
+                      </div>
+                      <div className={styles.groupActions}>
+                        <span className={styles.groupToggle}>
+                          {expandedGroups.has(group.id) ? (
+                            <ChevronUp className={styles.icon} />
+                          ) : (
+                            <ChevronDown className={styles.icon} />
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    {expandedGroups.has(group.id) && (
+                      <div className={styles.equipmentList}>
+                        {group.equipment.length === 0 ? (
+                          <div className={styles.emptyEquipment}>
+                            <p>このグループに機材がありません</p>
+                          </div>
+                        ) : (
+                          group.equipment.map((equipment) => (
+                            <div key={equipment.id} className={styles.equipmentItem}>
+                              <div className={styles.equipmentInfo}>
+                                <span className={styles.equipmentName}>{equipment.name}</span>
+                                <span className={styles.equipmentStock}>在庫: {equipment.stock}</span>
+                              </div>
+                              <div
+                                className={styles.draggableItem}
+                                draggable
+                                onDragStart={(e) => {
+                                  e.dataTransfer.setData('text/plain', JSON.stringify({
+                                    name: equipment.name,
+                                    category: group.name,
+                                    stock: equipment.stock
+                                  }))
+                                  handleDragStart({
+                                    name: equipment.name,
+                                    category: group.name,
+                                    stock: equipment.stock
+                                  })
+                                }}
+                                onDragEnd={handleDragEnd}
+                                title="ドラッグして現場に追加"
+                              >
+                                <GripVertical className={styles.dragIcon} />
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 右側: 現場管理 */}
