@@ -75,3 +75,16 @@ export const isCompanyUser = (user: User | null): boolean => {
   // 全てのユーザーを許可（ドメイン制限なし）
   return true
 }
+
+// 管理者かどうかをチェック
+export const isAdminUser = (user: User | null): boolean => {
+  if (!user?.email) return false
+  
+  // 管理者として認識するメールアドレスのリスト
+  const adminEmails = [
+    'admin@example.com',
+    // 他の管理者メールアドレスをここに追加
+  ]
+  
+  return adminEmails.includes(user.email.toLowerCase())
+}

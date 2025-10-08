@@ -57,6 +57,15 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrManager();
     }
     
+    // 担当者コレクションのルール
+    match /assignees/{assigneeId} {
+      // 読み取り: 認証されたユーザーのみ
+      allow read: if isAuthenticated();
+      
+      // 作成・更新・削除: 管理者・マネージャーのみ
+      allow create, update, delete: if isAdminOrManager();
+    }
+    
     // ユーザーコレクションのルール
     match /users/{userId} {
       // 読み取り: 認証されたユーザーのみ

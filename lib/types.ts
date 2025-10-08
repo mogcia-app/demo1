@@ -3,7 +3,8 @@
 export interface Equipment {
   id: string
   name: string
-  category: string
+  category?: string // 後方互換性のため残す（非推奨）
+  categories: string[] // 複数カテゴリ対応
   quantity: number
   stock: number // 在庫数
   description?: string
@@ -57,6 +58,17 @@ export interface EquipmentCategory {
   name: string
   color: string
   order: number
+}
+
+export interface Assignee {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  department?: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface User {
@@ -124,6 +136,7 @@ export const COLLECTIONS = {
   EQUIPMENT: 'equipment',
   EQUIPMENT_CATEGORIES: 'equipmentCategories',
   USERS: 'users',
+  ASSIGNEES: 'assignees',
   SCHEDULES: 'schedules',
   MAINTENANCE_RECORDS: 'maintenanceRecords',
   AUDIT_LOGS: 'auditLogs'

@@ -21,7 +21,7 @@ export default function EventDetailPage() {
         setIsAuthenticated(true)
       } else {
         setIsAuthenticated(false)
-        router.push('/')
+        router.push('/login')
       }
     })
 

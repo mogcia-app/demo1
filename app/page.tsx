@@ -1,70 +1,100 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Calendar, Settings, LogOut, User, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Eye, EyeOff } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, Calendar, Settings, LogOut, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Users } from 'lucide-react'
 import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
-import { signInWithEmail, signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
-import { useEvents, useEquipment, useEquipmentCategories } from '../lib/hooks/useFirestore'
+import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
+import { useEvents, useEquipment, useEquipmentCategories, useAssignees } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
 import { initializeAllData, removeAllGroups } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore'
-import { db } from '../lib/firebase'
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarInfo } from '../lib/google/calendar-client'
+import { decreaseInventory, increaseInventory, adjustInventory } from '../lib/inventory'
 
 export default function Home() {
+  const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [isLoginMode] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [authChecking, setAuthChecking] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAddEquipment, setShowAddEquipment] = useState<string | null>(null)
-  const [newEquipmentName, setNewEquipmentName] = useState('')
-  const [newEquipmentStock, setNewEquipmentStock] = useState(0)
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
+  const [equipmentViewMode, setEquipmentViewMode] = useState<'all' | 'grouped'>('all')
   const [showAddGroup, setShowAddGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
-  const [nextEquipmentNumber, setNextEquipmentNumber] = useState<number>(1)
-  const [eventDates, setEventDates] = useState<{[key: string]: {startDate: string, endDate: string, isMultiDay: boolean}}>({})
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
-  const [eventEquipment, setEventEquipment] = useState<{[key: string]: string[]}>({})
+  
+  // 現場データを統合管理
+  const [eventData, setEventData] = useState<{[key: string]: {
+    title: string
+    startDate: string
+    endDate: string
+    assigneeId: string
+    location: string
+    memo: string
+    equipment: {
+      equipmentId: string
+      name: string
+      quantity: number
+      maxStock: number
+    }[]
+  }}>({})
+  
   const [calendarEventIds, setCalendarEventIds] = useState<{[key: string]: string}>({})
-  const [eventDetails, setEventDetails] = useState<{[key: string]: {description: string, location: string, user: string}}>({})
+  const [savedEventEquipment, setSavedEventEquipment] = useState<{[key: string]: {equipmentId: string, quantity: number}[]}>({})
+  const [savedEvents, setSavedEvents] = useState<Set<string>>(new Set())
   const [showCreateEvent, setShowCreateEvent] = useState(false)
-  const [newEventName, setNewEventName] = useState('')
-  const [newEventStartDate, setNewEventStartDate] = useState('')
-  const [newEventEndDate, setNewEventEndDate] = useState('')
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
-  const { events, loading, error } = useEvents()
-  const { equipment, loading: equipmentLoading, error: equipmentError } = useEquipment()
-  const { categories, loading: categoriesLoading, error: categoriesError } = useEquipmentCategories()
-  const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
-  const { addDocument: addEquipment, loading: addEquipmentLoading } = useFirestoreOperations('equipment')
-  const { addDocument: addEvent, loading: addEventLoading } = useFirestoreOperations('events')
-  const { deleteDocument: deleteCategory, loading: deleteCategoryLoading } = useFirestoreOperations('equipmentCategories')
-
+  
   // 認証状態の確認
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user) => {
       if (user && isCompanyUser(user)) {
         setUser(user)
         setIsAuthenticated(true)
+        setAuthChecking(false)
       } else {
         setUser(null)
         setIsAuthenticated(false)
+        setAuthChecking(false)
+        // 未認証の場合はログインページへリダイレクト
+        window.location.href = '/login'
       }
     })
 
     return () => unsubscribe()
   }, [])
+
+  // 認証完了後のみFirestoreデータを取得
+  const { events, loading, error } = useEvents()
+  const { equipment } = useEquipment()
+  const { categories } = useEquipmentCategories()
+  const { assignees } = useAssignees()
+  const { addDocument: addEvent, loading: addEventLoading } = useFirestoreOperations('events')
+  const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
+
+  // イベントが読み込まれた時に初期データを設定
+  useEffect(() => {
+    events.forEach(event => {
+      if (!eventData[event.id]) {
+        setEventData(prev => ({
+          ...prev,
+          [event.id]: {
+            title: event.siteName || '',
+            startDate: event.startDate || '',
+            endDate: event.endDate || '',
+            assigneeId: '',
+            location: '',
+            memo: '',
+            equipment: []
+          }
+        }))
+      }
+    })
+  }, [events])
 
   // デバッグ用: 一時的に認証をスキップ（400エラーを回避）
   // useEffect(() => {
@@ -81,29 +111,12 @@ export default function Home() {
   //   }
   // }, [])
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email || !password) {
-      setAuthError('メールアドレスとパスワードを入力してください')
-      return
-    }
-
-    setIsLoading(true)
-    setAuthError('')
-
-    try {
-      await signInWithEmail(email, password)
-    } catch (error: any) {
-      console.error('認証エラー:', error)
-      setAuthError(error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleLogout = async () => {
     try {
       await signOutUser()
+      // ログアウト後はログインページへリダイレクト
+      window.location.href = '/login'
     } catch (error) {
       console.error('ログアウトエラー:', error)
     }
@@ -137,11 +150,15 @@ export default function Home() {
   }
 
 
-  // 機材グループをFirestoreから取得したデータで構築
+  // 機材グループをFirestoreから取得したデータで構築（複数カテゴリ対応）
   const equipmentGroups = categories.map(category => ({
     id: category.id,
     name: category.name,
-    equipment: equipment.filter(eq => eq.category === category.id)
+    equipment: equipment.filter(eq => {
+      // 後方互換性: categoriesまたはcategoryをチェック
+      const equipmentCategories = eq.categories || (eq.category ? [eq.category] : [])
+      return equipmentCategories.includes(category.id)
+    })
   }))
 
   const toggleGroup = (groupId: string) => {
@@ -164,22 +181,13 @@ export default function Home() {
     setExpandedEvents(newExpanded)
   }
 
-  // 機材検索機能
-  const filteredEquipmentGroups = equipmentGroups.map(group => ({
-    ...group,
-    equipment: group.equipment.filter(equipment => 
-      equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.id.toString().includes(searchTerm)
-    )
-  }))
-
   // グループ追加機能
   const handleAddGroup = async () => {
     if (newGroupName.trim()) {
       try {
         await addCategory({
           name: newGroupName.trim(),
-          color: '#3b82f6', // デフォルトの青色
+          color: '#3b82f6',
           order: categories.length + 1
         })
         setNewGroupName('')
@@ -197,181 +205,25 @@ export default function Home() {
     setShowAddGroup(false)
   }
 
-  // グループ削除機能
-  const handleDeleteGroup = async (groupId: string) => {
-    const group = equipmentGroups.find(g => g.id === groupId)
-    if (!group) return
+  // 機材検索機能
+  const filteredEquipmentGroups = equipmentGroups.map(group => ({
+    ...group,
+    equipment: group.equipment.filter(equipment => 
+      equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.id.toString().includes(searchTerm)
+    )
+  }))
 
-    if (confirm(`グループ「${group.name}」を削除しますか？\nこのグループに含まれる機材も全て削除されます。`)) {
-      try {
-        // グループ内の機材を削除
-        const groupEquipment = equipment.filter(eq => eq.category === groupId)
-        for (const equipmentItem of groupEquipment) {
-          const equipmentQuery = query(collection(db, 'equipment'), where('id', '==', equipmentItem.id))
-          const equipmentSnapshot = await getDocs(equipmentQuery)
-          for (const equipmentDoc of equipmentSnapshot.docs) {
-            await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
-          }
-        }
 
-        // グループを削除
-        await deleteCategory(groupId)
-        
-        alert('グループと機材を削除しました')
-      } catch (error) {
-        console.error('グループ削除エラー:', error)
-        alert('グループの削除に失敗しました')
-      }
-    }
-  }
-
-  // 次の機材番号を取得
-  const getNextEquipmentNumber = () => {
-    const allEquipment = equipmentGroups.flatMap(group => group.equipment)
-    if (allEquipment.length === 0) return 1
-    
-    const numbers = allEquipment.map(eq => {
-      const id = Number(eq.id)
-      return isNaN(id) ? 0 : id
-    })
-    const maxNumber = Math.max(...numbers)
-    return maxNumber + 1
-  }
-
-  // 選択されたグループの機材数を取得
-  const getSelectedGroupEquipmentCount = () => {
-    if (!selectedGroupId) return 0
-    const selectedGroup = equipmentGroups.find(group => group.id === selectedGroupId)
-    return selectedGroup ? selectedGroup.equipment.length : 0
-  }
-
-  // 全機材データをクリア（一時的）
-  const handleClearAllEquipment = async () => {
-    if (confirm('全ての機材データを削除しますか？この操作は取り消せません。')) {
-      try {
-        const equipmentQuery = query(collection(db, 'equipment'))
-        const equipmentSnapshot = await getDocs(equipmentQuery)
-        
-        for (const equipmentDoc of equipmentSnapshot.docs) {
-          await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
-        }
-        
-        alert('全ての機材データを削除しました')
-      } catch (error) {
-        console.error('機材データ削除エラー:', error)
-        alert('機材データの削除に失敗しました')
-      }
-    }
-  }
-
-  // 個別機材削除
-  const handleDeleteEquipment = async (equipmentId: string) => {
-    if (confirm('この機材を削除しますか？')) {
-      try {
-        console.log('削除対象の機材ID:', equipmentId)
-        
-        // 機材IDで検索
-        const equipmentQuery = query(collection(db, 'equipment'), where('id', '==', equipmentId))
-        const equipmentSnapshot = await getDocs(equipmentQuery)
-        
-        console.log('検索結果:', equipmentSnapshot.docs.length, '件')
-        
-        if (equipmentSnapshot.docs.length === 0) {
-          alert('機材が見つかりませんでした')
-          return
-        }
-        
-        for (const equipmentDoc of equipmentSnapshot.docs) {
-          console.log('削除中:', equipmentDoc.id, equipmentDoc.data())
-          await deleteDoc(doc(db, 'equipment', equipmentDoc.id))
-        }
-        
-        alert('機材を削除しました')
-      } catch (error) {
-        console.error('機材削除エラー:', error)
-        alert('機材の削除に失敗しました: ' + (error as Error).message)
-      }
-    }
-  }
-
-  // 機材追加機能（シンプル版）
-  const handleAddEquipmentSimple = async () => {
-    if (newEquipmentName.trim() && newEquipmentStock >= 0 && selectedGroupId) {
-      // グループの機材数チェック（最大20件）
-      if (getSelectedGroupEquipmentCount() >= 20) {
-        alert('1つのグループには最大20件までしか登録できません。')
-        return
-      }
-
-      try {
-        const equipmentNumber = getNextEquipmentNumber()
-        await addEquipment({
-          id: String(equipmentNumber),
-          name: newEquipmentName.trim(),
-          category: selectedGroupId,
-          stock: newEquipmentStock,
-          quantity: newEquipmentStock,
-          status: 'available',
-          tags: [],
-          description: ''
-        })
-        setNewEquipmentName('')
-        setNewEquipmentStock(0)
-        setSelectedGroupId('')
-        setNextEquipmentNumber(equipmentNumber + 1)
-        alert(`機材が追加されました！（#${equipmentNumber}）`)
-      } catch (error) {
-        console.error('機材追加エラー:', error)
-        alert('機材の追加に失敗しました。')
-      }
-    }
-  }
-
-  // 機材追加機能（従来版）
-  const handleAddEquipment = (groupId: string) => {
-    if (newEquipmentName.trim() && newEquipmentStock >= 0) {
-      // 実際の実装では、Firestoreに保存
-      console.log('機材追加:', { groupId, name: newEquipmentName, stock: newEquipmentStock })
-      setNewEquipmentName('')
-      setNewEquipmentStock(0)
-      setShowAddEquipment(null)
-      alert('機材が追加されました！')
-    }
-  }
-
-  const cancelAddEquipment = () => {
-    setNewEquipmentName('')
-    setNewEquipmentStock(0)
-    setShowAddEquipment(null)
-  }
-
-  // 連日使用の日付管理
-  const handleDateChange = (eventId: string, field: 'startDate' | 'endDate', value: string) => {
-    setEventDates(prev => ({
+  // 現場データ更新ヘルパー
+  const updateEventData = (eventId: string, field: string, value: any) => {
+    setEventData(prev => ({
       ...prev,
       [eventId]: {
         ...prev[eventId],
-        [field]: value,
-        isMultiDay: field === 'startDate' ? 
-          (prev[eventId]?.endDate ? value !== prev[eventId].endDate : false) :
-          (prev[eventId]?.startDate ? prev[eventId].startDate !== value : false)
+        [field]: value
       }
     }))
-  }
-
-  const toggleMultiDay = (eventId: string) => {
-    setEventDates(prev => ({
-      ...prev,
-      [eventId]: {
-        ...prev[eventId],
-        isMultiDay: !prev[eventId]?.isMultiDay,
-        endDate: !prev[eventId]?.isMultiDay ? prev[eventId]?.startDate || '' : prev[eventId]?.endDate || ''
-      }
-    }))
-  }
-
-  const getEventDates = (eventId: string) => {
-    return eventDates[eventId] || { startDate: '', endDate: '', isMultiDay: false }
   }
 
   // カレンダー表示用の機材データを準備
@@ -407,13 +259,23 @@ export default function Home() {
     if (!draggedEquipment) return
 
     // 既存の機材リストを取得
-    const currentEquipment = eventEquipment[eventId] || []
+    const currentEquipment = eventData[eventId]?.equipment || []
     
     // 重複チェック
-    if (!currentEquipment.includes(draggedEquipment.name)) {
-      setEventEquipment(prev => ({
+    const isDuplicate = currentEquipment.some(eq => eq.equipmentId === draggedEquipment.id)
+    
+    if (!isDuplicate) {
+      setEventData(prev => ({
         ...prev,
-        [eventId]: [...currentEquipment, draggedEquipment.name]
+        [eventId]: {
+          ...prev[eventId],
+          equipment: [...currentEquipment, {
+            equipmentId: draggedEquipment.id,
+            name: draggedEquipment.name,
+            quantity: 1,
+            maxStock: draggedEquipment.stock
+          }]
+        }
       }))
     }
     
@@ -421,10 +283,42 @@ export default function Home() {
   }
 
   // 機材削除
-  const removeEquipment = (eventId: string, equipmentName: string) => {
-    setEventEquipment(prev => ({
+  const removeEquipment = (eventId: string, equipmentId: string) => {
+    setEventData(prev => ({
       ...prev,
-      [eventId]: (prev[eventId] || []).filter(name => name !== equipmentName)
+      [eventId]: {
+        ...prev[eventId],
+        equipment: (prev[eventId]?.equipment || []).filter(eq => eq.equipmentId !== equipmentId)
+      }
+    }))
+  }
+
+  // 機材数量変更
+  const updateEquipmentQuantity = (eventId: string, equipmentId: string, quantity: number) => {
+    const currentEquipment = eventData[eventId]?.equipment || []
+    const targetEquipment = currentEquipment.find(eq => eq.equipmentId === equipmentId)
+    
+    if (!targetEquipment) return
+
+    // 在庫超過チェック
+    if (quantity > targetEquipment.maxStock) {
+      alert(`⚠️ 在庫不足\n\n機材: ${targetEquipment.name}\n要求数量: ${quantity}台\n在庫数: ${targetEquipment.maxStock}台\n\n在庫数を超えて割り当てることはできません。`)
+      return
+    }
+
+    // 最小値は1
+    const validQuantity = Math.max(1, quantity)
+
+    setEventData(prev => ({
+      ...prev,
+      [eventId]: {
+        ...prev[eventId],
+        equipment: (prev[eventId]?.equipment || []).map(eq => 
+          eq.equipmentId === equipmentId 
+            ? { ...eq, quantity: validQuantity }
+            : eq
+        )
+      }
     }))
   }
 
@@ -436,64 +330,158 @@ export default function Home() {
     }))
   }
 
-  // 機材No入力で機材を追加
+  // 機材No入力で機材を追加（一括入力対応）
   const handleAddEquipmentByNumber = (eventId: string) => {
     const inputValue = equipmentInputValue[eventId] || ''
-    const equipmentNumber = inputValue.replace('#', '').trim()
-    
-    if (!equipmentNumber) return
+    if (!inputValue.trim()) return
 
-    // 機材番号で機材を検索
-    const allEquipment = equipmentGroups.flatMap(group => group.equipment)
-    const foundEquipment = allEquipment.find(eq => eq.id === equipmentNumber)
-    
-    if (foundEquipment) {
-      const currentEquipment = eventEquipment[eventId] || []
-      if (!currentEquipment.includes(foundEquipment.name)) {
-        setEventEquipment(prev => ({
-          ...prev,
-          [eventId]: [...currentEquipment, foundEquipment.name]
-        }))
-        setEquipmentInputValue(prev => ({
-          ...prev,
-          [eventId]: ''
-        }))
-      } else {
-        alert('この機材は既に追加されています')
+    const currentEquipment = eventData[eventId]?.equipment || []
+    const newEquipment = [...currentEquipment]
+    const errors: string[] = []
+    const added: string[] = []
+
+    // カンマで分割して複数入力に対応
+    const inputs = inputValue.split(',').map(s => s.trim()).filter(s => s)
+
+    for (const input of inputs) {
+      // #1*2 形式をパース
+      const match = input.match(/^#?(\d+)(?:\*(\d+))?$/)
+      
+      if (!match) {
+        errors.push(`"${input}" の形式が正しくありません`)
+        continue
       }
-    } else {
-      alert(`機材No #${equipmentNumber} が見つかりません`)
+
+      const equipmentId = match[1]
+      const quantity = match[2] ? parseInt(match[2]) : 1
+
+      // 機材を検索
+      const foundEquipment = equipment.find(eq => eq.id === equipmentId)
+      
+      if (!foundEquipment) {
+        errors.push(`機材 #${equipmentId} が見つかりません`)
+        continue
+      }
+
+      // 在庫チェック
+      if (quantity > foundEquipment.stock) {
+        errors.push(`機材 #${equipmentId} ${foundEquipment.name}: 在庫不足（要求:${quantity}台, 在庫:${foundEquipment.stock}台）`)
+        continue
+      }
+
+      // 重複チェック
+      const isDuplicate = newEquipment.some(eq => eq.equipmentId === foundEquipment.id)
+      
+      if (isDuplicate) {
+        errors.push(`機材 #${equipmentId} ${foundEquipment.name} は既に追加されています`)
+        continue
+      }
+
+      // 追加
+      newEquipment.push({
+        equipmentId: foundEquipment.id,
+        name: foundEquipment.name,
+        quantity: quantity,
+        maxStock: foundEquipment.stock
+      })
+      
+      added.push(`#${equipmentId} ${foundEquipment.name} × ${quantity}台`)
+    }
+
+    // 結果を反映
+    if (newEquipment.length > currentEquipment.length) {
+      setEventData(prev => ({
+        ...prev,
+        [eventId]: {
+          ...prev[eventId],
+          equipment: newEquipment
+        }
+      }))
+      setEquipmentInputValue(prev => ({
+        ...prev,
+        [eventId]: ''
+      }))
+    }
+
+    // 結果をユーザーに通知
+    if (added.length > 0) {
+      const message = `✅ ${added.length}件の機材を追加しました\n\n${added.join('\n')}`
+      if (errors.length > 0) {
+        alert(`${message}\n\n⚠️ エラー:\n${errors.join('\n')}`)
+      } else {
+        console.log(message)
+      }
+    } else if (errors.length > 0) {
+      alert(`❌ エラー:\n\n${errors.join('\n')}`)
     }
   }
 
-  // 現場保存（Google Calendar連携）
+  // 現場保存（Google Calendar連携 + 在庫減算）
   const handleSaveEvent = async (eventId: string) => {
     const event = events.find(e => e.id === eventId)
     if (!event) return
 
-    const dates = getEventDates(eventId)
-    const details = eventDetails[eventId] || { description: '', location: '', user: '' }
-    const equipment = eventEquipment[eventId] || []
+    const data = eventData[eventId]
+    if (!data) {
+      alert('現場データがありません')
+      return
+    }
+
+    // 機材が選択されているか確認
+    if (data.equipment.length === 0) {
+      alert('機材を選択してください')
+      return
+    }
+
+    // タイトルと日付の確認
+    if (!data.title.trim() || !data.startDate) {
+      alert('タイトルと日付を入力してください')
+      return
+    }
 
     // 詳細ページのURLを生成
     const eventUrl = `${window.location.origin}/events/${eventId}`
 
-    // 日付のデバッグ情報
-    console.log('現場保存デバッグ:', {
-      siteName: event.siteName,
-      startDate: dates.startDate,
-      endDate: dates.endDate,
-      startDateValid: dates.startDate && !isNaN(new Date(dates.startDate).getTime()),
-      endDateValid: dates.endDate && !isNaN(new Date(dates.endDate).getTime())
-    })
-
     try {
+      // 在庫処理
+      const previousEquipment = savedEventEquipment[eventId] || []
+      const newEquipmentItems = data.equipment.map(eq => ({
+        equipmentId: eq.equipmentId,
+        quantity: eq.quantity
+      }))
+
+      let inventoryResult
+      if (previousEquipment.length > 0) {
+        // 既存現場の更新：差分調整
+        console.log('在庫調整開始...')
+        inventoryResult = await adjustInventory(previousEquipment, newEquipmentItems)
+      } else {
+        // 新規現場：在庫減算
+        console.log('在庫減算開始...')
+        inventoryResult = await decreaseInventory(newEquipmentItems)
+      }
+
+      if (!inventoryResult.success) {
+        alert(inventoryResult.error || '在庫処理に失敗しました')
+        return
+      }
+
+      // 在庫処理成功後、保存した機材情報を記録
+      setSavedEventEquipment(prev => ({
+        ...prev,
+        [eventId]: newEquipmentItems
+      }))
+
+      // このイベントを保存済みとしてマーク
+      setSavedEvents(prev => new Set(prev).add(eventId))
+
+      // Googleカレンダー連携
       const calendarData = {
-        siteName: event.siteName,
-        startDate: dates.startDate,
-        endDate: dates.endDate || dates.startDate,
-        description: details.description,
-        location: details.location,
+        siteName: data.title,
+        startDate: data.startDate,
+        endDate: data.endDate || data.startDate,
+        description: data.memo,
+        location: data.location,
         eventUrl: eventUrl
       }
 
@@ -514,12 +502,12 @@ export default function Home() {
 
       if (result.success) {
         const calendarUrl = result.eventUrl || result.calendarUrl || 'Googleカレンダーで確認してください'
-        console.log('現場保存成功！')
+        console.log('✅ 現場保存成功！')
         console.log('使用したカレンダーID:', result.calendarId || 'primary')
         console.log('GoogleカレンダーURL:', calendarUrl)
         console.log('詳細ページURL:', eventUrl)
         console.log('イベントID:', result.eventId)
-        alert(`現場が保存されました！\nGoogleカレンダー: ${calendarUrl}`)
+        alert(`現場が保存されました！\n\n在庫が減算されました。\n\nGoogleカレンダー: ${calendarUrl}`)
       } else {
         console.error('現場保存失敗:', result.error)
         alert(`保存に失敗しました: ${result.error}`)
@@ -530,11 +518,33 @@ export default function Home() {
     }
   }
 
-  // 現場削除（Google Calendar連携）
+  // 現場削除（Google Calendar連携 + 在庫復元）
   const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('この現場を削除しますか？')) return
+    if (!confirm('この現場を削除しますか？\n\n使用していた機材の在庫が復元されます。')) return
 
     try {
+      // 保存されていた機材情報を取得
+      const previousEquipment = savedEventEquipment[eventId] || []
+      
+      // 在庫を復元
+      if (previousEquipment.length > 0) {
+        console.log('在庫復元開始...')
+        const result = await increaseInventory(previousEquipment)
+        
+        if (!result.success) {
+          alert(`在庫復元に失敗しました: ${result.error}`)
+          return
+        }
+        
+        // 保存していた機材情報をクリア
+        setSavedEventEquipment(prev => {
+          const newSaved = { ...prev }
+          delete newSaved[eventId]
+          return newSaved
+        })
+      }
+
+      // Googleカレンダーから削除
       if (calendarEventIds[eventId]) {
         const result = await deleteCalendarEvent(calendarEventIds[eventId])
         if (result.success) {
@@ -545,7 +555,22 @@ export default function Home() {
           })
         }
       }
-      alert('現場を削除しました')
+
+      // イベントのデータをクリア
+      setEventData(prev => {
+        const newData = { ...prev }
+        delete newData[eventId]
+        return newData
+      })
+
+      // 保存済みフラグをクリア
+      setSavedEvents(prev => {
+        const newSaved = new Set(prev)
+        newSaved.delete(eventId)
+        return newSaved
+      })
+
+      alert('✅ 現場を削除しました\n\n在庫が復元されました。')
     } catch (error) {
       console.error('現場削除エラー:', error)
       alert('現場の削除に失敗しました')
@@ -571,100 +596,62 @@ export default function Home() {
 
   // 新しい現場作成
   const handleCreateEvent = async () => {
-    if (!newEventName.trim() || !newEventStartDate) {
-      alert('現場名と開始日を入力してください')
-      return
-    }
-
+    // 仮の現場を作成してFirestoreに保存
     try {
-      const eventData = {
-        siteName: newEventName.trim(),
-        startDate: newEventStartDate,
-        endDate: newEventEndDate || newEventStartDate,
+      const newEventId = await addEvent({
+        siteName: '新しい現場',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
         equipment: [],
         description: '',
         location: '',
-        user: ''
-      }
+        status: 'draft',
+        priority: 'medium',
+        createdBy: user?.uid || ''
+      })
 
-      await addEvent(eventData)
+      // 新しい現場の初期データを設定
+      if (newEventId) {
+        setEventData(prev => ({
+          ...prev,
+          [newEventId]: {
+            title: '新しい現場',
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: new Date().toISOString().split('T')[0],
+            assigneeId: '',
+            location: '',
+            memo: '',
+            equipment: []
+          }
+        }))
+        
+        // 自動的に開く
+        setExpandedEvents(prev => new Set(prev).add(newEventId))
+      }
       
-      // フォームをリセット
-      setNewEventName('')
-      setNewEventStartDate('')
-      setNewEventEndDate('')
       setShowCreateEvent(false)
-      
-      alert('新しい現場を作成しました！')
+      alert('新しい現場を作成しました！内容を編集してください。')
     } catch (error) {
       console.error('現場作成エラー:', error)
       alert('現場の作成に失敗しました')
     }
   }
 
-  if (!isAuthenticated) {
+  // 認証チェック中
+  if (authChecking) {
     return (
       <main className={styles.main}>
         <div className={styles.authContainer}>
           <h1 className={styles.title}>機材管理システム</h1>
-          <p className={styles.subtitle}>ログインしてください</p>
-          
-          <form onSubmit={handleAuth} className={styles.authForm}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="email" className={styles.label}>メールアドレス</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles.input}
-                placeholder="test@example.com"
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="password" className={styles.label}>パスワード</label>
-              <div className={styles.passwordContainer}>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={styles.input}
-                  placeholder="6文字以上"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className={styles.eyeIcon} /> : <Eye className={styles.eyeIcon} />}
-                </button>
-              </div>
-            </div>
-
-            {authError && (
-              <div className={styles.errorMessage}>
-                {authError}
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className={styles.authButton}
-              disabled={isLoading}
-            >
-              <User className={styles.icon} />
-              {isLoading ? '処理中...' : 'ログイン'}
-            </button>
-          </form>
-
+          <p className={styles.subtitle}>認証確認中...</p>
         </div>
       </main>
     )
+  }
+
+  // 未認証の場合はuseEffectでリダイレクトされるので、ここには到達しない
+  if (!isAuthenticated) {
+    return null
   }
 
   if (loading) {
@@ -715,10 +702,18 @@ export default function Home() {
                 <Grid3X3 className={styles.icon} />
               </button>
             </div>
-            <button className={styles.iconButton}>
+            <button 
+              className={styles.iconButton}
+              onClick={() => router.push('/admin/login')}
+              title="管理者設定"
+            >
               <Settings className={styles.icon} />
             </button>
-            <button className={styles.iconButton} onClick={handleLogout}>
+            <button 
+              className={styles.iconButton} 
+              onClick={handleLogout}
+              title="ログアウト"
+            >
               <LogOut className={styles.icon} />
             </button>
           </div>
@@ -738,157 +733,144 @@ export default function Home() {
           <div className={styles.equipmentSection}>
             <div className={styles.equipmentHeader}>
               <h2 className={styles.sectionTitle}>機材管理</h2>
-              <div className={styles.headerButtons}>
-                <button 
-                  className={styles.clearButton}
-                  onClick={handleClearAllEquipment}
-                >
-                  全機材削除
-                </button>
-                <button 
-                  className={styles.addGroupButton}
-                  onClick={() => setShowAddGroup(true)}
-                >
-                  <Plus className={styles.icon} />
-                  グループ追加
-                </button>
-              </div>
+              <p className={styles.equipmentNote}>※機材の追加・編集は管理者ページで行えます</p>
             </div>
 
-            {/* グループ追加フォーム */}
-            {showAddGroup && (
-              <div className={styles.addGroupForm}>
-                <input
-                  type="text"
-                  placeholder="グループ名を入力"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  className={styles.formInput}
-                  autoFocus
-                />
-                <div className={styles.formActions}>
-                  <button 
-                    className={styles.saveButton}
-                    onClick={handleAddGroup}
-                    disabled={addCategoryLoading || !newGroupName.trim()}
-                  >
-                    {addCategoryLoading ? '追加中...' : '追加'}
-                  </button>
-                  <button 
-                    className={styles.cancelButton}
-                    onClick={cancelAddGroup}
-                  >
-                    キャンセル
-                  </button>
-                </div>
+            {/* タブ切り替え */}
+            <div className={styles.equipmentTabs}>
+              <button
+                className={`${styles.equipmentTab} ${equipmentViewMode === 'all' ? styles.activeEquipmentTab : ''}`}
+                onClick={() => setEquipmentViewMode('all')}
+              >
+                全機材
+              </button>
+              <button
+                className={`${styles.equipmentTab} ${equipmentViewMode === 'grouped' ? styles.activeEquipmentTab : ''}`}
+                onClick={() => setEquipmentViewMode('grouped')}
+              >
+                グループ別
+              </button>
+            </div>
+
+            {/* 全機材表示 */}
+            {equipmentViewMode === 'all' && (
+              <div className={styles.allEquipmentList}>
+                {equipment.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>機材がありません</p>
+                    <p>管理者ページから機材を追加してください</p>
+                  </div>
+                ) : (
+                  <div className={styles.equipmentTable}>
+                    <div className={styles.tableHeader}>
+                      <div className={styles.tableCell}>機材名</div>
+                      <div className={styles.tableCell}>在庫</div>
+                    </div>
+                    {equipment.map((eq) => (
+                      <div 
+                        key={eq.id} 
+                        className={styles.tableRow}
+                        draggable
+                        onDragStart={() => handleDragStart(eq)}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <div className={styles.tableCell}>
+                          <span className={styles.equipmentNumber}>#{eq.id}</span>
+                          <span className={styles.equipmentName}>{eq.name}</span>
+                        </div>
+                        <div className={styles.tableCell}>
+                          <span className={styles.equipmentStock}>{eq.stock}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 機材追加フォーム */}
-            {equipmentGroups.length > 0 && (
-              <div className={styles.addEquipmentForm}>
-                <h3>機材を追加</h3>
-                <select
-                  value={selectedGroupId}
-                  onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className={styles.groupSelect}
-                >
-                  <option value="">グループを選択</option>
-                  {equipmentGroups.map(group => (
-                    <option key={group.id} value={group.id}>
-                      {group.name} ({group.equipment.length}/20)
-                    </option>
-                  ))}
-                </select>
-                <div className={styles.equipmentInputRow}>
-                  <span className={styles.equipmentNumber}>#{getNextEquipmentNumber()}</span>
-                  <input
-                    type="text"
-                    placeholder="機材名"
-                    value={newEquipmentName}
-                    onChange={(e) => setNewEquipmentName(e.target.value)}
-                    className={styles.formInput}
-                  />
-                  <input
-                    type="text"
-                    placeholder="在庫数"
-                    value={newEquipmentStock === 0 ? '' : newEquipmentStock}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      if (value === '' || /^\d+$/.test(value)) {
-                        setNewEquipmentStock(value === '' ? 0 : Number(value))
-                      }
-                    }}
-                    className={styles.formInput}
-                  />
+            {/* グループ別表示 */}
+            {equipmentViewMode === 'grouped' && (
+              <div className={styles.groupedEquipmentList}>
+                {/* グループ追加ボタン */}
+                <div className={styles.groupAddSection}>
                   <button 
-                    className={styles.addButton}
-                    onClick={handleAddEquipmentSimple}
-                    disabled={!selectedGroupId || !newEquipmentName.trim() || addEquipmentLoading || getSelectedGroupEquipmentCount() >= 20}
-                    title={`グループ選択: ${selectedGroupId ? 'OK' : '未選択'}, 機材名: ${newEquipmentName.trim() ? 'OK' : '未入力'}, ローディング: ${addEquipmentLoading ? '中' : '完了'}, グループ機材数: ${getSelectedGroupEquipmentCount()}/20`}
+                    className={styles.addGroupButton}
+                    onClick={() => setShowAddGroup(true)}
                   >
                     <Plus className={styles.icon} />
-                    {addEquipmentLoading ? '追加中...' : '追加'}
+                    グループ追加
                   </button>
                 </div>
-                {/* デバッグ情報 */}
-                <div className={styles.debugInfo}>
-                  <small>
-                    グループ: {selectedGroupId ? '選択済み' : '未選択'} | 
-                    機材名: {newEquipmentName.trim() ? '入力済み' : '未入力'} | 
-                    在庫: {newEquipmentStock} | 
-                    グループ機材数: {getSelectedGroupEquipmentCount()}/20
-                  </small>
-                </div>
-              </div>
-            )}
 
-            {/* 機材グループ一覧 */}
-            <div className={styles.equipmentGroups}>
-              {filteredEquipmentGroups.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <p>機材グループがありません</p>
-                  <p>「グループ追加」ボタンから新しいグループを作成してください</p>
-                </div>
-              ) : (
-                filteredEquipmentGroups.map((group) => (
-                  <div key={group.id} className={styles.equipmentGroup}>
-                    <div className={styles.groupHeader}>
-                      <div 
-                        className={styles.groupHeaderContent}
-                        onClick={() => toggleGroup(group.id)}
-                      >
-                        <span className={styles.groupTitle}>{group.name}</span>
-                        <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
-                        <span className={styles.toggleButton}>
-                          {expandedGroups.has(group.id) ? '-' : '+'}
-                        </span>
-                      </div>
+                {/* グループ追加フォーム */}
+                {showAddGroup && (
+                  <div className={styles.addGroupForm}>
+                    <input
+                      type="text"
+                      placeholder="グループ名を入力"
+                      value={newGroupName}
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                      className={styles.formInput}
+                      autoFocus
+                    />
+                    <div className={styles.formActions}>
                       <button 
-                        className={styles.deleteGroupButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteGroup(group.id)
-                        }}
-                        title="グループを削除"
+                        className={styles.saveButton}
+                        onClick={handleAddGroup}
+                        disabled={addCategoryLoading || !newGroupName.trim()}
                       >
-                        ×
+                        {addCategoryLoading ? '追加中...' : '追加'}
+                      </button>
+                      <button 
+                        className={styles.cancelButton}
+                        onClick={cancelAddGroup}
+                      >
+                        キャンセル
                       </button>
                     </div>
-                    {expandedGroups.has(group.id) && (
-                      <div className={styles.equipmentTable}>
-                        <div className={styles.tableHeader}>
-                          <div className={styles.tableCell}>機材名</div>
-                          <div className={styles.tableCell}>在庫</div>
-                          <div className={styles.tableCell}>操作</div>
-                        </div>
-                        {group.equipment.length === 0 ? (
-                          <div className={styles.emptyEquipment}>
-                            <p>このグループに機材がありません</p>
+                  </div>
+                )}
+
+                <div className={styles.equipmentGroups}>
+                  {filteredEquipmentGroups.length === 0 ? (
+                    <div className={styles.emptyState}>
+                      <p>機材グループがありません</p>
+                      <p>「グループ追加」ボタンから新しいグループを作成してください</p>
+                    </div>
+                  ) : (
+                    filteredEquipmentGroups.map((group) => (
+                      <div key={group.id} className={styles.equipmentGroup}>
+                        <div className={styles.groupHeader}>
+                          <div 
+                            className={styles.groupHeaderContent}
+                            onClick={() => toggleGroup(group.id)}
+                          >
+                            <span className={styles.groupTitle}>{group.name}</span>
+                            <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
+                            <span className={styles.toggleButton}>
+                              {expandedGroups.has(group.id) ? '-' : '+'}
+                            </span>
                           </div>
-                        ) : (
+                        </div>
+                        {expandedGroups.has(group.id) && (
+                          <div className={styles.equipmentTable}>
+                            <div className={styles.tableHeader}>
+                              <div className={styles.tableCell}>機材名</div>
+                              <div className={styles.tableCell}>在庫</div>
+                            </div>
+                            {group.equipment.length === 0 ? (
+                              <div className={styles.emptyEquipment}>
+                                <p>このグループに機材がありません</p>
+                              </div>
+                            ) : (
                           group.equipment.map((equipment) => (
-                            <div key={equipment.id} className={styles.tableRow}>
+                            <div 
+                              key={equipment.id} 
+                              className={styles.tableRow}
+                              draggable
+                              onDragStart={() => handleDragStart(equipment)}
+                              onDragEnd={handleDragEnd}
+                            >
                               <div className={styles.tableCell}>
                                 <span className={styles.equipmentNumber}>#{equipment.id}</span>
                                 <span className={styles.equipmentName}>{equipment.name}</span>
@@ -896,23 +878,17 @@ export default function Home() {
                               <div className={styles.tableCell}>
                                 <span className={styles.equipmentStock}>{equipment.stock}</span>
                               </div>
-                              <div className={styles.tableCell}>
-                                <button 
-                                  className={styles.deleteButton}
-                                  onClick={() => handleDeleteEquipment(equipment.id)}
-                                >
-                                  削除
-                                </button>
-                              </div>
                             </div>
                           ))
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 右側: 現場管理 */}
@@ -921,10 +897,11 @@ export default function Home() {
               <h2 className={styles.sectionTitle}>現場管理</h2>
               <button 
                 className={styles.createEventButton}
-                onClick={() => setShowCreateEvent(true)}
+                onClick={handleCreateEvent}
+                disabled={addEventLoading}
               >
                 <Plus className={styles.icon} />
-                新しい現場を登録
+                {addEventLoading ? '作成中...' : '新しい現場を登録'}
               </button>
               <button 
                 className={styles.checkCalendarButton}
@@ -934,59 +911,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* 新しい現場作成フォーム */}
-            {showCreateEvent && (
-              <div className={styles.createEventForm}>
-                <h3>新しい現場を作成</h3>
-                <div className={styles.formRow}>
-                  <input
-                    type="text"
-                    placeholder="現場名を入力"
-                    value={newEventName}
-                    onChange={(e) => setNewEventName(e.target.value)}
-                    className={styles.formInput}
-                    autoFocus
-                  />
-                </div>
-                <div className={styles.formRow}>
-                  <input
-                    type="date"
-                    placeholder="開始日"
-                    value={newEventStartDate}
-                    onChange={(e) => setNewEventStartDate(e.target.value)}
-                    className={styles.formInput}
-                  />
-                  <input
-                    type="date"
-                    placeholder="終了日（任意）"
-                    value={newEventEndDate}
-                    onChange={(e) => setNewEventEndDate(e.target.value)}
-                    className={styles.formInput}
-                    min={newEventStartDate}
-                  />
-                </div>
-                <div className={styles.formActions}>
-                  <button 
-                    className={styles.saveButton}
-                    onClick={handleCreateEvent}
-                    disabled={addEventLoading || !newEventName.trim() || !newEventStartDate}
-                  >
-                    {addEventLoading ? '作成中...' : '作成'}
-                  </button>
-                  <button 
-                    className={styles.cancelButton}
-                    onClick={() => {
-                      setShowCreateEvent(false)
-                      setNewEventName('')
-                      setNewEventStartDate('')
-                      setNewEventEndDate('')
-                    }}
-                  >
-                    キャンセル
-                  </button>
-                </div>
-              </div>
-            )}
             
             {events.length === 0 && (
               <div className={styles.emptyState}>
@@ -1002,204 +926,279 @@ export default function Home() {
 
 
             <div className={styles.eventsList}>
-              {events.map((event) => (
-                <div key={event.id} className={styles.eventCard}>
-                  <div 
-                    className={styles.eventHeader}
-                    onClick={() => toggleEvent(event.id)}
-                  >
-                    <div className={styles.eventTitle}>
-                      <h3>{event.siteName}</h3>
-                      <div className={styles.eventMeta}>
-                        <div className={styles.eventDate}>
-                          <Calendar className={styles.icon} />
-                          {event.startDate === event.endDate 
-                            ? event.startDate 
-                            : `${event.startDate} - ${event.endDate}`
-                          }
-                        </div>
-                        <div className={styles.eventLocation}>
-                          <MapPin className={styles.icon} />
-                          場所情報
-                        </div>
-                      </div>
-                    </div>
-                    <div className={styles.eventToggle}>
-                      {expandedEvents.has(event.id) ? (
-                        <ChevronUp className={styles.icon} />
-                      ) : (
-                        <ChevronDown className={styles.icon} />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {expandedEvents.has(event.id) && (
-                    <div className={styles.eventDetails}>
-                      <div className={styles.inputSection}>
-                        <h4>機材選択</h4>
-                        <div 
-                          className={styles.equipmentInput}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => handleDrop(event.id, e)}
-                        >
-                          <div className={styles.equipmentInputContainer}>
-                            <input 
-                              type="text" 
-                              placeholder="機材Noを入力（例: #1）またはドラッグ&ドロップ"
-                              className={styles.equipmentInputField}
-                              value={equipmentInputValue[event.id] || ''}
-                              onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleAddEquipmentByNumber(event.id)
-                                }
-                              }}
-                            />
-                            <button 
-                              className={styles.addEquipmentButton}
-                              onClick={() => handleAddEquipmentByNumber(event.id)}
-                              disabled={!equipmentInputValue[event.id]?.trim()}
-                            >
-                              追加
-                            </button>
-                          </div>
-                          <div className={styles.equipmentList}>
-                            {(eventEquipment[event.id] || []).map((equipmentName, index) => (
-                              <div key={index} className={styles.equipmentTag}>
-                                <span className={styles.equipmentTagName}>{equipmentName}</span>
-                                <button 
-                                  className={styles.equipmentTagRemove}
-                                  onClick={() => removeEquipment(event.id, equipmentName)}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className={styles.inputSection}>
-                        <h4>機材の他に記載したいもの</h4>
-                        <textarea 
-                          placeholder="備考やメモを入力してください"
-                          className={styles.textarea}
-                          value={eventDetails[event.id]?.description || ''}
-                          onChange={(e) => setEventDetails(prev => ({
-                            ...prev,
-                            [event.id]: {
-                              ...prev[event.id],
-                              description: e.target.value
+              {events.map((event) => {
+                const data = eventData[event.id] || {
+                  title: event.siteName,
+                  startDate: event.startDate,
+                  endDate: event.endDate,
+                  assigneeId: '',
+                  location: '',
+                  memo: '',
+                  equipment: []
+                }
+                const assignee = assignees.find(a => a.id === data.assigneeId)
+                const isSaved = savedEvents.has(event.id)
+                
+                return (
+                  <div key={event.id} className={styles.eventCard}>
+                    <div 
+                      className={styles.eventHeader}
+                      onClick={() => toggleEvent(event.id)}
+                    >
+                      <div className={styles.eventTitle}>
+                        <h3>{data.title || event.siteName}</h3>
+                        <div className={styles.eventMeta}>
+                          <div className={styles.eventMetaItem}>
+                            <Calendar className={styles.icon} />
+                            {data.startDate === data.endDate 
+                              ? data.startDate 
+                              : `${data.startDate} - ${data.endDate}`
                             }
-                          }))}
-                        />
-                      </div>
-                      
-                      <div className={styles.inputSection}>
-                        <h4>日付、現場名（タイトル）</h4>
-                        <div className={styles.dateSection}>
-                          <div className={styles.dateToggle}>
-                            <label className={styles.checkboxLabel}>
-                              <input 
-                                type="checkbox" 
-                                checked={getEventDates(event.id).isMultiDay}
-                                onChange={() => toggleMultiDay(event.id)}
-                                className={styles.checkbox}
-                              />
-                              <span className={styles.checkboxText}>連日使用</span>
-                            </label>
                           </div>
-                          <div className={styles.dateInputs}>
-                            <div className={styles.dateInputGroup}>
-                              <label className={styles.dateLabel}>
-                                {getEventDates(event.id).isMultiDay ? '開始日' : '日付'}
-                              </label>
-                              <input 
-                                type="date" 
-                                value={getEventDates(event.id).startDate}
-                                onChange={(e) => handleDateChange(event.id, 'startDate', e.target.value)}
-                                className={styles.dateInput}
-                              />
+                          {assignee && (
+                            <div className={styles.eventMetaItem}>
+                              <Users className={styles.icon} />
+                              {assignee.name}
                             </div>
-                            {getEventDates(event.id).isMultiDay && (
-                              <div className={styles.dateInputGroup}>
-                                <label className={styles.dateLabel}>終了日</label>
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.eventToggle}>
+                        {expandedEvents.has(event.id) ? (
+                          <ChevronUp className={styles.icon} />
+                        ) : (
+                          <ChevronDown className={styles.icon} />
+                        )}
+                      </div>
+                    </div>
+                  
+                    {expandedEvents.has(event.id) && (
+                      <div className={styles.eventDetails}>
+                        {/* タイトル */}
+                        <div className={styles.inputSection}>
+                          <h4>現場名（タイトル）</h4>
+                          <input 
+                            type="text" 
+                            placeholder="現場名を入力"
+                            className={styles.titleInput}
+                            value={data.title}
+                            onChange={(e) => updateEventData(event.id, 'title', e.target.value)}
+                          />
+                        </div>
+
+                        {/* 日付 */}
+                        <div className={styles.inputSection}>
+                          <h4>日付</h4>
+                          {isSaved ? (
+                            <div className={styles.readOnlyValue}>
+                              {data.startDate === data.endDate 
+                                ? data.startDate 
+                                : `${data.startDate} 〜 ${data.endDate}`}
+                            </div>
+                          ) : (
+                            <div className={styles.dateRow}>
+                              <div className={styles.dateField}>
+                                <label>開始日</label>
                                 <input 
                                   type="date" 
-                                  value={getEventDates(event.id).endDate}
-                                  onChange={(e) => handleDateChange(event.id, 'endDate', e.target.value)}
+                                  value={data.startDate}
+                                  onChange={(e) => updateEventData(event.id, 'startDate', e.target.value)}
                                   className={styles.dateInput}
-                                  min={getEventDates(event.id).startDate}
                                 />
                               </div>
-                            )}
-                          </div>
-                          <div className={styles.datePreview}>
-                            {getEventDates(event.id).startDate && (
-                              <span className={styles.datePreviewText}>
-                                {getEventDates(event.id).isMultiDay && getEventDates(event.id).endDate ? 
-                                  `${getEventDates(event.id).startDate} 〜 ${getEventDates(event.id).endDate}` :
-                                  getEventDates(event.id).startDate
-                                }
-                              </span>
+                              <div className={styles.dateField}>
+                                <label>終了日</label>
+                                <input 
+                                  type="date" 
+                                  value={data.endDate}
+                                  onChange={(e) => updateEventData(event.id, 'endDate', e.target.value)}
+                                  className={styles.dateInput}
+                                  min={data.startDate}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 担当者 */}
+                        <div className={styles.inputSection}>
+                          <h4>担当者</h4>
+                          {isSaved ? (
+                            <div className={styles.readOnlyValue}>
+                              {assignee ? `${assignee.name}${assignee.department ? ` (${assignee.department})` : ''}` : '未設定'}
+                            </div>
+                          ) : (
+                            <select 
+                              className={styles.assigneeSelect}
+                              value={data.assigneeId}
+                              onChange={(e) => updateEventData(event.id, 'assigneeId', e.target.value)}
+                            >
+                              <option value="">担当者を選択</option>
+                              {assignees.filter(a => a.isActive).map((assignee) => (
+                                <option key={assignee.id} value={assignee.id}>
+                                  {assignee.name} {assignee.department ? `(${assignee.department})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+
+                        {/* 場所 */}
+                        <div className={styles.inputSection}>
+                          <h4>場所（Googleマップ紐付け）</h4>
+                          {isSaved ? (
+                            <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
+                          ) : (
+                            <input 
+                              type="text" 
+                              placeholder="場所を入力"
+                              className={styles.locationInput}
+                              value={data.location}
+                              onChange={(e) => updateEventData(event.id, 'location', e.target.value)}
+                            />
+                          )}
+                        </div>
+
+                        {/* メモ */}
+                        <div className={styles.inputSection}>
+                          <h4>メモ</h4>
+                          {isSaved ? (
+                            <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
+                          ) : (
+                            <textarea 
+                              placeholder="備考やメモを入力してください"
+                              className={styles.textarea}
+                              value={data.memo}
+                              onChange={(e) => updateEventData(event.id, 'memo', e.target.value)}
+                              rows={3}
+                            />
+                          )}
+                        </div>
+
+                        {/* 機材選択 */}
+                        <div className={styles.inputSection}>
+                          <h4>機材選択</h4>
+                          {isSaved && (
+                            <div className={styles.savedBadge}>
+                              ⚠️ 保存済みのため、機材の変更はできません
+                            </div>
+                          )}
+                          {!isSaved && (
+                            <div 
+                              className={styles.equipmentInputContainer}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => handleDrop(event.id, e)}
+                            >
+                              <input 
+                                type="text" 
+                                placeholder="例: #1*2 または #1*2,#2*5 （左の機材をドラッグ&ドロップも可）"
+                                className={styles.equipmentInputField}
+                                value={equipmentInputValue[event.id] || ''}
+                                onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleAddEquipmentByNumber(event.id)
+                                  }
+                                }}
+                              />
+                              <button 
+                                className={styles.addEquipmentButton}
+                                onClick={() => handleAddEquipmentByNumber(event.id)}
+                                disabled={!equipmentInputValue[event.id]?.trim()}
+                              >
+                                追加
+                              </button>
+                            </div>
+                          )}
+                          <div className={styles.equipmentList}>
+                            {(data.equipment || []).length === 0 ? (
+                              <div className={styles.emptyEquipmentMessage}>
+                                {isSaved ? '機材が登録されていません' : '機材Noを入力して機材を追加してください'}
+                              </div>
+                            ) : (
+                              (data.equipment || []).map((eq) => (
+                                <div key={eq.equipmentId} className={styles.equipmentCard}>
+                                  <div className={styles.equipmentCardHeader}>
+                                    <span className={styles.equipmentCardName}>
+                                      #{eq.equipmentId} {eq.name}
+                                    </span>
+                                    {!isSaved && (
+                                      <button 
+                                        className={styles.equipmentCardRemove}
+                                        onClick={() => removeEquipment(event.id, eq.equipmentId)}
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className={styles.equipmentCardBody}>
+                                    {isSaved ? (
+                                      <div className={styles.equipmentReadOnly}>
+                                        <span className={styles.quantityDisplay}>数量: {eq.quantity}台</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className={styles.quantityControl}>
+                                          <label className={styles.quantityLabel}>数量:</label>
+                                          <button
+                                            className={styles.quantityButton}
+                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity - 1)}
+                                            disabled={eq.quantity <= 1}
+                                          >
+                                            -
+                                          </button>
+                                          <input
+                                            type="number"
+                                            className={styles.quantityInput}
+                                            value={eq.quantity}
+                                            onChange={(e) => updateEquipmentQuantity(event.id, eq.equipmentId, parseInt(e.target.value) || 1)}
+                                            min="1"
+                                            max={eq.maxStock}
+                                          />
+                                          <button
+                                            className={styles.quantityButton}
+                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity + 1)}
+                                            disabled={eq.quantity >= eq.maxStock}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                        <div className={styles.stockInfo}>
+                                          <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
+                                            在庫: {eq.maxStock}台
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
                             )}
                           </div>
                         </div>
-                        <input 
-                          type="text" 
-                          placeholder="現場名を入力"
-                          className={styles.siteNameInput}
-                        />
+
+                        {/* 保存・削除ボタン */}
+                        <div className={styles.eventActions}>
+                          {!isSaved && (
+                            <button 
+                              className={styles.saveEventButton}
+                              onClick={() => handleSaveEvent(event.id)}
+                            >
+                              保存
+                            </button>
+                          )}
+                          <button 
+                            className={styles.deleteEventButton}
+                            onClick={() => handleDeleteEvent(event.id)}
+                          >
+                            削除
+                          </button>
+                        </div>
                       </div>
-                      
-                      <div className={styles.inputSection}>
-                        <h4>使用者、場所（Googleマップ紐付け）</h4>
-                        <input 
-                          type="text" 
-                          placeholder="使用者名を入力"
-                          className={styles.userInput}
-                          value={eventDetails[event.id]?.user || ''}
-                          onChange={(e) => setEventDetails(prev => ({
-                            ...prev,
-                            [event.id]: {
-                              ...prev[event.id],
-                              user: e.target.value
-                            }
-                          }))}
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="場所を入力（Googleマップ連携）"
-                          className={styles.locationInput}
-                          value={eventDetails[event.id]?.location || ''}
-                          onChange={(e) => setEventDetails(prev => ({
-                            ...prev,
-                            [event.id]: {
-                              ...prev[event.id],
-                              location: e.target.value
-                            }
-                          }))}
-                        />
-                      </div>
-                      
-                      <div className={styles.eventActions}>
-                        <button 
-                          className={styles.actionButton}
-                          onClick={() => handleSaveEvent(event.id)}
-                        >
-                          {calendarEventIds[event.id] ? '更新' : '保存'}
-                        </button>
-                        <button 
-                          className={styles.actionButton}
-                          onClick={() => handleDeleteEvent(event.id)}
-                        >
-                          削除
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
