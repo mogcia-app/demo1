@@ -39,9 +39,6 @@ export default function AdminPage() {
   const [editingAssignee, setEditingAssignee] = useState<any>(null)
   const [assigneeForm, setAssigneeForm] = useState({
     name: '',
-    email: '',
-    phone: '',
-    department: '',
     isActive: true
   })
 
@@ -228,9 +225,6 @@ export default function AdminPage() {
     setEditingAssignee(null)
     setAssigneeForm({
       name: '',
-      email: '',
-      phone: '',
-      department: '',
       isActive: true
     })
     setShowAssigneeModal(true)
@@ -240,9 +234,6 @@ export default function AdminPage() {
     setEditingAssignee(assignee)
     setAssigneeForm({
       name: assignee.name,
-      email: assignee.email || '',
-      phone: assignee.phone || '',
-      department: assignee.department || '',
       isActive: assignee.isActive
     })
     setShowAssigneeModal(true)
@@ -514,41 +505,35 @@ export default function AdminPage() {
             </div>
 
             <div className={styles.table}>
-              <div className={styles.tableHeader}>
-                <div className={styles.tableCell}>名前</div>
-                <div className={styles.tableCell}>メール</div>
-                <div className={styles.tableCell}>電話番号</div>
-                <div className={styles.tableCell}>部署</div>
-                <div className={styles.tableCell}>状態</div>
-                <div className={styles.tableCell}>操作</div>
-              </div>
-              {assignees.map((assignee) => (
-                <div key={assignee.id} className={styles.tableRow}>
-                  <div className={styles.tableCell}>{assignee.name}</div>
-                  <div className={styles.tableCell}>{assignee.email || '-'}</div>
-                  <div className={styles.tableCell}>{assignee.phone || '-'}</div>
-                  <div className={styles.tableCell}>{assignee.department || '-'}</div>
-                  <div className={styles.tableCell}>
-                    <span className={assignee.isActive ? styles.activeBadge : styles.inactiveBadge}>
-                      {assignee.isActive ? '有効' : '無効'}
-                    </span>
-                  </div>
-                  <div className={styles.tableCell}>
-                    <button 
-                      className={styles.editButton}
-                      onClick={() => handleEditAssignee(assignee)}
-                    >
-                      <Edit className={styles.smallIcon} />
-                    </button>
-                    <button 
-                      className={styles.deleteButton}
-                      onClick={() => handleDeleteAssignee(assignee.id)}
-                    >
-                      <Trash2 className={styles.smallIcon} />
-                    </button>
-                  </div>
+            <div className={styles.tableHeader} style={{gridTemplateColumns: '3fr 1fr 1fr'}}>
+              <div className={styles.tableCell}>名前</div>
+              <div className={styles.tableCell}>状態</div>
+              <div className={styles.tableCell}>操作</div>
+            </div>
+            {assignees.map((assignee) => (
+              <div key={assignee.id} className={styles.tableRow} style={{gridTemplateColumns: '3fr 1fr 1fr'}}>
+                <div className={styles.tableCell}>{assignee.name}</div>
+                <div className={styles.tableCell}>
+                  <span className={assignee.isActive ? styles.activeBadge : styles.inactiveBadge}>
+                    {assignee.isActive ? '有効' : '無効'}
+                  </span>
                 </div>
-              ))}
+                <div className={styles.tableCell}>
+                  <button 
+                    className={styles.editButton}
+                    onClick={() => handleEditAssignee(assignee)}
+                  >
+                    <Edit className={styles.smallIcon} />
+                  </button>
+                  <button 
+                    className={styles.deleteButton}
+                    onClick={() => handleDeleteAssignee(assignee.id)}
+                  >
+                    <Trash2 className={styles.smallIcon} />
+                  </button>
+                </div>
+              </div>
+            ))}
             </div>
           </div>
         )}
@@ -684,34 +669,8 @@ export default function AdminPage() {
                   type="text"
                   value={assigneeForm.name}
                   onChange={(e) => setAssigneeForm({...assigneeForm, name: e.target.value})}
-                  placeholder="名前を入力"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>メールアドレス</label>
-                <input 
-                  type="email"
-                  value={assigneeForm.email}
-                  onChange={(e) => setAssigneeForm({...assigneeForm, email: e.target.value})}
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>電話番号</label>
-                <input 
-                  type="tel"
-                  value={assigneeForm.phone}
-                  onChange={(e) => setAssigneeForm({...assigneeForm, phone: e.target.value})}
-                  placeholder="090-1234-5678"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>部署</label>
-                <input 
-                  type="text"
-                  value={assigneeForm.department}
-                  onChange={(e) => setAssigneeForm({...assigneeForm, department: e.target.value})}
-                  placeholder="部署名を入力"
+                  placeholder="担当者名を入力"
+                  required
                 />
               </div>
               <div className={styles.formGroup}>

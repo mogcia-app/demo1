@@ -1025,7 +1025,7 @@ export default function Home() {
                           <h4>担当者</h4>
                           {isSaved ? (
                             <div className={styles.readOnlyValue}>
-                              {assignee ? `${assignee.name}${assignee.department ? ` (${assignee.department})` : ''}` : '未設定'}
+                              {assignee ? assignee.name : '未設定'}
                             </div>
                           ) : (
                             <select 
@@ -1036,7 +1036,7 @@ export default function Home() {
                               <option value="">担当者を選択</option>
                               {assignees.filter(a => a.isActive).map((assignee) => (
                                 <option key={assignee.id} value={assignee.id}>
-                                  {assignee.name} {assignee.department ? `(${assignee.department})` : ''}
+                                  {assignee.name}
                                 </option>
                               ))}
                             </select>
