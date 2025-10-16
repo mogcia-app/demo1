@@ -191,6 +191,24 @@ export default function SchedulePage() {
     return targetDate > today
   }
 
+  // 日跨ぎイベントのgrid-columnを計算する関数
+  const getEventGridColumn = (event: EventSchedule, currentDate: Date): string => {
+    if (!event.isMultiDay) return ''
+    
+    const eventStartDate = new Date(event.startDate)
+    const eventEndDate = new Date(event.endDate)
+    const currentDateStr = currentDate.toISOString().split('T')[0]
+    
+    // イベントが開始日の場合
+    if (currentDateStr === event.startDate) {
+      const duration = event.duration
+      return `span ${duration}`
+    }
+    
+    // イベントが中間日または終了日の場合は非表示
+    return 'display: none'
+  }
+
   if (loading) {
     return (
       <div className={styles.main}>
@@ -311,34 +329,39 @@ export default function SchedulePage() {
                         const isEventEnd = dateStr === eventEndDate
                         const isEventMiddle = dateStr > eventStartDate && dateStr < eventEndDate
                         
-                        // 日跨ぎ現場は全ての日付に表示
+                        // 日跨ぎイベントの場合、開始日のみ表示（他の日は非表示）
+                        if (event.isMultiDay && !isEventStart) {
+                          return null
+                        }
                         
                         return (
                           <div 
                             key={event.eventId}
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
-                            } ${event.isMultiDay && isEventStart ? styles.eventStart : ''} ${
-                              event.isMultiDay && isEventEnd ? styles.eventEnd : ''
-                            } ${event.isMultiDay && isEventMiddle ? styles.eventMiddle : ''}`}
+                            }`}
+                            style={event.isMultiDay ? {
+                              gridColumn: getEventGridColumn(event, day)
+                            } : {}}
                           >
-                            <div className={`${styles.eventNameRow} ${
-                              event.isMultiDay && isEventMiddle ? styles.eventMiddle : ''
-                            } ${event.isMultiDay && isEventEnd ? styles.eventEnd : ''}`}>
-                              {(isEventStart || !event.isMultiDay) && (
+                            {/* 日跨ぎイベントの連続バー */}
+                            {event.isMultiDay && (
+                              <div className={`${styles.eventMultiDayBar} ${styles.eventStart}`}></div>
+                            )}
+                            
+                            <div className={event.isMultiDay ? styles.eventMultiDayContent : ''}>
+                              <div className={styles.eventNameRow}>
                                 <span className={styles.eventName}>{event.eventName}</span>
-                              )}
-                              {event.isMultiDay && (
-                                <span className={styles.eventDuration}>
-                                  {isEventStart && `> ${event.duration}日間`}
-                                  {isEventEnd && `< 終了`}
-                                  {isEventMiddle && `- 継続中`}
-                                </span>
+                                {event.isMultiDay && (
+                                  <span className={styles.eventDuration}>
+                                    &gt; {event.duration}日間
+                                  </span>
+                                )}
+                              </div>
+                              {event.location && (
+                                <span className={styles.eventLocation}>📍 {event.location}</span>
                               )}
                             </div>
-                            {event.location && (
-                              <span className={styles.eventLocation}>📍 {event.location}</span>
-                            )}
                           </div>
                         )
                       })}
