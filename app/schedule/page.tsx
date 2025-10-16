@@ -97,7 +97,7 @@ export default function SchedulePage() {
           
           schedules[scheduleIndex].usage[dateStr].push({
             eventId: event.id,
-            eventName: event.title,
+            eventName: event.siteName,
             quantity: eventEq.quantity,
             isConflict
           })
