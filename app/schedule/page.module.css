@@ -165,16 +165,210 @@
   color: #f44336;
 }
 
-/* スケジュールテーブル */
-.scheduleTable {
-  overflow-x: auto;
-}
-
-.tableHeader {
-  display: grid;
-  grid-template-columns: 200px 1fr;
+/* サマリー */
+.summary {
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
   background: #fafafa;
   border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summaryLabel {
+  font-size: 0.875rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* タイムライン */
+.timelineContainer {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.timelineHeader {
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1rem;
+}
+
+.timelineTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.timelineDates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.timelineDate {
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.timelineDate.today {
+  background: #fff3e0;
+  border: 2px solid #1a1a1a;
+}
+
+.dayName {
+  font-size: 0.75rem;
+  color: #666666;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.dayNumber {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.timelineDate.today .dayNumber {
+  background: #1a1a1a;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* タイムラインボディ */
+.timelineBody {
+  padding: 1rem;
+}
+
+.eventCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+.eventCard:hover {
+  background: #fafafa;
+}
+
+.eventCard:last-child {
+  border-bottom: none;
+}
+
+.eventInfo {
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.eventName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.eventDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.eventLocation,
+.eventDuration,
+.eventEquipment {
+  font-size: 0.875rem;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.eventTimeline {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.timelineCell {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.timelineCell.today {
+  background: #fff3e0;
+  border: 1px solid #1a1a1a;
+}
+
+.timelineCell.pastDate {
+  background: #f9f9f9;
+}
+
+.timelineCell.futureDate {
+  background: #f0f8ff;
+}
+
+.timelineCell.otherMonth {
+  background: #f9f9f9;
+  opacity: 0.5;
+}
+
+.eventBar {
+  width: 100%;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.eventBar.singleDay {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.eventBar.multiDay {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.eventStart,
+.eventEnd,
+.eventMiddle {
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .equipmentHeader {
@@ -448,20 +642,21 @@
     padding: 1rem;
   }
   
-  .tableHeader {
-    grid-template-columns: 150px 1fr;
+  .summary {
+    gap: 1rem;
+    padding: 1rem;
   }
   
-  .equipmentCell {
-    padding: 0.75rem;
+  .eventInfo {
+    min-width: 150px;
   }
   
-  .equipmentName {
+  .eventName {
+    font-size: 0.9rem;
+  }
+  
+  .eventDetails {
     font-size: 0.8rem;
-  }
-  
-  .stockInfo {
-    font-size: 0.7rem;
   }
 }
 

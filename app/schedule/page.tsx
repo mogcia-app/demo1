@@ -249,6 +249,27 @@ export default function SchedulePage() {
 
       <div className={styles.content}>
         <div className={styles.scheduleContainer}>
+          <div className={styles.summary}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>総現場数</span>
+              <span className={styles.summaryValue}>{eventSchedules.length}件</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>日跨ぎ現場</span>
+              <span className={styles.summaryValue}>{eventSchedules.filter(e => e.isMultiDay).length}件</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>今月の現場</span>
+              <span className={styles.summaryValue}>
+                {eventSchedules.filter(e => {
+                  const eventDate = new Date(e.startDate)
+                  return eventDate.getMonth() === currentMonth.getMonth() && 
+                         eventDate.getFullYear() === currentMonth.getFullYear()
+                }).length}件
+              </span>
+            </div>
+          </div>
+
           <div className={styles.legend}>
             <div className={styles.legendItem}>
               <div className={`${styles.legendColor} ${styles.singleDay}`}></div>
