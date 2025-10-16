@@ -366,6 +366,11 @@
   opacity: 0.9;
 }
 
+.eventNameRow.eventMiddle,
+.eventNameRow.eventEnd {
+  justify-content: flex-end;
+}
+
 .eventName {
   display: block;
   font-weight: 600;

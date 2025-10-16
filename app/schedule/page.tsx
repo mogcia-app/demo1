@@ -322,8 +322,12 @@ export default function SchedulePage() {
                               isEventEnd ? styles.eventEnd : ''
                             } ${isEventMiddle ? styles.eventMiddle : ''}`}
                           >
-                            <div className={styles.eventNameRow}>
-                              <span className={styles.eventName}>{event.eventName}</span>
+                            <div className={`${styles.eventNameRow} ${
+                              isEventMiddle ? styles.eventMiddle : ''
+                            } ${isEventEnd ? styles.eventEnd : ''}`}>
+                              {(isEventStart || !event.isMultiDay) && (
+                                <span className={styles.eventName}>{event.eventName}</span>
+                              )}
                               {event.isMultiDay && (
                                 <span className={styles.eventDuration}>
                                   {isEventStart && `▶ ${event.duration}日間`}
