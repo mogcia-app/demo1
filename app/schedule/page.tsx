@@ -318,21 +318,21 @@ export default function SchedulePage() {
                             key={event.eventId}
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
-                            } ${isEventStart ? styles.eventStart : ''} ${
-                              isEventEnd ? styles.eventEnd : ''
-                            } ${isEventMiddle ? styles.eventMiddle : ''}`}
+                            } ${event.isMultiDay && isEventStart ? styles.eventStart : ''} ${
+                              event.isMultiDay && isEventEnd ? styles.eventEnd : ''
+                            } ${event.isMultiDay && isEventMiddle ? styles.eventMiddle : ''}`}
                           >
                             <div className={`${styles.eventNameRow} ${
-                              isEventMiddle ? styles.eventMiddle : ''
-                            } ${isEventEnd ? styles.eventEnd : ''}`}>
+                              event.isMultiDay && isEventMiddle ? styles.eventMiddle : ''
+                            } ${event.isMultiDay && isEventEnd ? styles.eventEnd : ''}`}>
                               {(isEventStart || !event.isMultiDay) && (
                                 <span className={styles.eventName}>{event.eventName}</span>
                               )}
                               {event.isMultiDay && (
                                 <span className={styles.eventDuration}>
-                                  {isEventStart && `▶ ${event.duration}日間`}
-                                  {isEventEnd && `◀ 終了`}
-                                  {isEventMiddle && `━ 継続中`}
+                                  {isEventStart && `> ${event.duration}日間`}
+                                  {isEventEnd && `< 終了`}
+                                  {isEventMiddle && `- 継続中`}
                                 </span>
                               )}
                             </div>
