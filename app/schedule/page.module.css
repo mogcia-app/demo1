@@ -348,6 +348,24 @@
   border-right: 3px solid #666666;
 }
 
+.eventNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.125rem;
+}
+
+.eventNameRow .eventName {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.eventNameRow .eventDuration {
+  font-size: 0.625rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
 .eventName {
   display: block;
   font-weight: 600;

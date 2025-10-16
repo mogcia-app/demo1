@@ -322,16 +322,18 @@ export default function SchedulePage() {
                               isEventEnd ? styles.eventEnd : ''
                             } ${isEventMiddle ? styles.eventMiddle : ''}`}
                           >
-                            <span className={styles.eventName}>{event.eventName}</span>
+                            <div className={styles.eventNameRow}>
+                              <span className={styles.eventName}>{event.eventName}</span>
+                              {event.isMultiDay && (
+                                <span className={styles.eventDuration}>
+                                  {isEventStart && `▶ ${event.duration}日間`}
+                                  {isEventEnd && `◀ 終了`}
+                                  {isEventMiddle && `━ 継続中`}
+                                </span>
+                              )}
+                            </div>
                             {event.location && (
                               <span className={styles.eventLocation}>📍 {event.location}</span>
-                            )}
-                            {event.isMultiDay && (
-                              <span className={styles.eventDuration}>
-                                {isEventStart && `▶ ${event.duration}日間`}
-                                {isEventEnd && `◀ 終了`}
-                                {isEventMiddle && `━ 継続中`}
-                              </span>
                             )}
                           </div>
                         )
