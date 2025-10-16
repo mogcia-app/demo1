@@ -392,7 +392,19 @@
 .eventMultiDayBar.eventStart {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
-  border-right: 2px solid #666666;
+  border-right: 1px solid #666666;
+}
+
+.eventMultiDayBar.eventMiddle {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+.eventMultiDayBar.eventEnd {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-left: 1px solid #666666;
 }
 
 /* 日跨ぎイベントのコンテンツ */
