@@ -84,8 +84,14 @@ export default function SchedulePage() {
     const schedules: EventSchedule[] = events.map(event => {
       const startDate = new Date(event.startDate)
       const endDate = event.endDate ? new Date(event.endDate) : startDate
-      const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
-      const isMultiDay = duration > 1
+      
+      // 日跨ぎ判定：開始日と終了日が異なる場合
+      const isMultiDay = event.startDate !== (event.endDate || event.startDate)
+      
+      // 日数計算：日跨ぎの場合は実際の日数、単日の場合は1
+      const duration = isMultiDay 
+        ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        : 1
 
       return {
         eventId: event.id,
@@ -105,6 +111,18 @@ export default function SchedulePage() {
     })
 
     console.log('現場スケジュールデータ完成:', schedules)
+    console.log('日跨ぎイベント:', schedules.filter(s => s.isMultiDay))
+    console.log('単日イベント:', schedules.filter(s => !s.isMultiDay))
+    
+    // デバッグ：各イベントの詳細
+    schedules.forEach(s => {
+      console.log(`イベント: ${s.eventName}`, {
+        startDate: s.startDate,
+        endDate: s.endDate,
+        isMultiDay: s.isMultiDay,
+        duration: s.duration
+      })
+    })
     setEventSchedules(schedules)
     setLoading(false)
   }, [events])
@@ -195,18 +213,16 @@ export default function SchedulePage() {
   const getEventGridColumn = (event: EventSchedule, currentDate: Date): string => {
     if (!event.isMultiDay) return ''
     
-    const eventStartDate = new Date(event.startDate)
-    const eventEndDate = new Date(event.endDate)
     const currentDateStr = currentDate.toISOString().split('T')[0]
     
-    // イベントが開始日の場合
+    // イベントが開始日の場合のみ表示
     if (currentDateStr === event.startDate) {
       const duration = event.duration
       return `span ${duration}`
     }
     
     // イベントが中間日または終了日の場合は非表示
-    return 'display: none'
+    return ''
   }
 
   if (loading) {
@@ -340,28 +356,18 @@ export default function SchedulePage() {
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
                             }`}
-                            style={event.isMultiDay ? {
-                              gridColumn: getEventGridColumn(event, day)
-                            } : {}}
                           >
-                            {/* 日跨ぎイベントの連続バー */}
-                            {event.isMultiDay && (
-                              <div className={`${styles.eventMultiDayBar} ${styles.eventStart}`}></div>
-                            )}
-                            
-                            <div className={event.isMultiDay ? styles.eventMultiDayContent : ''}>
-                              <div className={styles.eventNameRow}>
-                                <span className={styles.eventName}>{event.eventName}</span>
-                                {event.isMultiDay && (
-                                  <span className={styles.eventDuration}>
-                                    &gt; {event.duration}日間
-                                  </span>
-                                )}
-                              </div>
-                              {event.location && (
-                                <span className={styles.eventLocation}>📍 {event.location}</span>
+                            <div className={styles.eventNameRow}>
+                              <span className={styles.eventName}>{event.eventName}</span>
+                              {event.isMultiDay && (
+                                <span className={styles.eventDuration}>
+                                  &gt; {event.duration}日間
+                                </span>
                               )}
                             </div>
+                            {event.location && (
+                              <span className={styles.eventLocation}>📍 {event.location}</span>
+                            )}
                           </div>
                         )
                       })}
