@@ -235,13 +235,37 @@
 }
 
 .calendarGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #e0e0e0;
+}
+
+.calendarWeek {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background: #e0e0e0;
   position: relative;
+  min-height: 120px;
 }
 
+.dayCell {
+  background: #ffffff;
+  min-height: 120px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.emptyDay {
+  background: #ffffff;
+  min-height: 120px;
+}
+
+/* 後方互換性のため残す */
 .calendarCell {
   background: #ffffff;
   min-height: 120px;
@@ -253,8 +277,18 @@
   overflow: visible;
 }
 
+.dayCell:hover {
+  background: #fafafa;
+}
+
 .calendarCell:hover {
   background: #fafafa;
+}
+
+.dayCell.today {
+  background: #ffffff;
+  border: 2px solid #1a1a1a;
+  color: #1a1a1a;
 }
 
 .calendarCell.today {
@@ -288,6 +322,36 @@
 }
 
 .calendarCell.otherMonth {
+  background: #ffffff;
+  color: #cccccc;
+}
+
+/* 新しいクラス名のスタイル */
+.dayCell.today .dateNumber {
+  background: #1a1a1a;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dayCell.pastDate {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+.dayCell.futureDate {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+.dayCell.otherMonth {
   background: #ffffff;
   color: #cccccc;
 }
