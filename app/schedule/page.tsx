@@ -304,19 +304,36 @@ export default function SchedulePage() {
                       {formatDate(day)}
                     </div>
                     <div className={styles.eventsList}>
-                      {dayEvents.map(event => (
-                        <div 
-                          key={event.eventId}
-                          className={`${styles.eventItem} ${
-                            event.isMultiDay ? styles.multiDay : styles.singleDay
-                          }`}
-                        >
-                          <span className={styles.eventName}>{event.eventName}</span>
-                          {event.location && (
-                            <span className={styles.eventLocation}>📍 {event.location}</span>
-                          )}
-                        </div>
-                      ))}
+                      {dayEvents.map(event => {
+                        const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
+                        const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                        const isEventStart = dateStr === eventStartDate
+                        const isEventEnd = dateStr === eventEndDate
+                        const isEventMiddle = dateStr > eventStartDate && dateStr < eventEndDate
+                        
+                        return (
+                          <div 
+                            key={event.eventId}
+                            className={`${styles.eventItem} ${
+                              event.isMultiDay ? styles.multiDay : styles.singleDay
+                            } ${isEventStart ? styles.eventStart : ''} ${
+                              isEventEnd ? styles.eventEnd : ''
+                            } ${isEventMiddle ? styles.eventMiddle : ''}`}
+                          >
+                            <span className={styles.eventName}>{event.eventName}</span>
+                            {event.location && (
+                              <span className={styles.eventLocation}>📍 {event.location}</span>
+                            )}
+                            {event.isMultiDay && (
+                              <span className={styles.eventDuration}>
+                                {isEventStart && `▶ ${event.duration}日間`}
+                                {isEventEnd && `◀ 終了`}
+                                {isEventMiddle && `━ 継続中`}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )
