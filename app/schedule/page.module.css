@@ -255,7 +255,7 @@
 }
 
 .calendarCell.today {
-  background: #f0f8ff;
+  background: #f8f9fa;
   border: 2px solid #1a1a1a;
   color: #1a1a1a;
 }
