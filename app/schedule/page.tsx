@@ -135,7 +135,10 @@ export default function SchedulePage() {
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
     const startDate = new Date(firstDay)
-    startDate.setDate(startDate.getDate() - firstDay.getDay()) // 月曜日開始
+    // 月曜日開始に調整（日曜日=0なので、月曜日=1になるように調整）
+    const dayOfWeek = firstDay.getDay() // 0=日曜, 1=月曜, ..., 6=土曜
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // 月曜日開始
+    startDate.setDate(startDate.getDate() - daysToSubtract)
     
     const days = []
     for (let i = 0; i < 42; i++) { // 6週間分
@@ -308,7 +311,7 @@ export default function SchedulePage() {
             <div className={styles.calendarHeader}>
               <div className={styles.calendarTitle}>現場スケジュール</div>
               <div className={styles.calendarDays}>
-                {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
+                {['月', '火', '水', '木', '金', '土', '日'].map((day, index) => (
                   <div key={index} className={styles.dayHeader}>
                     {day}
                   </div>
@@ -321,15 +324,15 @@ export default function SchedulePage() {
                 const weekStart = weekIndex * 7
                 const weekDays = days.slice(weekStart, weekStart + 7)
                 
-                // この週のイベントを取得
+                // この週のイベントを取得（週をまたぐイベントも含む）
                 const weekEvents = eventSchedules.filter(event => {
-                  const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
-                  const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                  const eventStartDate = new Date(event.startDate)
+                  const eventEndDate = new Date(event.endDate)
+                  const startOfWeek = weekDays[0]
+                  const endOfWeek = weekDays[6]
                   
-                  return weekDays.some(day => {
-                    const dayStr = day.toISOString().split('T')[0]
-                    return dayStr >= eventStartDate && dayStr <= eventEndDate
-                  })
+                  // イベントがこの週と重なる場合（週の前後にまたがっても含む）
+                  return eventEndDate >= startOfWeek && eventStartDate <= endOfWeek
                 })
 
                 return (
@@ -358,9 +361,9 @@ export default function SchedulePage() {
                     })}
                     
                     {/* 日跨ぎイベント */}
-                    {weekEvents.map(event => {
-                      const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
-                      const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                    {weekEvents.map((event, eventIndex) => {
+                      const eventStartDate = new Date(event.startDate)
+                      const eventEndDate = new Date(event.endDate)
                       
                       // この週での開始位置と終了位置を計算
                       let startIndex = -1
@@ -368,7 +371,10 @@ export default function SchedulePage() {
                       
                       weekDays.forEach((day, index) => {
                         const dayStr = day.toISOString().split('T')[0]
-                        if (dayStr >= eventStartDate && dayStr <= eventEndDate) {
+                        const eventStartStr = eventStartDate.toISOString().split('T')[0]
+                        const eventEndStr = eventEndDate.toISOString().split('T')[0]
+                        
+                        if (dayStr >= eventStartStr && dayStr <= eventEndStr) {
                           if (startIndex === -1) startIndex = index
                           endIndex = index
                         }
@@ -376,29 +382,86 @@ export default function SchedulePage() {
                       
                       if (startIndex === -1) return null
                       
-                      const span = endIndex - startIndex + 1
-                      const gridColumn = event.isMultiDay 
-                        ? `${startIndex + 1} / span ${span}`
-                        : `${startIndex + 1}`
+                      // 週をまたぐイベントの処理
+                      const weekStartDate = weekDays[0]
+                      const weekEndDate = weekDays[6]
+                      
+                      // イベントが週の境界をまたぐかチェック
+                      const spansMultipleWeeks = eventStartDate < weekStartDate || eventEndDate > weekEndDate
+                      
+                      // この週でイベントが開始するかチェック（新しい週での現場名表示用）
+                      const startsInThisWeek = eventStartDate >= weekStartDate && eventStartDate <= weekEndDate
+                      
+                      // 調整された期間を事前に計算
+                      const adjustedStartDate = eventStartDate < weekStartDate ? weekStartDate : eventStartDate
+                      const adjustedEndDate = eventEndDate > weekEndDate ? weekEndDate : eventEndDate
+                      
+                      let leftPercent, widthPercent
+                      
+                      if (spansMultipleWeeks) {
+                        // 週をまたぐ場合：この週での実際の開始・終了位置を計算
+                        
+                        // 調整された期間でのインデックスを再計算
+                        let adjustedStartIndex = -1
+                        let adjustedEndIndex = -1
+                        
+                        weekDays.forEach((day, index) => {
+                          const dayStr = day.toISOString().split('T')[0]
+                          const adjustedStartStr = adjustedStartDate.toISOString().split('T')[0]
+                          const adjustedEndStr = adjustedEndDate.toISOString().split('T')[0]
+                          
+                          if (dayStr >= adjustedStartStr && dayStr <= adjustedEndStr) {
+                            if (adjustedStartIndex === -1) adjustedStartIndex = index
+                            adjustedEndIndex = index
+                          }
+                        })
+                        
+                        // 調整された期間で表示
+                        leftPercent = (adjustedStartIndex / 7) * 100
+                        widthPercent = ((adjustedEndIndex - adjustedStartIndex + 1) / 7) * 100
+                      } else {
+                        // 週内のみの場合：通常の計算
+                        leftPercent = (startIndex / 7) * 100
+                        widthPercent = ((endIndex - startIndex + 1) / 7) * 100
+                      }
+                      
+                      // デバッグ情報（開発時のみ）
+                      if (event.isMultiDay) {
+                        console.log(`日跨ぎイベント: ${event.eventName}`, {
+                          duration: event.duration,
+                          spansMultipleWeeks,
+                          startsInThisWeek,
+                          showEventName: startsInThisWeek || !spansMultipleWeeks,
+                          leftPercent: leftPercent.toFixed(1) + '%',
+                          widthPercent: widthPercent.toFixed(1) + '%',
+                          weekRange: `${weekStartDate.toISOString().split('T')[0]} ~ ${weekEndDate.toISOString().split('T')[0]}`,
+                          eventRange: `${event.startDate} ~ ${event.endDate}`,
+                          adjustedRange: spansMultipleWeeks ? 
+                            `${adjustedStartDate.toISOString().split('T')[0]} ~ ${adjustedEndDate.toISOString().split('T')[0]}` : 
+                            '週内のみ'
+                        })
+                      }
                       
                       return (
                         <div
-                          key={event.eventId}
+                          key={`${event.eventId}-${weekIndex}`}
                           className={`${styles.eventItem} ${
                             event.isMultiDay ? styles.multiDay : styles.singleDay
-                          }`}
-                          style={{ gridColumn }}
+                          } ${spansMultipleWeeks ? styles.spanningWeek : ''}`}
+                          style={{
+                            left: `${leftPercent}%`,
+                            width: `${widthPercent}%`,
+                            top: `${32 + eventIndex * 22}px`,
+                          }}
                         >
-                          <div className={styles.eventNameRow}>
+                          {/* この週で開始する場合、または単日イベントの場合は現場名を表示 */}
+                          {(startsInThisWeek || !spansMultipleWeeks) && (
                             <span className={styles.eventName}>{event.eventName}</span>
-                            {event.isMultiDay && (
-                              <span className={styles.eventDuration}>
-                                ({event.duration}日間)
-                              </span>
-                            )}
-                          </div>
-                          {event.location && (
-                            <span className={styles.eventLocation}>📍 {event.location}</span>
+                          )}
+                          {event.isMultiDay && (
+                            <span className={styles.eventDuration}>
+                              ({event.duration}日間)
+                            </span>
                           )}
                         </div>
                       )
