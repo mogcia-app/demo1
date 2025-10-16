@@ -283,48 +283,12 @@ export default function SchedulePage() {
             </div>
 
             <div className={styles.calendarGrid}>
-              {/* 日跨ぎ現場の連続バーを先に描画 */}
-              {eventSchedules.filter(event => event.isMultiDay).map(event => {
-                const eventStartDate = new Date(event.startDate)
-                const eventEndDate = new Date(event.endDate)
-                const startDayIndex = days.findIndex(day => 
-                  day.toISOString().split('T')[0] === eventStartDate.toISOString().split('T')[0]
-                )
-                const endDayIndex = days.findIndex(day => 
-                  day.toISOString().split('T')[0] === eventEndDate.toISOString().split('T')[0]
-                )
-                
-                if (startDayIndex === -1 || endDayIndex === -1) return null
-                
-                const spanDays = endDayIndex - startDayIndex + 1
-                
-                return (
-                  <div 
-                    key={`bar-${event.eventId}`}
-                    className={styles.eventBar}
-                    style={{
-                      gridColumn: `${startDayIndex + 1} / span ${spanDays}`,
-                      gridRow: '1'
-                    }}
-                  >
-                    <div className={styles.eventBarContent}>
-                      <span className={styles.eventName}>{event.eventName}</span>
-                      {event.location && (
-                        <span className={styles.eventLocation}>📍 {event.location}</span>
-                      )}
-                      <span className={styles.eventDuration}>{event.duration}日間</span>
-                    </div>
-                  </div>
-                )
-              })}
-              
-              {/* カレンダーセル */}
               {days.map((day, dayIndex) => {
                 const dateStr = day.toISOString().split('T')[0]
                 const dayEvents = eventSchedules.filter(event => {
                   const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
                   const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
-                  return dateStr >= eventStartDate && dateStr <= eventEndDate && !event.isMultiDay
+                  return dateStr >= eventStartDate && dateStr <= eventEndDate
                 })
 
                 return (
@@ -340,17 +304,40 @@ export default function SchedulePage() {
                       {formatDate(day)}
                     </div>
                     <div className={styles.eventsList}>
-                      {dayEvents.map(event => (
-                        <div 
-                          key={event.eventId}
-                          className={`${styles.eventItem} ${styles.singleDay}`}
-                        >
-                          <span className={styles.eventName}>{event.eventName}</span>
-                          {event.location && (
-                            <span className={styles.eventLocation}>📍 {event.location}</span>
-                          )}
-                        </div>
-                      ))}
+                      {dayEvents.map(event => {
+                        const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
+                        const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                        const isEventStart = dateStr === eventStartDate
+                        const isEventEnd = dateStr === eventEndDate
+                        const isEventMiddle = dateStr > eventStartDate && dateStr < eventEndDate
+                        
+                        // 日跨ぎ現場は全ての日付に表示
+                        
+                        return (
+                          <div 
+                            key={event.eventId}
+                            className={`${styles.eventItem} ${
+                              event.isMultiDay ? styles.multiDay : styles.singleDay
+                            }`}
+                          >
+                            {(isEventStart || !event.isMultiDay) && (
+                              <>
+                                <span className={styles.eventName}>{event.eventName}</span>
+                                {event.location && (
+                                  <span className={styles.eventLocation}>📍 {event.location}</span>
+                                )}
+                              </>
+                            )}
+                            {event.isMultiDay && (
+                              <span className={styles.eventDuration}>
+                                {isEventStart && `▶ ${event.duration}日間`}
+                                {isEventEnd && `◀ 終了`}
+                                {isEventMiddle && `━ 継続中`}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )

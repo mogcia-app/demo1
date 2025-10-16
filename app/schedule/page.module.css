@@ -239,7 +239,6 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: #e0e0e0;
-  position: relative;
 }
 
 .calendarCell {
@@ -347,39 +346,6 @@
   opacity: 0.9;
 }
 
-/* 連続バー */
-.eventBar {
-  background: #e8e8e8;
-  border: 1px solid #666666;
-  border-radius: 4px;
-  padding: 0.5rem;
-  margin: 0.25rem 0;
-  z-index: 2;
-  position: relative;
-}
-
-.eventBarContent {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.eventBarContent .eventName {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #333333;
-}
-
-.eventBarContent .eventLocation {
-  font-size: 0.625rem;
-  color: #666666;
-}
-
-.eventBarContent .eventDuration {
-  font-size: 0.625rem;
-  font-weight: 500;
-  color: #666666;
-}
 
 .eventStart {
   border-left: 3px solid #1a1a1a;
