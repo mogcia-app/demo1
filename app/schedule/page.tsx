@@ -320,9 +320,13 @@ export default function SchedulePage() {
                               event.isMultiDay ? styles.multiDay : styles.singleDay
                             }`}
                           >
-                            <span className={styles.eventName}>{event.eventName}</span>
-                            {event.location && (
-                              <span className={styles.eventLocation}>📍 {event.location}</span>
+                            {(isEventStart || !event.isMultiDay) && (
+                              <>
+                                <span className={styles.eventName}>{event.eventName}</span>
+                                {event.location && (
+                                  <span className={styles.eventLocation}>📍 {event.location}</span>
+                                )}
+                              </>
                             )}
                             {event.isMultiDay && (
                               <span className={styles.eventDuration}>
