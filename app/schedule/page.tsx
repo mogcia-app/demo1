@@ -54,46 +54,6 @@ export default function SchedulePage() {
     return unsubscribe
   }, [])
 
-  // 認証チェック
-  if (authChecking) {
-    return (
-      <div className={styles.main}>
-        <div className={styles.loading}>
-          <p className={styles.subtitle}>認証確認中...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className={styles.main}>
-        <div className={styles.error}>
-          <p className={styles.subtitle}>ログインが必要です</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 月の日付配列を生成
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startDate = new Date(firstDay)
-    startDate.setDate(startDate.getDate() - firstDay.getDay()) // 月曜日開始
-    
-    const days = []
-    for (let i = 0; i < 42; i++) { // 6週間分
-      const day = new Date(startDate)
-      day.setDate(startDate.getDate() + i)
-      days.push(day)
-    }
-    return days
-  }
-
   // スケジュールデータを処理
   useEffect(() => {
     if (!events || !equipment || equipmentLoading) return
@@ -150,6 +110,46 @@ export default function SchedulePage() {
     setEquipmentSchedules(schedules)
     setLoading(false)
   }, [events, equipment, equipmentLoading])
+
+  // 月の日付配列を生成
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startDate = new Date(firstDay)
+    startDate.setDate(startDate.getDate() - firstDay.getDay()) // 月曜日開始
+    
+    const days = []
+    for (let i = 0; i < 42; i++) { // 6週間分
+      const day = new Date(startDate)
+      day.setDate(startDate.getDate() + i)
+      days.push(day)
+    }
+    return days
+  }
+
+  // 認証チェック
+  if (authChecking) {
+    return (
+      <div className={styles.main}>
+        <div className={styles.loading}>
+          <p className={styles.subtitle}>認証確認中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className={styles.main}>
+        <div className={styles.error}>
+          <p className={styles.subtitle}>ログインが必要です</p>
+        </div>
+      </div>
+    )
+  }
 
   const days = getDaysInMonth(currentMonth)
   const monthNames = [
