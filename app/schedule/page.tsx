@@ -270,90 +270,57 @@ export default function SchedulePage() {
             </div>
           </div>
 
-          <div className={styles.legend}>
-            <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.singleDay}`}></div>
-              <span>単日現場</span>
-            </div>
-            <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.multiDay}`}></div>
-              <span>日跨ぎ現場</span>
-            </div>
-            <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.today}`}></div>
-              <span>今日</span>
-            </div>
-          </div>
-
-          <div className={styles.scheduleTable}>
-            <div className={styles.tableHeader}>
-              <div className={styles.eventHeader}>現場名</div>
-              <div className={styles.datesHeader}>
-                {days.slice(0, 7).map((day, index) => (
+          <div className={styles.calendarContainer}>
+            <div className={styles.calendarHeader}>
+              <div className={styles.calendarTitle}>現場スケジュール</div>
+              <div className={styles.calendarDays}>
+                {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
                   <div key={index} className={styles.dayHeader}>
-                    {['日', '月', '火', '水', '木', '金', '土'][index]}
+                    {day}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={styles.tableBody}>
-              {eventSchedules.map(event => (
-                <div key={event.eventId} className={styles.scheduleRow}>
-                  <div className={styles.eventCell}>
-                    <div className={styles.eventName}>
-                      {event.eventName}
+            <div className={styles.calendarGrid}>
+              {days.map((day, dayIndex) => {
+                const dateStr = day.toISOString().split('T')[0]
+                const dayEvents = eventSchedules.filter(event => {
+                  const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
+                  const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                  return dateStr >= eventStartDate && dateStr <= eventEndDate
+                })
+
+                return (
+                  <div 
+                    key={dayIndex}
+                    className={`${styles.calendarCell} ${
+                      !isCurrentMonth(day) ? styles.otherMonth : ''
+                    } ${isToday(day) ? styles.today : ''} ${
+                      isPastDate(day) ? styles.pastDate : ''
+                    } ${isFutureDate(day) ? styles.futureDate : ''}`}
+                  >
+                    <div className={styles.dateNumber}>
+                      {formatDate(day)}
                     </div>
-                    <div className={styles.eventInfo}>
-                      {event.location && <span>📍 {event.location}</span>}
-                      {event.isMultiDay && <span>📅 {event.duration}日間</span>}
-                      {event.equipment.length > 0 && <span>🔧 {event.equipment.length}種類</span>}
-                    </div>
-                  </div>
-                  <div className={styles.datesCell}>
-                    {days.map((day, dayIndex) => {
-                      const dateStr = day.toISOString().split('T')[0]
-                      const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
-                      const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
-                      const isEventDay = dateStr >= eventStartDate && dateStr <= eventEndDate
-                      const isEventStart = dateStr === eventStartDate
-                      const isEventEnd = dateStr === eventEndDate
-                      
-                      return (
+                    <div className={styles.eventsList}>
+                      {dayEvents.map(event => (
                         <div 
-                          key={dayIndex}
-                          className={`${styles.dateCell} ${
-                            !isCurrentMonth(day) ? styles.otherMonth : ''
-                          } ${isToday(day) ? styles.today : ''} ${
-                            isPastDate(day) ? styles.pastDate : ''
-                          } ${isFutureDate(day) ? styles.futureDate : ''}`}
+                          key={event.eventId}
+                          className={`${styles.eventItem} ${
+                            event.isMultiDay ? styles.multiDay : styles.singleDay
+                          }`}
                         >
-                          <div className={styles.dateNumber}>
-                            {formatDate(day)}
-                          </div>
-                          {isEventDay && (
-                            <div className={`${styles.eventContainer} ${
-                              event.isMultiDay ? styles.multiDay : styles.singleDay
-                            }`}>
-                              <div className={styles.eventBar}>
-                                {isEventStart && (
-                                  <span className={styles.eventStart}>▶</span>
-                                )}
-                                {isEventEnd && (
-                                  <span className={styles.eventEnd}>◀</span>
-                                )}
-                                {!isEventStart && !isEventEnd && event.isMultiDay && (
-                                  <span className={styles.eventMiddle}>━</span>
-                                )}
-                              </div>
-                            </div>
+                          <span className={styles.eventName}>{event.eventName}</span>
+                          {event.location && (
+                            <span className={styles.eventLocation}>📍 {event.location}</span>
                           )}
                         </div>
-                      )
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

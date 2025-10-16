@@ -152,11 +152,15 @@
 }
 
 .singleDay {
-  background: #e3f2fd;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  color: #495057;
 }
 
 .multiDay {
-  background: #e8f5e8;
+  background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
+  border: 1px solid #dadce0;
+  color: #3c4043;
 }
 
 .warningIcon {
@@ -194,181 +198,144 @@
   color: #1a1a1a;
 }
 
-/* タイムライン */
-.timelineContainer {
+/* カレンダー */
+.calendarContainer {
   background: #ffffff;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
   overflow: hidden;
 }
 
-.timelineHeader {
+.calendarHeader {
   background: #fafafa;
   border-bottom: 1px solid #e0e0e0;
   padding: 1rem;
 }
 
-.timelineTitle {
+.calendarTitle {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 1rem;
 }
 
-.timelineDates {
+.calendarDays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5rem;
 }
 
-.timelineDate {
+.dayHeader {
   text-align: center;
   padding: 0.5rem;
+  font-weight: 600;
+  color: #666666;
+  background: #f5f5f5;
   border-radius: 4px;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #e0e0e0;
+}
+
+.calendarCell {
+  background: #ffffff;
+  min-height: 120px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
   transition: all 0.2s ease;
 }
 
-.timelineDate.today {
-  background: #fff3e0;
-  border: 2px solid #1a1a1a;
+.calendarCell:hover {
+  background: #fafafa;
 }
 
-.dayName {
-  font-size: 0.75rem;
-  color: #666666;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.dayNumber {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.timelineDate.today .dayNumber {
-  background: #1a1a1a;
+.calendarCell.today {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   color: #ffffff;
+}
+
+.calendarCell.today .dateNumber {
+  background: #ffffff;
+  color: #1a1a1a;
   border-radius: 50%;
   width: 1.5rem;
   height: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
+  font-weight: 700;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* タイムラインボディ */
-.timelineBody {
-  padding: 1rem;
-}
-
-.eventCard {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s ease;
-}
-
-.eventCard:hover {
-  background: #fafafa;
-}
-
-.eventCard:last-child {
-  border-bottom: none;
-}
-
-.eventInfo {
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.eventName {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.eventDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.eventLocation,
-.eventDuration,
-.eventEquipment {
-  font-size: 0.875rem;
-  color: #666666;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.eventTimeline {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.timelineCell {
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.timelineCell.today {
-  background: #fff3e0;
-  border: 1px solid #1a1a1a;
-}
-
-.timelineCell.pastDate {
+.calendarCell.pastDate {
   background: #f9f9f9;
+  color: #cccccc;
 }
 
-.timelineCell.futureDate {
+.calendarCell.futureDate {
   background: #f0f8ff;
 }
 
-.timelineCell.otherMonth {
+.calendarCell.otherMonth {
   background: #f9f9f9;
   opacity: 0.5;
 }
 
-.eventBar {
-  width: 100%;
-  height: 1rem;
+.dateNumber {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.eventsList {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.eventItem {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
   font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.eventItem:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.eventItem.singleDay {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.eventItem.multiDay {
+  background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
+  border: 1px solid #dadce0;
+  color: #3c4043;
+}
+
+.eventName {
+  display: block;
   font-weight: 600;
+  margin-bottom: 0.125rem;
 }
 
-.eventBar.singleDay {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-
-.eventBar.multiDay {
-  background: #e8f5e8;
-  color: #2e7d32;
-}
-
-.eventStart,
-.eventEnd,
-.eventMiddle {
-  font-size: 0.75rem;
-  font-weight: 600;
+.eventLocation {
+  font-size: 0.625rem;
+  opacity: 0.8;
 }
 
 .equipmentHeader {
@@ -499,21 +466,24 @@
 }
 
 .today {
-  background: #fff3e0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   border: 2px solid #1a1a1a;
+  box-shadow: 0 4px 12px rgba(26, 26, 26, 0.15);
+  color: #ffffff;
 }
 
 .today .dateNumber {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: #ffffff;
+  color: #1a1a1a;
   border-radius: 50%;
   width: 1.5rem;
   height: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pastDate {
@@ -647,16 +617,20 @@
     padding: 1rem;
   }
   
-  .eventInfo {
-    min-width: 150px;
+  .calendarCell {
+    min-height: 100px;
+  }
+  
+  .eventItem {
+    font-size: 0.7rem;
   }
   
   .eventName {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
   }
   
-  .eventDetails {
-    font-size: 0.8rem;
+  .eventLocation {
+    font-size: 0.6rem;
   }
 }
 
