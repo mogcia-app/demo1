@@ -8,16 +8,20 @@ import styles from './page.module.css'
 import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-interface ScheduleEvent {
+interface EventSchedule {
   eventId: string
   eventName: string
   startDate: string
   endDate: string
+  location: string
+  assigneeId: string
   equipment: {
     equipmentId: string
     name: string
     quantity: number
   }[]
+  isMultiDay: boolean
+  duration: number
 }
 
 interface EquipmentSchedule {
@@ -42,13 +46,15 @@ export default function SchedulePage() {
   const [user, setUser] = useState<any>(null)
   const [authChecking, setAuthChecking] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [equipmentSchedules, setEquipmentSchedules] = useState<EquipmentSchedule[]>([])
+  const [eventSchedules, setEventSchedules] = useState<EventSchedule[]>([])
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
 
   // 認証状態を監視
   useEffect(() => {
+    console.log('認証状態監視開始')
     const unsubscribe = onAuthStateChange((user) => {
+      console.log('認証状態変更:', user ? 'ログイン済み' : '未ログイン')
       setUser(user)
       setAuthChecking(false)
     })
@@ -64,62 +70,44 @@ export default function SchedulePage() {
     return () => clearInterval(timer)
   }, [])
 
-  // スケジュールデータを処理
+  // 現場スケジュールデータを処理
   useEffect(() => {
-    if (!events || !equipment || equipmentLoading) return
-
-    const schedules: EquipmentSchedule[] = []
+    console.log('現場スケジュールデータ処理開始:', { events })
     
-    // 各機材のスケジュールを初期化
-    equipment.forEach(eq => {
-      schedules.push({
-        equipmentId: eq.id,
-        equipmentName: eq.name,
-        stock: eq.stock,
-        usage: {}
-      })
-    })
+    if (!events) {
+      console.log('現場データが不足')
+      return
+    }
 
-    // 現場データから機材使用状況を抽出
-    events.forEach(event => {
-      if (!event.equipment || event.equipment.length === 0) return
-      
+    console.log('現場データ取得完了:', events.length)
+
+    const schedules: EventSchedule[] = events.map(event => {
       const startDate = new Date(event.startDate)
       const endDate = event.endDate ? new Date(event.endDate) : startDate
-      
-      // 日付範囲を生成
-      const currentDate = new Date(startDate)
-      while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split('T')[0]
-        
-        event.equipment.forEach(eventEq => {
-          const scheduleIndex = schedules.findIndex(s => s.equipmentId === eventEq.equipmentId)
-          if (scheduleIndex === -1) return
-          
-          if (!schedules[scheduleIndex].usage[dateStr]) {
-            schedules[scheduleIndex].usage[dateStr] = []
-          }
-          
-          // 在庫競合チェック
-          const totalUsage = schedules[scheduleIndex].usage[dateStr]
-            .reduce((sum, usage) => sum + usage.quantity, 0)
-          const isConflict = (totalUsage + eventEq.quantity) > schedules[scheduleIndex].stock
-          
-          schedules[scheduleIndex].usage[dateStr].push({
-            eventId: event.id,
-            eventName: event.siteName,
-            quantity: eventEq.quantity,
-            isConflict
-          })
-        })
-        
-        currentDate.setDate(currentDate.getDate() + 1)
+      const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      const isMultiDay = duration > 1
+
+      return {
+        eventId: event.id,
+        eventName: event.siteName,
+        startDate: event.startDate,
+        endDate: event.endDate || event.startDate,
+        location: event.location || '',
+        assigneeId: '',
+        equipment: (event.equipment || []).map(eq => ({
+          equipmentId: eq.equipmentId,
+          name: eq.equipmentName,
+          quantity: eq.quantity
+        })),
+        isMultiDay,
+        duration
       }
     })
 
-    setEquipmentSchedules(schedules)
+    console.log('現場スケジュールデータ完成:', schedules)
+    setEventSchedules(schedules)
     setLoading(false)
-  }, [events, equipment, equipmentLoading])
+  }, [events])
 
   // 月の日付配列を生成
   const getDaysInMonth = (date: Date) => {
@@ -208,6 +196,7 @@ export default function SchedulePage() {
       <div className={styles.main}>
         <div className={styles.loading}>
           <p className={styles.subtitle}>スケジュールを読み込み中...</p>
+          <p className={styles.subtitle}>現場数: {events?.length || 0}件</p>
         </div>
       </div>
     )
@@ -262,22 +251,22 @@ export default function SchedulePage() {
         <div className={styles.scheduleContainer}>
           <div className={styles.legend}>
             <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.normalUsage}`}></div>
-              <span>通常使用</span>
+              <div className={`${styles.legendColor} ${styles.singleDay}`}></div>
+              <span>単日現場</span>
             </div>
             <div className={styles.legendItem}>
-              <div className={`${styles.legendColor} ${styles.conflictUsage}`}></div>
-              <span>在庫競合</span>
+              <div className={`${styles.legendColor} ${styles.multiDay}`}></div>
+              <span>日跨ぎ現場</span>
             </div>
             <div className={styles.legendItem}>
-              <AlertTriangle className={styles.warningIcon} />
-              <span>注意が必要</span>
+              <div className={`${styles.legendColor} ${styles.today}`}></div>
+              <span>今日</span>
             </div>
           </div>
 
           <div className={styles.scheduleTable}>
             <div className={styles.tableHeader}>
-              <div className={styles.equipmentHeader}>機材名</div>
+              <div className={styles.eventHeader}>現場名</div>
               <div className={styles.datesHeader}>
                 {days.slice(0, 7).map((day, index) => (
                   <div key={index} className={styles.dayHeader}>
@@ -288,22 +277,26 @@ export default function SchedulePage() {
             </div>
 
             <div className={styles.tableBody}>
-              {equipmentSchedules.map(schedule => (
-                <div key={schedule.equipmentId} className={styles.scheduleRow}>
-                  <div className={styles.equipmentCell}>
-                    <div className={styles.equipmentName}>
-                      #{schedule.equipmentId} {schedule.equipmentName}
+              {eventSchedules.map(event => (
+                <div key={event.eventId} className={styles.scheduleRow}>
+                  <div className={styles.eventCell}>
+                    <div className={styles.eventName}>
+                      {event.eventName}
                     </div>
-                    <div className={styles.stockInfo}>
-                      在庫: {schedule.stock}台
+                    <div className={styles.eventInfo}>
+                      {event.location && <span>📍 {event.location}</span>}
+                      {event.isMultiDay && <span>📅 {event.duration}日間</span>}
+                      {event.equipment.length > 0 && <span>🔧 {event.equipment.length}種類</span>}
                     </div>
                   </div>
                   <div className={styles.datesCell}>
                     {days.map((day, dayIndex) => {
                       const dateStr = day.toISOString().split('T')[0]
-                      const usage = schedule.usage[dateStr] || []
-                      const hasUsage = usage.length > 0
-                      const hasConflict = usage.some(u => u.isConflict)
+                      const eventStartDate = new Date(event.startDate).toISOString().split('T')[0]
+                      const eventEndDate = new Date(event.endDate).toISOString().split('T')[0]
+                      const isEventDay = dateStr >= eventStartDate && dateStr <= eventEndDate
+                      const isEventStart = dateStr === eventStartDate
+                      const isEventEnd = dateStr === eventEndDate
                       
                       return (
                         <div 
@@ -317,24 +310,21 @@ export default function SchedulePage() {
                           <div className={styles.dateNumber}>
                             {formatDate(day)}
                           </div>
-                          {hasUsage && (
-                            <div className={`${styles.usageContainer} ${
-                              hasConflict ? styles.conflict : styles.normal
+                          {isEventDay && (
+                            <div className={`${styles.eventContainer} ${
+                              event.isMultiDay ? styles.multiDay : styles.singleDay
                             }`}>
-                              {usage.map((u, uIndex) => (
-                                <div 
-                                  key={uIndex}
-                                  className={styles.usageItem}
-                                  title={`${u.eventName} - ${u.quantity}台${u.isConflict ? ' (在庫不足)' : ''}`}
-                                >
-                                  {u.isConflict && (
-                                    <AlertTriangle className={styles.conflictIcon} />
-                                  )}
-                                  <span className={styles.usageText}>
-                                    {u.quantity}台
-                                  </span>
-                                </div>
-                              ))}
+                              <div className={styles.eventBar}>
+                                {isEventStart && (
+                                  <span className={styles.eventStart}>▶</span>
+                                )}
+                                {isEventEnd && (
+                                  <span className={styles.eventEnd}>◀</span>
+                                )}
+                                {!isEventStart && !isEventEnd && event.isMultiDay && (
+                                  <span className={styles.eventMiddle}>━</span>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>

@@ -151,12 +151,12 @@
   border: 1px solid #e0e0e0;
 }
 
-.normalUsage {
+.singleDay {
   background: #e3f2fd;
 }
 
-.conflictUsage {
-  background: #ffebee;
+.multiDay {
+  background: #e8f5e8;
 }
 
 .warningIcon {
@@ -178,6 +178,15 @@
 }
 
 .equipmentHeader {
+  padding: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+}
+
+.eventHeader {
   padding: 1rem;
   font-weight: 600;
   color: #1a1a1a;
@@ -241,6 +250,34 @@
 .stockInfo {
   font-size: 0.75rem;
   color: #999999;
+}
+
+.eventCell {
+  padding: 1rem;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.eventName {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.875rem;
+}
+
+.eventInfo {
+  font-size: 0.75rem;
+  color: #666666;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.eventInfo span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .datesCell {
@@ -353,6 +390,38 @@
 
 .usageText {
   font-weight: 600;
+}
+
+.eventContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.eventBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 0.5rem;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.eventStart {
+  color: #1a1a1a;
+  font-size: 0.5rem;
+}
+
+.eventEnd {
+  color: #1a1a1a;
+  font-size: 0.5rem;
+}
+
+.eventMiddle {
+  color: #1a1a1a;
+  font-size: 0.5rem;
 }
 
 /* ローディング・エラー状態 */
