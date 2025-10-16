@@ -44,6 +44,7 @@ export default function SchedulePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [equipmentSchedules, setEquipmentSchedules] = useState<EquipmentSchedule[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   // 認証状態を監視
   useEffect(() => {
@@ -52,6 +53,15 @@ export default function SchedulePage() {
       setAuthChecking(false)
     })
     return unsubscribe
+  }, [])
+
+  // リアルタイムで現在時刻を更新（1分ごと）
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000) // 1分ごとに更新
+
+    return () => clearInterval(timer)
   }, [])
 
   // スケジュールデータを処理
@@ -174,8 +184,23 @@ export default function SchedulePage() {
   }
 
   const isToday = (date: Date) => {
-    const today = new Date()
-    return date.toDateString() === today.toDateString()
+    return date.toDateString() === currentTime.toDateString()
+  }
+
+  const isPastDate = (date: Date) => {
+    const today = new Date(currentTime)
+    today.setHours(0, 0, 0, 0)
+    const targetDate = new Date(date)
+    targetDate.setHours(0, 0, 0, 0)
+    return targetDate < today
+  }
+
+  const isFutureDate = (date: Date) => {
+    const today = new Date(currentTime)
+    today.setHours(0, 0, 0, 0)
+    const targetDate = new Date(date)
+    targetDate.setHours(0, 0, 0, 0)
+    return targetDate > today
   }
 
   if (loading) {
@@ -213,6 +238,16 @@ export default function SchedulePage() {
             <span className={styles.monthDisplay}>
               {currentMonth.getFullYear()}年{monthNames[currentMonth.getMonth()]}
             </span>
+            <div className={styles.currentTime}>
+              {currentTime.toLocaleDateString('ja-JP', { 
+                month: 'short', 
+                day: 'numeric',
+                weekday: 'short'
+              })} {currentTime.toLocaleTimeString('ja-JP', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </div>
             <button 
               className={styles.navButton}
               onClick={() => navigateMonth('next')}
@@ -275,7 +310,9 @@ export default function SchedulePage() {
                           key={dayIndex}
                           className={`${styles.dateCell} ${
                             !isCurrentMonth(day) ? styles.otherMonth : ''
-                          } ${isToday(day) ? styles.today : ''}`}
+                          } ${isToday(day) ? styles.today : ''} ${
+                            isPastDate(day) ? styles.pastDate : ''
+                          } ${isFutureDate(day) ? styles.futureDate : ''}`}
                         >
                           <div className={styles.dateNumber}>
                             {formatDate(day)}

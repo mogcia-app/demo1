@@ -103,6 +103,14 @@
   text-align: center;
 }
 
+.currentTime {
+  font-size: 0.875rem;
+  color: #666666;
+  font-weight: 500;
+  text-align: center;
+  min-width: 140px;
+}
+
 /* コンテンツ */
 .content {
   max-width: 1400px;
@@ -261,6 +269,7 @@
 
 .today {
   background: #fff3e0;
+  border: 2px solid #1a1a1a;
 }
 
 .today .dateNumber {
@@ -274,6 +283,25 @@
   justify-content: center;
   font-weight: 600;
   font-size: 0.75rem;
+}
+
+.pastDate {
+  background: #f9f9f9;
+  color: #cccccc;
+}
+
+.pastDate .dateNumber {
+  color: #cccccc;
+}
+
+.futureDate {
+  background: #f0f8ff;
+  color: #1a1a1a;
+}
+
+.futureDate .dateNumber {
+  color: #1a1a1a;
+  font-weight: 500;
 }
 
 .dateNumber {
