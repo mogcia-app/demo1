@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { onAuthStateChange } from '@/lib/auth'
 import { useEvents, useEquipment } from '@/lib/hooks/useFirestore'
-import { Equipment, EventData } from '@/lib/types'
+import { Equipment } from '@/lib/types'
 import styles from './page.module.css'
 import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
