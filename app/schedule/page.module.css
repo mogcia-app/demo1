@@ -327,19 +327,6 @@
   background: #e8e8e8;
   border-left: 3px solid #666666;
   color: #333333;
-  position: relative;
-}
-
-.eventItem.multiDay::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -100%;
-  width: 200%;
-  height: 2px;
-  background: #666666;
-  transform: translateY(-50%);
-  z-index: 1;
 }
 
 .eventName {
