@@ -69,7 +69,7 @@ export default function Home() {
   }, [])
 
   // 認証完了後のみFirestoreデータを取得
-  const { events, loading, error } = useEvents()
+  const { events, loading, error, createEvent, updateEvent } = useEvents()
   const { equipment } = useEquipment()
   const { categories } = useEquipmentCategories()
   const { assignees } = useAssignees()
@@ -471,6 +471,35 @@ export default function Home() {
         ...prev,
         [eventId]: newEquipmentItems
       }))
+
+      // Firestoreに現場データを保存
+      const eventToSave = {
+        siteName: data.title,
+        startDate: data.startDate,
+        endDate: data.endDate || data.startDate,
+        equipment: data.equipment.map(eq => ({
+          equipmentId: eq.equipmentId,
+          equipmentName: eq.name,
+          quantity: eq.quantity,
+          notes: ''
+        })),
+        description: data.memo,
+        notes: data.memo,
+        status: 'confirmed' as const,
+        priority: 'medium' as const,
+        createdBy: user?.uid || '',
+        userName: user?.displayName || user?.email || '',
+        location: data.location,
+        assigneeId: data.assigneeId
+      }
+
+      if (savedEvents.has(eventId)) {
+        // 既存の現場を更新
+        await updateEvent(eventId, eventToSave)
+      } else {
+        // 新しい現場を作成
+        await createEvent(eventToSave)
+      }
 
       // このイベントを保存済みとしてマーク
       setSavedEvents(prev => new Set(prev).add(eventId))
