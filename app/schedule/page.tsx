@@ -311,14 +311,17 @@ export default function SchedulePage() {
                         const isEventEnd = dateStr === eventEndDate
                         const isEventMiddle = dateStr > eventStartDate && dateStr < eventEndDate
                         
+                        // 日跨ぎ現場は開始日のみ表示
+                        if (event.isMultiDay && !isEventStart) {
+                          return null
+                        }
+                        
                         return (
                           <div 
                             key={event.eventId}
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
-                            } ${isEventStart ? styles.eventStart : ''} ${
-                              isEventEnd ? styles.eventEnd : ''
-                            } ${isEventMiddle ? styles.eventMiddle : ''}`}
+                            }`}
                           >
                             <span className={styles.eventName}>{event.eventName}</span>
                             {event.location && (
@@ -326,9 +329,7 @@ export default function SchedulePage() {
                             )}
                             {event.isMultiDay && (
                               <span className={styles.eventDuration}>
-                                {isEventStart && `▶ ${event.duration}日間`}
-                                {isEventEnd && `◀ 終了`}
-                                {isEventMiddle && `━ 継続中`}
+                                {event.duration}日間
                               </span>
                             )}
                           </div>
