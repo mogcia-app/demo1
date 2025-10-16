@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
-import { useFirestore } from '@/lib/hooks/useFirestore'
-import { useEquipment } from '@/lib/hooks/useEquipment'
+import { useEvents, useEquipment } from '@/lib/hooks/useFirestore'
 import { Equipment, EventData } from '@/lib/types'
 import styles from './page.module.css'
 import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft } from 'lucide-react'
@@ -38,7 +37,7 @@ interface EquipmentSchedule {
 export default function SchedulePage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { data: events } = useFirestore<EventData>('events')
+  const { events } = useEvents()
   const { equipment, loading: equipmentLoading } = useEquipment()
 
   const [currentMonth, setCurrentMonth] = useState(new Date())
