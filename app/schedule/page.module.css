@@ -327,25 +327,9 @@
 }
 
 .eventItem.multiDay {
-  background: transparent;
-  border: none;
+  background: #f0f0f0;
+  border-left: 3px solid #666666;
   color: #333333;
-  position: relative;
-}
-
-.eventItem.multiDay.eventStart {
-  background: transparent;
-  border: none;
-}
-
-.eventItem.multiDay.eventMiddle {
-  background: transparent;
-  border: none;
-}
-
-.eventItem.multiDay.eventEnd {
-  background: transparent;
-  border: none;
 }
 
 .eventNameRow {
@@ -371,45 +355,6 @@
   justify-content: flex-end;
 }
 
-/* 日跨ぎイベントの連続バー */
-.eventMultiDayBar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #e8e8e8;
-  border: 2px solid #666666;
-  border-radius: 6px;
-  z-index: 1;
-  pointer-events: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.eventMultiDayBar.eventStart {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-  border-right: 1px solid #666666;
-}
-
-.eventMultiDayBar.eventMiddle {
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
-}
-
-.eventMultiDayBar.eventEnd {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  border-left: 1px solid #666666;
-}
-
-/* 日跨ぎイベントのコンテンツ */
-.eventMultiDayContent {
-  position: relative;
-  z-index: 2;
-  background: transparent;
-}
 
 .eventName {
   display: block;

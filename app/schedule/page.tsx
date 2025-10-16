@@ -352,36 +352,19 @@ export default function SchedulePage() {
                             key={event.eventId}
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
-                            } ${event.isMultiDay && isEventStart ? styles.eventStart : ''} ${
-                              event.isMultiDay && isEventEnd ? styles.eventEnd : ''
-                            } ${event.isMultiDay && isEventMiddle ? styles.eventMiddle : ''}`}
+                            }`}
                           >
-                            {/* 日跨ぎイベントの連続バー */}
-                            {event.isMultiDay && (
-                              <div className={`${styles.eventMultiDayBar} ${
-                                isEventStart ? styles.eventStart : ''
-                              } ${isEventMiddle ? styles.eventMiddle : ''} ${
-                                isEventEnd ? styles.eventEnd : ''
-                              }`}></div>
-                            )}
-                            
-                            <div className={event.isMultiDay ? styles.eventMultiDayContent : ''}>
-                              <div className={styles.eventNameRow}>
-                                {(isEventStart || !event.isMultiDay) && (
-                                  <span className={styles.eventName}>{event.eventName}</span>
-                                )}
-                                {event.isMultiDay && (
-                                  <span className={styles.eventDuration}>
-                                    {isEventStart && `&gt; ${event.duration}日間`}
-                                    {isEventEnd && `&lt; 終了`}
-                                    {isEventMiddle && `- 継続中`}
-                                  </span>
-                                )}
-                              </div>
-                              {(isEventStart || !event.isMultiDay) && event.location && (
-                                <span className={styles.eventLocation}>📍 {event.location}</span>
+                            <div className={styles.eventNameRow}>
+                              <span className={styles.eventName}>{event.eventName}</span>
+                              {event.isMultiDay && (
+                                <span className={styles.eventDuration}>
+                                  ({event.duration}日間)
+                                </span>
                               )}
                             </div>
+                            {event.location && (
+                              <span className={styles.eventLocation}>📍 {event.location}</span>
+                            )}
                           </div>
                         )
                       })}
