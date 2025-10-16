@@ -318,15 +318,13 @@ export default function SchedulePage() {
                             key={event.eventId}
                             className={`${styles.eventItem} ${
                               event.isMultiDay ? styles.multiDay : styles.singleDay
-                            }`}
+                            } ${isEventStart ? styles.eventStart : ''} ${
+                              isEventEnd ? styles.eventEnd : ''
+                            } ${isEventMiddle ? styles.eventMiddle : ''}`}
                           >
-                            {(isEventStart || !event.isMultiDay) && (
-                              <>
-                                <span className={styles.eventName}>{event.eventName}</span>
-                                {event.location && (
-                                  <span className={styles.eventLocation}>📍 {event.location}</span>
-                                )}
-                              </>
+                            <span className={styles.eventName}>{event.eventName}</span>
+                            {event.location && (
+                              <span className={styles.eventLocation}>📍 {event.location}</span>
                             )}
                             {event.isMultiDay && (
                               <span className={styles.eventDuration}>

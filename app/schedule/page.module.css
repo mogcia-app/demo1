@@ -327,6 +327,51 @@
   background: #e8e8e8;
   border-left: 3px solid #666666;
   color: #333333;
+  position: relative;
+}
+
+.eventItem.multiDay.eventStart::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 1px;
+  height: 100%;
+  background: #666666;
+  transform: translateY(-50%);
+}
+
+.eventItem.multiDay.eventMiddle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  width: 1px;
+  height: 100%;
+  background: #666666;
+  transform: translateY(-50%);
+}
+
+.eventItem.multiDay.eventMiddle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 1px;
+  height: 100%;
+  background: #666666;
+  transform: translateY(-50%);
+}
+
+.eventItem.multiDay.eventEnd::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  width: 1px;
+  height: 100%;
+  background: #666666;
+  transform: translateY(-50%);
 }
 
 .eventName {
