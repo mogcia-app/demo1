@@ -327,28 +327,25 @@
 }
 
 .eventItem.multiDay {
-  background: #e8e8e8;
-  border-left: 3px solid #666666;
+  background: transparent;
+  border: none;
   color: #333333;
   position: relative;
 }
 
 .eventItem.multiDay.eventStart {
-  background: #e8e8e8;
-  border-left: 3px solid #666666;
-  border-right: 1px solid #666666;
+  background: transparent;
+  border: none;
 }
 
 .eventItem.multiDay.eventMiddle {
-  background: #e8e8e8;
-  border-left: 1px solid #666666;
-  border-right: 1px solid #666666;
+  background: transparent;
+  border: none;
 }
 
 .eventItem.multiDay.eventEnd {
-  background: #e8e8e8;
-  border-left: 1px solid #666666;
-  border-right: 3px solid #666666;
+  background: transparent;
+  border: none;
 }
 
 .eventNameRow {
