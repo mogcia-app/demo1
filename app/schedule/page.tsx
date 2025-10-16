@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
+import { onAuthStateChange } from '@/lib/auth'
 import { useEvents, useEquipment } from '@/lib/hooks/useFirestore'
 import { Equipment, EventData } from '@/lib/types'
 import styles from './page.module.css'
@@ -36,16 +36,26 @@ interface EquipmentSchedule {
 
 export default function SchedulePage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
   const { events } = useEvents()
   const { equipment, loading: equipmentLoading } = useEquipment()
 
+  const [user, setUser] = useState<any>(null)
+  const [authChecking, setAuthChecking] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [equipmentSchedules, setEquipmentSchedules] = useState<EquipmentSchedule[]>([])
   const [loading, setLoading] = useState(true)
 
+  // 認証状態を監視
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      setUser(user)
+      setAuthChecking(false)
+    })
+    return unsubscribe
+  }, [])
+
   // 認証チェック
-  if (authLoading) {
+  if (authChecking) {
     return (
       <div className={styles.main}>
         <div className={styles.loading}>
