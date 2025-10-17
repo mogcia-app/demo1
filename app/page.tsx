@@ -49,6 +49,7 @@ export default function Home() {
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
   
   // 認証状態の確認
   useEffect(() => {
@@ -521,6 +522,22 @@ export default function Home() {
       // このイベントを保存済みとしてマーク
       setSavedEvents(prev => new Set(prev).add(eventId))
 
+      // 編集中状態を解除
+      setEditingEventId(null)
+
+      // eventDataを更新（機材名などの表示を確実にするため）
+      setEventData(prev => ({
+        ...prev,
+        [eventId]: {
+          ...data,
+          // 機材情報を確実に更新
+          equipment: data.equipment.map(eq => ({
+            ...eq,
+            name: equipment.find(e => e.id === eq.equipmentId)?.name || eq.name
+          }))
+        }
+      }))
+
       // Googleカレンダー連携
       const calendarData = {
         siteName: data.title,
@@ -547,13 +564,12 @@ export default function Home() {
       }
 
       if (result.success) {
-        const calendarUrl = result.eventUrl || result.calendarUrl || 'Googleカレンダーで確認してください'
         console.log('✅ 現場保存成功！')
         console.log('使用したカレンダーID:', result.calendarId || 'primary')
-        console.log('GoogleカレンダーURL:', calendarUrl)
+        console.log('GoogleカレンダーURL:', result.eventUrl || result.calendarUrl)
         console.log('詳細ページURL:', eventUrl)
         console.log('イベントID:', result.eventId)
-        alert(`現場が保存されました！\n\n在庫が減算されました。\n\nGoogleカレンダー: ${calendarUrl}`)
+        alert('✅ 現場が保存されました！\n\n在庫が減算されました。\n\nGoogleカレンダーに登録されました。')
       } else {
         console.error('現場保存失敗:', result.error)
         alert(`保存に失敗しました: ${result.error}`)
@@ -644,12 +660,13 @@ export default function Home() {
 
       // 新しい現場の初期データを設定
       if (newEventId) {
+        const today = new Date().toISOString().split('T')[0]
         setEventData(prev => ({
           ...prev,
           [newEventId]: {
             title: '新しい現場',
-            startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0],
+            startDate: today,
+            endDate: today,
             assigneeId: '',
             location: '',
             memo: '',
@@ -659,6 +676,22 @@ export default function Home() {
         
         // 自動的に開く
         setExpandedEvents(prev => new Set(prev).add(newEventId))
+        
+        // 編集中状態に設定
+        setEditingEventId(newEventId)
+        
+        console.log('新しい現場データを設定:', {
+          eventId: newEventId,
+          eventData: {
+            title: '新しい現場',
+            startDate: today,
+            endDate: today,
+            assigneeId: '',
+            location: '',
+            memo: '',
+            equipment: []
+          }
+        })
       }
       
       setShowCreateEvent(false)
@@ -1002,6 +1035,28 @@ export default function Home() {
                 
                 return (
                   <div key={event.id} className={styles.eventCard}>
+                    {/* 編集中タブの表示 */}
+                    {editingEventId === event.id && (
+                      <div className={styles.editingTab}>
+                        <div className={styles.editingTabHeader}>
+                          <span className={styles.editingTabTitle}>編集中</span>
+                          <button 
+                            className={styles.cancelButton}
+                            onClick={() => {
+                              setEditingEventId(null)
+                              setExpandedEvents(prev => {
+                                const newSet = new Set(prev)
+                                newSet.delete(event.id)
+                                return newSet
+                              })
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div 
                       className={styles.eventHeader}
                       onClick={() => toggleEvent(event.id)}

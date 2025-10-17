@@ -780,6 +780,54 @@
   gap: 1rem;
 }
 
+/* 編集中タブ */
+.editingTab {
+  background: #fff3e0;
+  border: 2px solid #ff9800;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 10;
+}
+
+.editingTabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #ff9800;
+  color: #ffffff;
+  border-radius: 6px 6px 0 0;
+}
+
+.editingTabTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cancelButton {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 /* イベントカード */
 .eventCard {
   background: white;
