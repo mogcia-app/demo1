@@ -1077,6 +1077,12 @@ export default function Home() {
                               {assignee.name}
                             </div>
                           )}
+                          {/* 保存状態の表示 */}
+                          {isSaved && (
+                            <div className={styles.eventMetaItem}>
+                              <span className={styles.savedStatus}>✅ 保存済み</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className={styles.eventToggle}>
@@ -1105,191 +1111,179 @@ export default function Home() {
                         {/* 日付 */}
                         <div className={styles.inputSection}>
                           <h4>日付</h4>
-                          {isSaved ? (
-                            <div className={styles.readOnlyValue}>
-                              {data.startDate === data.endDate 
-                                ? data.startDate 
-                                : `${data.startDate} 〜 ${data.endDate}`}
-                            </div>
-                          ) : (
-                            <div className={styles.dateRow}>
-                              <div className={styles.dateField}>
-                                <label>開始日</label>
-                                <input 
-                                  type="date" 
-                                  value={data.startDate}
-                                  onChange={(e) => updateEventData(event.id, 'startDate', e.target.value)}
-                                  className={styles.dateInput}
-                                />
-                              </div>
-                              <div className={styles.dateField}>
-                                <label>終了日</label>
-                                <input 
-                                  type="date" 
-                                  value={data.endDate}
-                                  onChange={(e) => updateEventData(event.id, 'endDate', e.target.value)}
-                                  className={styles.dateInput}
-                                  min={data.startDate}
-                                />
-                              </div>
-                            </div>
-                          )}
+                          <div className={styles.readOnlyValue}>
+                            {data.startDate === data.endDate 
+                              ? data.startDate 
+                              : `${data.startDate} 〜 ${data.endDate}`}
+                          </div>
                         </div>
 
                         {/* 担当者 */}
                         <div className={styles.inputSection}>
                           <h4>担当者</h4>
-                          {isSaved ? (
-                            <div className={styles.readOnlyValue}>
-                              {assignee ? assignee.name : '未設定'}
-                            </div>
-                          ) : (
-                            <select 
-                              className={styles.assigneeSelect}
-                              value={data.assigneeId}
-                              onChange={(e) => updateEventData(event.id, 'assigneeId', e.target.value)}
-                            >
-                              <option value="">担当者を選択</option>
-                              {assignees.filter(a => a.isActive).map((assignee) => (
-                                <option key={assignee.id} value={assignee.id}>
-                                  {assignee.name}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+                          <div className={styles.readOnlyValue}>
+                            {assignee ? assignee.name : '未設定'}
+                          </div>
                         </div>
 
                         {/* 場所 */}
                         <div className={styles.inputSection}>
                           <h4>場所（Googleマップ紐付け）</h4>
-                          {isSaved ? (
-                            <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
-                          ) : (
-                            <input 
-                              type="text" 
-                              placeholder="場所を入力"
-                              className={styles.locationInput}
-                              value={data.location}
-                              onChange={(e) => updateEventData(event.id, 'location', e.target.value)}
-                            />
-                          )}
+                          <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
                         </div>
 
                         {/* メモ */}
                         <div className={styles.inputSection}>
                           <h4>メモ</h4>
-                          {isSaved ? (
-                            <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
-                          ) : (
-                            <textarea 
-                              placeholder="備考やメモを入力してください"
-                              className={styles.textarea}
-                              value={data.memo}
-                              onChange={(e) => updateEventData(event.id, 'memo', e.target.value)}
-                              rows={3}
-                            />
-                          )}
+                          <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
                         </div>
 
                         {/* 機材選択 */}
                         <div className={styles.inputSection}>
                           <h4>機材選択</h4>
-                          <div 
-                            className={styles.equipmentInputContainer}
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => handleDrop(event.id, e)}
-                          >
-                            <input 
-                              type="text" 
-                              placeholder="例: #1*2 または #1*2,#2*5 （左の機材をドラッグ&ドロップも可）"
-                              className={styles.equipmentInputField}
-                              value={equipmentInputValue[event.id] || ''}
-                              onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleAddEquipmentByNumber(event.id)
-                                }
-                              }}
-                            />
-                            <button 
-                              className={styles.addEquipmentButton}
-                              onClick={() => handleAddEquipmentByNumber(event.id)}
-                              disabled={!equipmentInputValue[event.id]?.trim()}
-                            >
-                              追加
-                            </button>
-                          </div>
-                          <div className={styles.equipmentList}>
-                            {(data.equipment || []).length === 0 ? (
-                              <div className={styles.emptyEquipmentMessage}>
-                                機材Noを入力して機材を追加してください
+                          {isSaved ? (
+                            <div className={styles.savedEquipmentSection}>
+                              <div className={styles.equipmentList}>
+                                {(data.equipment || []).length === 0 ? (
+                                  <div className={styles.emptyEquipmentMessage}>
+                                    機材が登録されていません
+                                  </div>
+                                ) : (
+                                  (data.equipment || []).map((eq) => (
+                                    <div key={eq.equipmentId} className={styles.equipmentCard}>
+                                      <div className={styles.equipmentCardHeader}>
+                                        <span className={styles.equipmentCardName}>
+                                          #{eq.equipmentId} {eq.name}
+                                        </span>
+                                        <span className={styles.equipmentQuantity}>
+                                          {eq.quantity}台
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
                               </div>
-                            ) : (
-                              (data.equipment || []).map((eq) => (
-                                <div key={eq.equipmentId} className={styles.equipmentCard}>
-                                  <div className={styles.equipmentCardHeader}>
-                                    <span className={styles.equipmentCardName}>
-                                      #{eq.equipmentId} {eq.name}
-                                    </span>
-                                    <button 
-                                      className={styles.equipmentCardRemove}
-                                      onClick={() => removeEquipment(event.id, eq.equipmentId)}
-                                    >
-                                      ×
-                                    </button>
+                              <button 
+                                className={styles.editEquipmentButton}
+                                onClick={() => {
+                                  // 機材編集モードに切り替え
+                                  setEditingEventId(event.id)
+                                }}
+                              >
+                                ✏️ 機材編集
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div 
+                                className={styles.equipmentInputContainer}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => handleDrop(event.id, e)}
+                              >
+                                <input 
+                                  type="text" 
+                                  placeholder="例: #1*2 または #1*2,#2*5 （左の機材をドラッグ&ドロップも可）"
+                                  className={styles.equipmentInputField}
+                                  value={equipmentInputValue[event.id] || ''}
+                                  onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleAddEquipmentByNumber(event.id)
+                                    }
+                                  }}
+                                />
+                                <button 
+                                  className={styles.addEquipmentButton}
+                                  onClick={() => handleAddEquipmentByNumber(event.id)}
+                                  disabled={!equipmentInputValue[event.id]?.trim()}
+                                >
+                                  追加
+                                </button>
+                              </div>
+                              <div className={styles.equipmentList}>
+                                {(data.equipment || []).length === 0 ? (
+                                  <div className={styles.emptyEquipmentMessage}>
+                                    機材Noを入力して機材を追加してください
                                   </div>
-                                  <div className={styles.equipmentCardBody}>
-                                    <div className={styles.quantityControl}>
-                                      <label className={styles.quantityLabel}>数量:</label>
-                                      <button
-                                        className={styles.quantityButton}
-                                        onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity - 1)}
-                                        disabled={eq.quantity <= 1}
-                                      >
-                                        -
-                                      </button>
-                                      <input
-                                        type="number"
-                                        className={styles.quantityInput}
-                                        value={eq.quantity}
-                                        onChange={(e) => updateEquipmentQuantity(event.id, eq.equipmentId, parseInt(e.target.value) || 1)}
-                                        min="1"
-                                        max={eq.maxStock}
-                                      />
-                                      <button
-                                        className={styles.quantityButton}
-                                        onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity + 1)}
-                                        disabled={eq.quantity >= eq.maxStock}
-                                      >
-                                        +
-                                      </button>
+                                ) : (
+                                  (data.equipment || []).map((eq) => (
+                                    <div key={eq.equipmentId} className={styles.equipmentCard}>
+                                      <div className={styles.equipmentCardHeader}>
+                                        <span className={styles.equipmentCardName}>
+                                          #{eq.equipmentId} {eq.name}
+                                        </span>
+                                        <button 
+                                          className={styles.equipmentCardRemove}
+                                          onClick={() => removeEquipment(event.id, eq.equipmentId)}
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                      <div className={styles.equipmentCardBody}>
+                                        <div className={styles.quantityControl}>
+                                          <label className={styles.quantityLabel}>数量:</label>
+                                          <button
+                                            className={styles.quantityButton}
+                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity - 1)}
+                                            disabled={eq.quantity <= 1}
+                                          >
+                                            -
+                                          </button>
+                                          <input
+                                            type="number"
+                                            className={styles.quantityInput}
+                                            value={eq.quantity}
+                                            onChange={(e) => updateEquipmentQuantity(event.id, eq.equipmentId, parseInt(e.target.value) || 1)}
+                                            min="1"
+                                            max={eq.maxStock}
+                                          />
+                                          <button
+                                            className={styles.quantityButton}
+                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity + 1)}
+                                            disabled={eq.quantity >= eq.maxStock}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                        <div className={styles.stockInfo}>
+                                          <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
+                                            在庫: {eq.maxStock}台
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className={styles.stockInfo}>
-                                      <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
-                                        在庫: {eq.maxStock}台
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
+                                  ))
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* 保存・削除ボタン */}
                         <div className={styles.eventActions}>
-                          <button 
-                            className={styles.saveEventButton}
-                            onClick={() => handleSaveEvent(event.id)}
-                          >
-                            {isSaved ? '更新' : '保存'}
-                          </button>
-                          <button 
-                            className={styles.deleteEventButton}
-                            onClick={() => handleDeleteEvent(event.id)}
-                          >
-                            削除
-                          </button>
+                          {isSaved ? (
+                            <button 
+                              className={styles.deleteEventButton}
+                              onClick={() => handleDeleteEvent(event.id)}
+                            >
+                              削除
+                            </button>
+                          ) : (
+                            <>
+                              <button 
+                                className={styles.saveEventButton}
+                                onClick={() => handleSaveEvent(event.id)}
+                              >
+                                保存
+                              </button>
+                              <button 
+                                className={styles.deleteEventButton}
+                                onClick={() => handleDeleteEvent(event.id)}
+                              >
+                                削除
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
