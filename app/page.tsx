@@ -50,6 +50,8 @@ export default function Home() {
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  const [showEquipmentEditModal, setShowEquipmentEditModal] = useState(false)
+  const [editingEquipmentEventId, setEditingEquipmentEventId] = useState<string | null>(null)
   
   // 認証状態の確認
   useEffect(() => {
@@ -167,6 +169,65 @@ export default function Home() {
     }
   }
 
+
+  // 機材編集モーダルを開く
+  const handleOpenEquipmentEdit = (eventId: string) => {
+    setEditingEquipmentEventId(eventId)
+    setShowEquipmentEditModal(true)
+  }
+
+  // 機材編集モーダルを閉じる
+  const handleCloseEquipmentEdit = () => {
+    setShowEquipmentEditModal(false)
+    setEditingEquipmentEventId(null)
+  }
+
+  // 機材編集の保存
+  const handleSaveEquipmentEdit = async (eventId: string, newEquipment: any[]) => {
+    try {
+      // 既存の機材情報を取得
+      const previousEquipment = savedEventEquipment[eventId] || []
+      const newEquipmentItems = newEquipment.map(eq => ({
+        equipmentId: eq.equipmentId,
+        quantity: eq.quantity
+      }))
+
+      // 在庫調整処理
+      console.log('機材編集 - 在庫調整開始...')
+      const inventoryResult = await adjustInventory(previousEquipment, newEquipmentItems)
+
+      if (!inventoryResult.success) {
+        alert(inventoryResult.error || '在庫調整に失敗しました')
+        return
+      }
+
+      // eventDataを更新
+      setEventData(prev => ({
+        ...prev,
+        [eventId]: {
+          ...prev[eventId],
+          equipment: newEquipment.map(eq => ({
+            ...eq,
+            name: equipment.find(e => e.id === eq.equipmentId)?.name || eq.name
+          }))
+        }
+      }))
+
+      // 保存した機材情報を更新
+      setSavedEventEquipment(prev => ({
+        ...prev,
+        [eventId]: newEquipmentItems
+      }))
+
+      // モーダルを閉じる
+      handleCloseEquipmentEdit()
+
+      alert('✅ 機材を更新しました！\n\n在庫が調整されました。')
+    } catch (error) {
+      console.error('機材編集エラー:', error)
+      alert('機材の更新に失敗しました')
+    }
+  }
 
   // 機材グループをFirestoreから取得したデータで構築（複数カテゴリ対応）
   const equipmentGroups = categories.map(category => ({
@@ -1165,10 +1226,7 @@ export default function Home() {
                               </div>
                               <button 
                                 className={styles.editEquipmentButton}
-                                onClick={() => {
-                                  // 機材編集モードに切り替え
-                                  setEditingEventId(event.id)
-                                }}
+                                onClick={() => handleOpenEquipmentEdit(event.id)}
                               >
                                 ✏️ 機材編集
                               </button>
@@ -1295,6 +1353,112 @@ export default function Home() {
         </div>
         )}
       </div>
+
+      {/* 機材編集モーダル */}
+      {showEquipmentEditModal && editingEquipmentEventId && (
+        <div className={styles.modalOverlay} onClick={handleCloseEquipmentEdit}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>機材編集</h2>
+              <button className={styles.closeButton} onClick={handleCloseEquipmentEdit}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.equipmentEditSection}>
+                <h3>現在の機材</h3>
+                <div className={styles.equipmentList}>
+                  {(eventData[editingEquipmentEventId]?.equipment || []).map((eq) => (
+                    <div key={eq.equipmentId} className={styles.equipmentCard}>
+                      <div className={styles.equipmentCardHeader}>
+                        <span className={styles.equipmentCardName}>
+                          #{eq.equipmentId} {eq.name}
+                        </span>
+                        <button 
+                          className={styles.equipmentCardRemove}
+                          onClick={() => removeEquipment(editingEquipmentEventId, eq.equipmentId)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div className={styles.equipmentCardBody}>
+                        <div className={styles.quantityControl}>
+                          <label className={styles.quantityLabel}>数量:</label>
+                          <button
+                            className={styles.quantityButton}
+                            onClick={() => updateEquipmentQuantity(editingEquipmentEventId, eq.equipmentId, eq.quantity - 1)}
+                            disabled={eq.quantity <= 1}
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            className={styles.quantityInput}
+                            value={eq.quantity}
+                            onChange={(e) => updateEquipmentQuantity(editingEquipmentEventId, eq.equipmentId, parseInt(e.target.value) || 1)}
+                            min="1"
+                            max={eq.maxStock}
+                          />
+                          <button
+                            className={styles.quantityButton}
+                            onClick={() => updateEquipmentQuantity(editingEquipmentEventId, eq.equipmentId, eq.quantity + 1)}
+                            disabled={eq.quantity >= eq.maxStock}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className={styles.stockInfo}>
+                          <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
+                            在庫: {eq.maxStock}台
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className={styles.equipmentInputContainer}>
+                  <input 
+                    type="text" 
+                    placeholder="例: #1*2 または #1*2,#2*5"
+                    className={styles.equipmentInputField}
+                    value={equipmentInputValue[editingEquipmentEventId] || ''}
+                    onChange={(e) => handleEquipmentInput(editingEquipmentEventId, e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddEquipmentByNumber(editingEquipmentEventId)
+                      }
+                    }}
+                  />
+                  <button 
+                    className={styles.addEquipmentButton}
+                    onClick={() => handleAddEquipmentByNumber(editingEquipmentEventId)}
+                    disabled={!equipmentInputValue[editingEquipmentEventId]?.trim()}
+                  >
+                    追加
+                  </button>
+                </div>
+              </div>
+              
+              <div className={styles.modalActions}>
+                <button 
+                  className={styles.cancelButton}
+                  onClick={handleCloseEquipmentEdit}
+                >
+                  キャンセル
+                </button>
+                <button 
+                  className={styles.saveButton}
+                  onClick={() => handleSaveEquipmentEdit(editingEquipmentEventId, eventData[editingEquipmentEventId]?.equipment || [])}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
