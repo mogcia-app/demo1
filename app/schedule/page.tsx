@@ -129,7 +129,12 @@ export default function SchedulePage() {
         startDate: s.startDate,
         endDate: s.endDate,
         isMultiDay: s.isMultiDay,
-        duration: s.duration
+        duration: s.duration,
+        // デバッグ用：日付オブジェクトの詳細
+        startDateObj: new Date(s.startDate).toISOString(),
+        endDateObj: new Date(s.endDate).toISOString(),
+        startDateLocal: new Date(s.startDate).toLocaleDateString('ja-JP'),
+        endDateLocal: new Date(s.endDate).toLocaleDateString('ja-JP')
       })
     })
     setEventSchedules(schedules)
@@ -457,7 +462,11 @@ export default function SchedulePage() {
                           eventRange: `${event.startDate} ~ ${event.endDate}`,
                           adjustedRange: spansMultipleWeeks ? 
                             `${adjustedStartDate.toISOString().split('T')[0]} ~ ${adjustedEndDate.toISOString().split('T')[0]}` : 
-                            '週内のみ'
+                            '週内のみ',
+                          // デバッグ用：実際の日付比較
+                          weekDays: weekDays.map(d => d.toISOString().split('T')[0]),
+                          eventStartDate: eventStartDate.toISOString().split('T')[0],
+                          eventEndDate: eventEndDate.toISOString().split('T')[0]
                         })
                       }
                       
