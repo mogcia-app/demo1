@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Calendar, Settings, LogOut, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Users, CalendarDays } from 'lucide-react'
+import { Plus, Calendar, Settings, LogOut, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Users } from 'lucide-react'
 import EquipmentSchedule from '../components/EquipmentSchedule'
 import styles from './page.module.css'
 import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
@@ -725,19 +725,12 @@ export default function Home() {
               </button>
               <button 
                 className={`${styles.viewButton} ${viewMode === 'calendar' ? styles.active : ''}`}
-                onClick={() => setViewMode('calendar')}
-                title="カレンダー表示"
+                onClick={() => router.push('/schedule')}
+                title="機材スケジュール"
               >
                 <Grid3X3 className={styles.icon} />
               </button>
             </div>
-            <button 
-              className={styles.iconButton}
-              onClick={() => router.push('/schedule')}
-              title="機材スケジュール"
-            >
-              <CalendarDays className={styles.icon} />
-            </button>
             <button 
               className={styles.iconButton}
               onClick={() => router.push('/admin/login')}
