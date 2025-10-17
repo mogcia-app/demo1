@@ -485,26 +485,6 @@
   cursor: not-allowed;
 }
 
-.checkCalendarButton {
-  padding: 0.875rem 1.5rem;
-  background: #e0e0e0;
-  color: #1a1a1a;
-  border: 1px solid #c0c0c0;
-  border-radius: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-left: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.checkCalendarButton:hover {
-  background: #d0d0d0;
-  border-color: #b0b0b0;
-}
-
 .initButton {
   padding: 0.875rem 1.5rem;
   background: #1a1a1a;

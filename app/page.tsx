@@ -626,23 +626,6 @@ export default function Home() {
     }
   }
 
-  // カレンダー情報を確認する関数
-  const handleCheckCalendar = async () => {
-    try {
-      const result = await getCalendarInfo()
-      if (result.success) {
-        console.log('カレンダー情報:', result.calendarInfo)
-        alert(`カレンダー情報を取得しました！\nカレンダーID: ${result.calendarId}\n詳細はコンソールを確認してください。`)
-      } else {
-        console.error('カレンダー情報取得失敗:', result.error)
-        alert(`カレンダー情報の取得に失敗しました: ${result.error}`)
-      }
-    } catch (error) {
-      console.error('カレンダー情報確認エラー:', error)
-      alert('カレンダー情報の確認に失敗しました')
-    }
-  }
-
   // 新しい現場作成
   const handleCreateEvent = async () => {
     // 仮の現場を作成してFirestoreに保存
@@ -986,12 +969,6 @@ export default function Home() {
               >
                 <Plus className={styles.icon} />
                 {addEventLoading ? '作成中...' : '新しい現場を登録'}
-              </button>
-              <button 
-                className={styles.checkCalendarButton}
-                onClick={handleCheckCalendar}
-              >
-                カレンダー情報確認
               </button>
             </div>
 
