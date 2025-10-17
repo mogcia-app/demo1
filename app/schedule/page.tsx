@@ -49,6 +49,8 @@ export default function SchedulePage() {
   const [eventSchedules, setEventSchedules] = useState<EventSchedule[]>([])
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [selectedEvent, setSelectedEvent] = useState<EventSchedule | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // 認証状態を監視
   useEffect(() => {
@@ -182,6 +184,16 @@ export default function SchedulePage() {
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1))
       return newDate
     })
+  }
+
+  const handleEventClick = (event: EventSchedule) => {
+    setSelectedEvent(event)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedEvent(null)
   }
 
   const formatDate = (date: Date) => {
@@ -453,6 +465,7 @@ export default function SchedulePage() {
                             width: `${widthPercent}%`,
                             top: `${32 + eventIndex * 22}px`,
                           }}
+                          onClick={() => handleEventClick(event)}
                         >
                           {/* この週で開始する場合、または単日イベントの場合は現場名を表示 */}
                           {(startsInThisWeek || !spansMultipleWeeks) && (
@@ -473,6 +486,78 @@ export default function SchedulePage() {
           </div>
         </div>
       </div>
+
+      {/* イベント詳細モーダル */}
+      {isModalOpen && selectedEvent && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>{selectedEvent.eventName}</h2>
+              <button className={styles.closeButton} onClick={closeModal}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.eventInfo}>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>開始日:</span>
+                  <span className={styles.infoValue}>
+                    {new Date(selectedEvent.startDate).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      weekday: 'long'
+                    })}
+                  </span>
+                </div>
+                
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>終了日:</span>
+                  <span className={styles.infoValue}>
+                    {new Date(selectedEvent.endDate).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      weekday: 'long'
+                    })}
+                  </span>
+                </div>
+                
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>期間:</span>
+                  <span className={styles.infoValue}>
+                    {selectedEvent.duration}日間
+                  </span>
+                </div>
+                
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>場所:</span>
+                  <span className={styles.infoValue}>
+                    {selectedEvent.location || '未設定'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className={styles.equipmentSection}>
+                <h3 className={styles.sectionTitle}>使用機材</h3>
+                {selectedEvent.equipment.length > 0 ? (
+                  <div className={styles.equipmentList}>
+                    {selectedEvent.equipment.map((eq, index) => (
+                      <div key={index} className={styles.equipmentItem}>
+                        <span className={styles.equipmentName}>{eq.name}</span>
+                        <span className={styles.equipmentQuantity}>{eq.quantity}台</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={styles.noEquipment}>使用機材なし</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

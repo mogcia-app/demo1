@@ -325,6 +325,7 @@
   white-space: nowrap;
   overflow: hidden;
   border-left: 3px solid #666666; /* 左にグレーのボーダー */
+  cursor: pointer; /* クリック可能であることを示す */
 }
 
 .eventItem:hover {
@@ -377,6 +378,137 @@
   font-size: 1.125rem;
   color: #666666;
   margin: 0;
+}
+
+/* モーダル */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666666;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.closeButton:hover {
+  color: #1a1a1a;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.eventInfo {
+  margin-bottom: 2rem;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: #666666;
+  min-width: 80px;
+  margin-right: 1rem;
+}
+
+.infoValue {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.equipmentSection {
+  margin-top: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.equipmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.equipmentItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: #fafafa;
+  border-radius: 4px;
+  border-left: 3px solid #666666;
+}
+
+.equipmentName {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.equipmentQuantity {
+  color: #666666;
+  font-weight: 500;
+}
+
+.noEquipment {
+  color: #999999;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
 }
 
 /* レスポンシブ対応 */
