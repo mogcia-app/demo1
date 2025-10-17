@@ -8,7 +8,7 @@ import styles from './page.module.css'
 import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents, useEquipment, useEquipmentCategories, useAssignees } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
-import { initializeAllData, removeAllGroups } from '../lib/initData'
+import { initializeAllData, removeAllGroups, removeSampleEvents } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarInfo } from '../lib/google/calendar-client'
 import { decreaseInventory, increaseInventory, adjustInventory } from '../lib/inventory'
@@ -48,6 +48,7 @@ export default function Home() {
   const [savedEvents, setSavedEvents] = useState<Set<string>>(new Set())
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   
   // 認証状態の確認
   useEffect(() => {
@@ -145,6 +146,22 @@ export default function Home() {
       } catch (error) {
         console.error('機材グループ削除エラー:', error)
         alert('機材グループの削除に失敗しました。')
+      }
+    }
+  }
+
+  // サンプルイベントを削除
+  const handleRemoveSampleEvents = async () => {
+    if (!user) return
+    
+    if (confirm('サンプルイベント（東京ドーム、横浜アリーナ）を削除しますか？')) {
+      try {
+        await removeSampleEvents()
+        alert('サンプルイベントを削除しました！')
+        window.location.reload()
+      } catch (error) {
+        console.error('サンプルイベント削除エラー:', error)
+        alert('サンプルイベントの削除に失敗しました。')
       }
     }
   }
@@ -736,8 +753,8 @@ export default function Home() {
             </div>
             <button 
               className={styles.iconButton}
-              onClick={() => router.push('/admin/login')}
-              title="管理者設定"
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              title="設定"
             >
               <Settings className={styles.icon} />
             </button>
@@ -751,6 +768,41 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* 設定メニュー */}
+      {showSettingsMenu && (
+        <div className={styles.settingsMenu}>
+          <div className={styles.settingsMenuContent}>
+            <button 
+              className={styles.settingsMenuItem}
+              onClick={() => {
+                setShowSettingsMenu(false)
+                router.push('/admin/login')
+              }}
+            >
+              管理者設定
+            </button>
+            <button 
+              className={styles.settingsMenuItem}
+              onClick={() => {
+                setShowSettingsMenu(false)
+                handleRemoveSampleEvents()
+              }}
+            >
+              サンプルイベントを削除
+            </button>
+            <button 
+              className={styles.settingsMenuItem}
+              onClick={() => {
+                setShowSettingsMenu(false)
+                handleRemoveAllGroups()
+              }}
+            >
+              機材グループを全削除
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* メインコンテンツ */}
       <div className={styles.content}>

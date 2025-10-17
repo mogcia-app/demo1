@@ -53,51 +53,38 @@ export const initializeSampleEquipment = async () => {
   }
 }
 
-// サンプルイベントデータの初期化
+// サンプルイベントデータの初期化（空の状態で開始）
 export const initializeSampleEvents = async (userId: string) => {
   try {
-    // 既存のイベントをチェック
+    console.log('イベントデータは空の状態で開始します')
+    // デフォルトイベントは作成しない
+  } catch (error) {
+    console.error('サンプルイベントデータの初期化エラー:', error)
+    throw error
+  }
+}
+
+// 既存のサンプルイベントを削除
+export const removeSampleEvents = async () => {
+  try {
+    console.log('サンプルイベントを削除中...')
+    
     const eventsQuery = query(collection(db, COLLECTIONS.EVENTS))
     const eventsSnapshot = await getDocs(eventsQuery)
     
-    if (eventsSnapshot.empty) {
-      console.log('サンプルイベントデータを初期化中...')
-      
-      const sampleEvents = [
-        {
-          siteName: '東京ドーム イベント会場',
-          startDate: '2024-01-15',
-          endDate: '2024-01-17',
-          equipment: [],
-          description: '大型イベント会場での音響・照明機材セットアップ',
-          status: 'confirmed' as const,
-          createdBy: userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          siteName: '横浜アリーナ コンサート',
-          startDate: '2024-01-20',
-          endDate: '2024-01-20',
-          equipment: [],
-          description: 'コンサート会場での大型音響システム設置',
-          status: 'confirmed' as const,
-          createdBy: userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }
-      ]
-      
-      for (const event of sampleEvents) {
-        await addDoc(collection(db, COLLECTIONS.EVENTS), event)
+    for (const eventDoc of eventsSnapshot.docs) {
+      const eventData = eventDoc.data()
+      // サンプルイベントかどうかを判定
+      if (eventData.siteName === '東京ドーム イベント会場' || 
+          eventData.siteName === '横浜アリーナ コンサート') {
+        await deleteDoc(doc(db, COLLECTIONS.EVENTS, eventDoc.id))
+        console.log(`サンプルイベント「${eventData.siteName}」を削除しました`)
       }
-      
-      console.log('サンプルイベントデータの初期化が完了しました')
-    } else {
-      console.log('イベントデータは既に存在します')
     }
+    
+    console.log('サンプルイベントの削除が完了しました')
   } catch (error) {
-    console.error('サンプルイベントデータの初期化エラー:', error)
+    console.error('サンプルイベント削除エラー:', error)
     throw error
   }
 }
