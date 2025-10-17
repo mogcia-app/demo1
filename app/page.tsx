@@ -69,7 +69,7 @@ export default function Home() {
   }, [])
 
   // 認証完了後のみFirestoreデータを取得
-  const { events, loading, error, createEvent, updateEvent } = useEvents()
+  const { events, loading, error, createEvent, updateEvent, deleteEvent } = useEvents()
   const { equipment } = useEquipment()
   const { categories } = useEquipmentCategories()
   const { assignees } = useAssignees()
@@ -584,6 +584,9 @@ export default function Home() {
           })
         }
       }
+
+      // Firestoreからイベントを削除
+      await deleteEvent(eventId)
 
       // イベントのデータをクリア
       setEventData(prev => {
