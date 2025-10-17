@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { onAuthStateChange } from '@/lib/auth'
-import { useEvents, useEquipment } from '@/lib/hooks/useFirestore'
+import { useEvents, useEquipment, useAssignees } from '@/lib/hooks/useFirestore'
 import { Equipment } from '@/lib/types'
 import styles from './page.module.css'
 import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft } from 'lucide-react'
@@ -15,6 +15,7 @@ interface EventSchedule {
   endDate: string
   location: string
   assigneeId: string
+  assigneeName: string
   equipment: {
     equipmentId: string
     name: string
@@ -42,6 +43,7 @@ export default function SchedulePage() {
   const router = useRouter()
   const { events } = useEvents()
   const { equipment, loading: equipmentLoading } = useEquipment()
+  const { assignees } = useAssignees()
 
   const [user, setUser] = useState<any>(null)
   const [authChecking, setAuthChecking] = useState(true)
@@ -95,13 +97,18 @@ export default function SchedulePage() {
         ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : 1
 
+      // 担当者名を取得
+      const assignee = assignees?.find(a => a.id === event.assigneeId)
+      const assigneeName = assignee?.name || '未設定'
+
       return {
         eventId: event.id,
         eventName: event.siteName,
         startDate: event.startDate,
         endDate: event.endDate || event.startDate,
         location: event.location || '',
-        assigneeId: '',
+        assigneeId: event.assigneeId || '',
+        assigneeName,
         equipment: (event.equipment || []).map(eq => ({
           equipmentId: eq.equipmentId,
           name: eq.equipmentName,
@@ -127,7 +134,7 @@ export default function SchedulePage() {
     })
     setEventSchedules(schedules)
     setLoading(false)
-  }, [events])
+  }, [events, assignees])
 
   // 月の日付配列を生成
   const getDaysInMonth = (date: Date) => {
@@ -535,6 +542,13 @@ export default function SchedulePage() {
                   <span className={styles.infoLabel}>場所:</span>
                   <span className={styles.infoValue}>
                     {selectedEvent.location || '未設定'}
+                  </span>
+                </div>
+                
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>担当者:</span>
+                  <span className={styles.infoValue}>
+                    {selectedEvent.assigneeName}
                   </span>
                 </div>
               </div>

@@ -24,6 +24,7 @@ export interface Event {
   siteName: string
   startDate: string
   endDate: string
+  assigneeId?: string
   equipment: {
     equipmentId: string
     equipmentName: string
