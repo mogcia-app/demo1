@@ -284,14 +284,18 @@ export default function SchedulePage() {
               {currentMonth.getFullYear()}年{monthNames[currentMonth.getMonth()]}
             </span>
             <div className={styles.currentTime}>
-              {currentTime.toLocaleDateString('ja-JP', { 
-                month: 'short', 
-                day: 'numeric',
-                weekday: 'short'
-              })} {currentTime.toLocaleTimeString('ja-JP', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
+              <span className={styles.currentDate}>
+                {currentTime.getDate()}
+              </span>
+              <span className={styles.currentDateTime}>
+                {currentTime.toLocaleDateString('ja-JP', { 
+                  month: 'short', 
+                  weekday: 'short'
+                })} {currentTime.toLocaleTimeString('ja-JP', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
             </div>
             <button 
               className={styles.navButton}
