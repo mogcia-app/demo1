@@ -131,8 +131,8 @@ export default function SchedulePage() {
         isMultiDay: s.isMultiDay,
         duration: s.duration,
         // デバッグ用：日付オブジェクトの詳細
-        startDateObj: new Date(s.startDate).toISOString(),
-        endDateObj: new Date(s.endDate).toISOString(),
+        startDateObj: new Date(s.startDate).toLocaleDateString('en-CA'),
+        endDateObj: new Date(s.endDate).toLocaleDateString('en-CA'),
         startDateLocal: new Date(s.startDate).toLocaleDateString('ja-JP'),
         endDateLocal: new Date(s.endDate).toLocaleDateString('ja-JP')
       })
@@ -394,9 +394,10 @@ export default function SchedulePage() {
                       let endIndex = -1
                       
                       weekDays.forEach((day, index) => {
-                        const dayStr = day.toISOString().split('T')[0]
-                        const eventStartStr = eventStartDate.toISOString().split('T')[0]
-                        const eventEndStr = eventEndDate.toISOString().split('T')[0]
+                        // タイムゾーンを考慮した日付文字列の比較
+                        const dayStr = day.toLocaleDateString('en-CA') // YYYY-MM-DD形式
+                        const eventStartStr = eventStartDate.toLocaleDateString('en-CA')
+                        const eventEndStr = eventEndDate.toLocaleDateString('en-CA')
                         
                         if (dayStr >= eventStartStr && dayStr <= eventEndStr) {
                           if (startIndex === -1) startIndex = index
@@ -430,9 +431,10 @@ export default function SchedulePage() {
                         let adjustedEndIndex = -1
                         
                         weekDays.forEach((day, index) => {
-                          const dayStr = day.toISOString().split('T')[0]
-                          const adjustedStartStr = adjustedStartDate.toISOString().split('T')[0]
-                          const adjustedEndStr = adjustedEndDate.toISOString().split('T')[0]
+                          // タイムゾーンを考慮した日付文字列の比較
+                          const dayStr = day.toLocaleDateString('en-CA') // YYYY-MM-DD形式
+                          const adjustedStartStr = adjustedStartDate.toLocaleDateString('en-CA')
+                          const adjustedEndStr = adjustedEndDate.toLocaleDateString('en-CA')
                           
                           if (dayStr >= adjustedStartStr && dayStr <= adjustedEndStr) {
                             if (adjustedStartIndex === -1) adjustedStartIndex = index
@@ -464,9 +466,9 @@ export default function SchedulePage() {
                             `${adjustedStartDate.toISOString().split('T')[0]} ~ ${adjustedEndDate.toISOString().split('T')[0]}` : 
                             '週内のみ',
                           // デバッグ用：実際の日付比較
-                          weekDays: weekDays.map(d => d.toISOString().split('T')[0]),
-                          eventStartDate: eventStartDate.toISOString().split('T')[0],
-                          eventEndDate: eventEndDate.toISOString().split('T')[0]
+                          weekDays: weekDays.map(d => d.toLocaleDateString('en-CA')),
+                          eventStartDate: eventStartDate.toLocaleDateString('en-CA'),
+                          eventEndDate: eventEndDate.toLocaleDateString('en-CA')
                         })
                       }
                       
