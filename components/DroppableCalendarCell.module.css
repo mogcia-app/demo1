@@ -82,6 +82,19 @@
   min-height: 24px;
 }
 
+.scheduleItem.continued {
+  background: #6b7280;
+  opacity: 0.8;
+}
+
+.scheduleItem.startDate {
+  border-left: 3px solid #ffffff;
+}
+
+.scheduleItem.endDate {
+  border-right: 3px solid #ffffff;
+}
+
 .scheduleItem:hover {
   transform: scale(1.02);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);

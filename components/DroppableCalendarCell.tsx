@@ -75,7 +75,8 @@ export default function DroppableCalendarCell({
   const dateString = date.toISOString().split('T')[0]
   const itemsForThisDate = scheduleItems.filter(item => 
     item.equipmentName === equipmentName && 
-    item.startDate === dateString
+    (item.startDate === dateString || 
+     (new Date(item.startDate) <= date && new Date(item.endDate) >= date))
   )
 
   // 連日予定を優先してソート（終了日が後のものを優先）
@@ -100,17 +101,25 @@ export default function DroppableCalendarCell({
     >
       {sortedItems.length > 0 ? (
         <>
-          {displayItems.map((item, index) => (
-            <div
-              key={item.id}
-              className={styles.scheduleItem}
-              style={{ backgroundColor: item.color }}
-              onClick={() => onScheduleClick(item)}
-              title={`${item.eventName} (${item.startDate} - ${item.endDate})`}
-            >
-              {item.eventName}
-            </div>
-          ))}
+          {displayItems.map((item, index) => {
+            const isStartDate = item.startDate === dateString
+            const isEndDate = item.endDate === dateString
+            const isMultiDay = item.startDate !== item.endDate
+            
+            return (
+              <div
+                key={item.id}
+                className={`${styles.scheduleItem} ${
+                  isMultiDay && !isStartDate ? styles.continued : ''
+                } ${isStartDate ? styles.startDate : ''} ${isEndDate ? styles.endDate : ''}`}
+                style={{ backgroundColor: item.color }}
+                onClick={() => onScheduleClick(item)}
+                title={`${item.eventName} (${item.startDate} - ${item.endDate})`}
+              >
+                {isMultiDay && !isStartDate ? '...' : item.eventName}
+              </div>
+            )
+          })}
           {remainingCount > 0 && (
             <div
               className={styles.moreItems}
