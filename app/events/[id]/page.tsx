@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar, MapPin, Edit, Trash2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Edit, Trash2, ExternalLink, User } from 'lucide-react'
 import styles from './page.module.css'
 import { useEvent } from '../../../lib/hooks/useFirestore'
 import { onAuthStateChange, isCompanyUser } from '../../../lib/auth'
@@ -155,18 +155,30 @@ export default function EventDetailPage() {
               </div>
             </div>
 
-            <div className={styles.detailItem}>
-              <MapPin className={styles.icon} />
-              <div>
-                <h3>現場名</h3>
-                <p>{event.siteName}</p>
+            {event.location && (
+              <div className={styles.detailItem}>
+                <MapPin className={styles.icon} />
+                <div>
+                  <h3>場所</h3>
+                  <p>{event.location}</p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {event.assigneeId && (
+              <div className={styles.detailItem}>
+                <User className={styles.icon} />
+                <div>
+                  <h3>担当者</h3>
+                  <p>{event.assigneeId}</p>
+                </div>
+              </div>
+            )}
 
             {event.description && (
               <div className={styles.detailItem}>
                 <div>
-                  <h3>詳細</h3>
+                  <h3>メモ・詳細</h3>
                   <p>{event.description}</p>
                 </div>
               </div>
