@@ -79,6 +79,11 @@ export default function DroppableCalendarCell({
      (new Date(item.startDate) <= date && new Date(item.endDate) >= date))
   )
 
+  // デバッグ用: 18日の予定をログ出力
+  if (dateString === '2025-10-18' && equipmentName === 'YAMAHA QL5') {
+    console.log('18日の予定:', itemsForThisDate)
+  }
+
   // 日数が少ない予定を上に表示（1日 < 2日 < 3日）
   const sortedItems = itemsForThisDate.sort((a, b) => {
     const aDuration = Math.ceil((new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
@@ -92,6 +97,16 @@ export default function DroppableCalendarCell({
     // 日数が同じ場合は開始日が早いものを上に
     return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   })
+
+  // デバッグ用: ソート後の結果をログ出力
+  if (dateString === '2025-10-18' && equipmentName === 'YAMAHA QL5') {
+    console.log('ソート後の予定:', sortedItems.map(item => ({
+      name: item.eventName,
+      duration: Math.ceil((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1,
+      startDate: item.startDate,
+      endDate: item.endDate
+    })))
+  }
 
   // 最大3個まで表示、残りは「他X個」として表示
   const maxDisplayItems = 3
