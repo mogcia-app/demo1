@@ -306,13 +306,13 @@
 
 /* 設定メニュー */
 .settingsMenu {
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: 80px;
   right: 20px;
   background: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #d1d5db;
   border-radius: 0px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   min-width: 200px;
 }
@@ -334,7 +334,7 @@
 }
 
 .settingsMenuItem:hover {
-  background-color: #f5f5f5;
+  background-color: #f3f4f6;
 }
 
 .settingsMenuItem:first-child {
@@ -354,7 +354,6 @@
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  position: relative;
 }
 
 .headerContent {
