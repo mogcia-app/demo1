@@ -103,22 +103,63 @@ export default function Home() {
               title: event.siteName || '',
               startDate: event.startDate || '',
               endDate: event.endDate || '',
-              assigneeId: '',
+              assigneeId: event.assigneeId || '', // 修正: assigneeIdを正しく設定
               location: event.location || '',
               memo: event.description || '',
               equipment: event.equipment?.map(eq => ({
                 equipmentId: eq.equipmentId,
                 name: eq.equipmentName || '',
                 quantity: eq.quantity,
-                maxStock: 0 // 後で機材データから取得
+                maxStock: equipment.find(e => e.id === eq.equipmentId)?.stock || 0 // 修正: 機材データから在庫数を取得
               })) || []
             }
           }
         })
         return newEventData
       })
+
+      // 保存済みイベントのSetを更新
+      setSavedEvents(prev => {
+        const newSavedEvents = new Set(prev)
+        uniqueEvents.forEach(event => {
+          newSavedEvents.add(event.id)
+        })
+        return newSavedEvents
+      })
+
+      // 保存済み機材情報も更新
+      setSavedEventEquipment(prev => {
+        const newSavedEquipment = { ...prev }
+        uniqueEvents.forEach(event => {
+          if (event.equipment && event.equipment.length > 0) {
+            newSavedEquipment[event.id] = event.equipment.map(eq => ({
+              equipmentId: eq.equipmentId,
+              quantity: eq.quantity
+            }))
+          }
+        })
+        return newSavedEquipment
+      })
     }
   }, [events])
+
+  // 機材データが読み込まれた時にmaxStockを更新
+  useEffect(() => {
+    if (equipment.length > 0) {
+      setEventData(prev => {
+        const newEventData = { ...prev }
+        Object.keys(newEventData).forEach(eventId => {
+          if (newEventData[eventId].equipment) {
+            newEventData[eventId].equipment = newEventData[eventId].equipment.map(eq => ({
+              ...eq,
+              maxStock: equipment.find(e => e.id === eq.equipmentId)?.stock || eq.maxStock
+            }))
+          }
+        })
+        return newEventData
+      })
+    }
+  }, [equipment])
 
   // デバッグ用: 一時的に認証をスキップ（400エラーを回避）
   // useEffect(() => {
