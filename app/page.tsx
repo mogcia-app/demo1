@@ -52,6 +52,11 @@ export default function Home() {
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+
+  // デバッグ用: 設定メニューの状態を監視
+  useEffect(() => {
+    console.log('設定メニューの状態:', showSettingsMenu)
+  }, [showSettingsMenu])
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [previewingEventId, setPreviewingEventId] = useState<string | null>(null)
   const [showEquipmentEditModal, setShowEquipmentEditModal] = useState(false)
@@ -867,7 +872,10 @@ export default function Home() {
             </div>
             <button 
               className={styles.iconButton}
-              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              onClick={() => {
+                console.log('設定ボタンがクリックされました')
+                setShowSettingsMenu(!showSettingsMenu)
+              }}
               title="設定"
             >
               <Settings className={styles.icon} />
