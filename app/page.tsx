@@ -12,7 +12,7 @@ import styles from './page.module.css'
 import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents, useEquipment, useEquipmentCategories, useAssignees } from '../lib/hooks/useFirestore'
 import { Event } from '../lib/types'
-import { initializeAllData, removeAllGroups, removeSampleEvents } from '../lib/initData'
+import { initializeAllData } from '../lib/initData'
 import { useFirestoreOperations } from '../lib/hooks/useCloudFunction'
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarInfo } from '../lib/google/calendar-client'
 import { decreaseInventory, increaseInventory, adjustInventory } from '../lib/inventory'
@@ -86,7 +86,7 @@ export default function Home() {
   const { equipment } = useEquipment()
   const { categories } = useEquipmentCategories()
   const { assignees } = useAssignees()
-  const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
+  const { addDocument: addCategory, loading: addCategoryLoading, deleteDocument: deleteCategory } = useFirestoreOperations('equipmentCategories')
 
   // イベントが読み込まれた時に初期データを設定
   useEffect(() => {
@@ -204,34 +204,17 @@ export default function Home() {
     }
   }
 
-  const handleRemoveAllGroups = async () => {
+  // 機材グループを個別削除
+  const handleDeleteGroup = async (groupId: string) => {
     if (!user) return
     
-    if (confirm('全ての機材グループを削除しますか？この操作は元に戻せません。')) {
-      try {
-        await removeAllGroups()
-        alert('全ての機材グループを削除しました！')
-        window.location.reload()
+    try {
+      // Firestoreからグループを削除
+      await deleteCategory(groupId)
+      alert('グループを削除しました！')
       } catch (error) {
-        console.error('機材グループ削除エラー:', error)
-        alert('機材グループの削除に失敗しました。')
-      }
-    }
-  }
-
-  // サンプルイベントを削除
-  const handleRemoveSampleEvents = async () => {
-    if (!user) return
-    
-    if (confirm('サンプルイベント（東京ドーム、横浜アリーナ）を削除しますか？')) {
-      try {
-        await removeSampleEvents()
-        alert('サンプルイベントを削除しました！')
-        window.location.reload()
-      } catch (error) {
-        console.error('サンプルイベント削除エラー:', error)
-        alert('サンプルイベントの削除に失敗しました。')
-      }
+      console.error('グループ削除エラー:', error)
+      alert('グループの削除に失敗しました。')
     }
   }
 
@@ -904,24 +887,6 @@ export default function Home() {
             >
               管理者設定
             </button>
-            <button 
-              className={styles.settingsMenuItem}
-              onClick={() => {
-                setShowSettingsMenu(false)
-                handleRemoveSampleEvents()
-              }}
-            >
-              サンプルイベントを削除
-            </button>
-            <button 
-              className={styles.settingsMenuItem}
-              onClick={() => {
-                setShowSettingsMenu(false)
-                handleRemoveAllGroups()
-              }}
-            >
-              機材グループを全削除
-            </button>
           </div>
         </div>
       )}
@@ -935,7 +900,7 @@ export default function Home() {
           />
         ) : (
           <div className={styles.layout}>
-            {/* 左側: 機材管理 */}
+          {/* 左側: 機材管理 */}
             <EquipmentManagement
               equipment={equipment}
               categories={categories}
@@ -946,7 +911,7 @@ export default function Home() {
               expandedGroups={expandedGroups}
               onToggleGroup={toggleGroup}
               onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
+                        onDragEnd={handleDragEnd}
               showAddGroup={showAddGroup}
               onShowAddGroup={setShowAddGroup}
               newGroupName={newGroupName}
@@ -954,6 +919,7 @@ export default function Home() {
               onAddGroup={handleAddGroup}
               onCancelAddGroup={cancelAddGroup}
               addCategoryLoading={addCategoryLoading}
+              onDeleteGroup={handleDeleteGroup}
             />
 
             {/* 右側: 現場管理 */}
@@ -974,9 +940,9 @@ export default function Home() {
               onInitializeData={handleInitializeData}
               loading={loading}
             />
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
       {/* 現場プレビューモーダル */}
       <EventPreviewModal
@@ -986,10 +952,10 @@ export default function Home() {
           title: '',
           startDate: '',
           endDate: '',
-          assigneeId: '',
-          location: '',
-          memo: '',
-          equipment: []
+                  assigneeId: '',
+                  location: '',
+                  memo: '',
+                  equipment: []
         } : {
           title: '',
           startDate: '',

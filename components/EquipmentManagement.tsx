@@ -37,6 +37,7 @@ interface EquipmentManagementProps {
   onAddGroup: () => void
   onCancelAddGroup: () => void
   addCategoryLoading: boolean
+  onDeleteGroup: (groupId: string) => void
 }
 
 export default function EquipmentManagement({
@@ -56,7 +57,8 @@ export default function EquipmentManagement({
   onNewGroupNameChange,
   onAddGroup,
   onCancelAddGroup,
-  addCategoryLoading
+  addCategoryLoading,
+  onDeleteGroup
 }: EquipmentManagementProps) {
   // 機材グループをFirestoreから取得したデータで構築（複数カテゴリ対応）
   const equipmentGroups = categories.map(category => ({
@@ -211,6 +213,18 @@ export default function EquipmentManagement({
                         {expandedGroups.has(group.id) ? '-' : '+'}
                       </span>
                     </div>
+                    <button 
+                      className={styles.deleteGroupButton}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm(`「${group.name}」グループを削除しますか？\n\nこのグループに属する機材は削除されませんが、グループ分類が解除されます。`)) {
+                          onDeleteGroup(group.id)
+                        }
+                      }}
+                      title="グループを削除"
+                    >
+                      🗑️
+                    </button>
                   </div>
                   {expandedGroups.has(group.id) && (
                     <div className={styles.equipmentTable}>
