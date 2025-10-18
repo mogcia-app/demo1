@@ -1,0 +1,198 @@
+/* EventManagement.module.css */
+.eventsSection {
+  flex: 1;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.eventsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.createEventButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #38a169;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.createEventButton:hover:not(:disabled) {
+  background: #2f855a;
+}
+
+.createEventButton:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #718096;
+}
+
+.emptyState p {
+  margin: 8px 0;
+}
+
+.initButton {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.initButton:hover {
+  background: #2c5aa0;
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eventCard {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.eventCard:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.eventInfo {
+  flex: 1;
+}
+
+.eventTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.eventTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.eventStatus {
+  flex-shrink: 0;
+}
+
+.savedBadge {
+  background: #c6f6d5;
+  color: #22543d;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.draftBadge {
+  background: #fed7d7;
+  color: #742a2a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.eventMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.eventMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.eventMetaItem .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.equipmentCount {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.eventActions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.editButton,
+.deleteButton {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.editButton {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+.editButton:hover {
+  background: #b2f5ea;
+}
+
+.deleteButton {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.deleteButton:hover {
+  background: #feb2b2;
+}

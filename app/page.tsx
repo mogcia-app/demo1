@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Calendar, Settings, LogOut, ChevronDown, ChevronUp, MapPin, Clock, Grid3X3, GripVertical, Users } from 'lucide-react'
+import { Calendar, Settings, LogOut, Grid3X3 } from 'lucide-react'
 import EquipmentSchedule from '../components/EquipmentSchedule'
+import EquipmentManagement from '../components/EquipmentManagement'
+import EventManagement from '../components/EventManagement'
+import EventEditModal from '../components/EventEditModal'
 import styles from './page.module.css'
 import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents, useEquipment, useEquipmentCategories, useAssignees } from '../lib/hooks/useFirestore'
@@ -19,7 +22,6 @@ export default function Home() {
   const [user, setUser] = useState<any>(null)
   const [authChecking, setAuthChecking] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [equipmentViewMode, setEquipmentViewMode] = useState<'all' | 'grouped'>('all')
@@ -269,15 +271,6 @@ export default function Home() {
     setExpandedGroups(newExpanded)
   }
 
-  const toggleEvent = (eventId: string) => {
-    const newExpanded = new Set(expandedEvents)
-    if (newExpanded.has(eventId)) {
-      newExpanded.delete(eventId)
-    } else {
-      newExpanded.add(eventId)
-    }
-    setExpandedEvents(newExpanded)
-  }
 
   // グループ追加機能
   const handleAddGroup = async () => {
@@ -516,9 +509,6 @@ export default function Home() {
 
   // 現場保存（Google Calendar連携 + 在庫減算）
   const handleSaveEvent = async (eventId: string) => {
-    const event = events.find(e => e.id === eventId)
-    if (!event) return
-
     const data = eventData[eventId]
     if (!data) {
       alert('現場データがありません')
@@ -541,6 +531,10 @@ export default function Home() {
     const eventUrl = `${window.location.origin}/events/${eventId}`
 
     try {
+      // 新規作成か既存編集かを判定
+      const isNewEvent = eventId.startsWith('temp-')
+      let actualEventId = eventId
+
       // 在庫処理
       const previousEquipment = savedEventEquipment[eventId] || []
       const newEquipmentItems = data.equipment.map(eq => ({
@@ -564,12 +558,6 @@ export default function Home() {
         return
       }
 
-      // 在庫処理成功後、保存した機材情報を記録
-      setSavedEventEquipment(prev => ({
-        ...prev,
-        [eventId]: newEquipmentItems
-      }))
-
       // Firestoreに現場データを保存
       const eventToSave = {
         siteName: data.title,
@@ -591,16 +579,38 @@ export default function Home() {
         assigneeId: data.assigneeId
       }
 
-      if (savedEvents.has(eventId)) {
+      if (isNewEvent) {
+        // 新しい現場を作成
+        actualEventId = await createEvent(eventToSave)
+        
+        // 一時的なeventDataを実際のIDに移行
+        if (actualEventId) {
+          setEventData(prev => {
+            const newData = { ...prev }
+            delete newData[eventId] // 一時IDを削除
+            newData[actualEventId] = data // 実際のIDで保存
+            return newData
+          })
+          
+          // 保存した機材情報も移行
+          setSavedEventEquipment(prev => ({
+            ...prev,
+            [actualEventId]: newEquipmentItems
+          }))
+        }
+      } else {
         // 既存の現場を更新
         await updateEvent(eventId, eventToSave)
-      } else {
-        // 新しい現場を作成
-        await createEvent(eventToSave)
+        
+        // 保存した機材情報を更新
+        setSavedEventEquipment(prev => ({
+          ...prev,
+          [eventId]: newEquipmentItems
+        }))
       }
 
       // このイベントを保存済みとしてマーク
-      setSavedEvents(prev => new Set(prev).add(eventId))
+      setSavedEvents(prev => new Set(prev).add(actualEventId))
 
       // 編集中状態を解除
       setEditingEventId(null)
@@ -608,7 +618,7 @@ export default function Home() {
       // eventDataを更新（機材名などの表示を確実にするため）
       setEventData(prev => ({
         ...prev,
-        [eventId]: {
+        [actualEventId]: {
           ...data,
           // 機材情報を確実に更新
           equipment: data.equipment.map(eq => ({
@@ -629,16 +639,16 @@ export default function Home() {
       }
 
       let result: { success: boolean; eventId?: string | null; eventUrl?: string | null; calendarUrl?: string; calendarId?: string; error?: string }
-      if (calendarEventIds[eventId]) {
+      if (calendarEventIds[actualEventId]) {
         // 既存のイベントを更新
-        result = await updateCalendarEvent(calendarEventIds[eventId], calendarData)
+        result = await updateCalendarEvent(calendarEventIds[actualEventId], calendarData)
       } else {
         // 新しいイベントを作成
         result = await createCalendarEvent(calendarData)
         if (result.success && result.eventId) {
           setCalendarEventIds(prev => ({
             ...prev,
-            [eventId]: result.eventId!
+            [actualEventId]: result.eventId!
           }))
         }
       }
@@ -724,37 +734,27 @@ export default function Home() {
 
   // 新しい現場作成
   const handleCreateEvent = async () => {
-    // 仮の現場を作成してFirestoreに保存
-    try {
-      const newEventId = await createEvent({
-        siteName: '新しい現場',
+    // 新しい現場のIDを生成（一時的なもの）
+    const tempEventId = `temp-${Date.now()}`
+    
+    // 新しい現場の初期データを設定
+    setEventData(prev => ({
+      ...prev,
+      [tempEventId]: {
+        title: '新しい現場',
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
-        equipment: [],
-        description: '',
+        assigneeId: '',
         location: '',
-        status: 'draft',
-        priority: 'medium',
-        createdBy: user?.uid || ''
-      })
-
-      // 新しい現場の初期データを設定（Firestoreから取得されるので不要）
-      if (newEventId) {
-        // 自動的に開く
-        setExpandedEvents(prev => new Set(prev).add(newEventId))
-        
-        // 編集中状態に設定
-        setEditingEventId(newEventId)
-        
-        console.log('新しい現場を作成しました:', newEventId)
+        memo: '',
+        equipment: []
       }
-      
-      setShowCreateEvent(false)
-      alert('新しい現場を作成しました！内容を編集してください。')
-    } catch (error) {
-      console.error('現場作成エラー:', error)
-      alert('現場の作成に失敗しました')
-    }
+    }))
+    
+    // 編集中状態に設定（モーダルを開く）
+    setEditingEventId(tempEventId)
+    
+    console.log('新しい現場を作成しました:', tempEventId)
   }
 
   // 認証チェック中
@@ -884,534 +884,80 @@ export default function Home() {
           />
         ) : (
           <div className={styles.layout}>
-          {/* 左側: 機材管理 */}
-          <div className={styles.equipmentSection}>
-            <div className={styles.equipmentHeader}>
-              <h2 className={styles.sectionTitle}>機材管理</h2>
-              <p className={styles.equipmentNote}>※機材の追加・編集は管理者ページで行えます</p>
-            </div>
+            {/* 左側: 機材管理 */}
+            <EquipmentManagement
+              equipment={equipment}
+              categories={categories}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              equipmentViewMode={equipmentViewMode}
+              onViewModeChange={setEquipmentViewMode}
+              expandedGroups={expandedGroups}
+              onToggleGroup={toggleGroup}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              showAddGroup={showAddGroup}
+              onShowAddGroup={setShowAddGroup}
+              newGroupName={newGroupName}
+              onNewGroupNameChange={setNewGroupName}
+              onAddGroup={handleAddGroup}
+              onCancelAddGroup={cancelAddGroup}
+              addCategoryLoading={addCategoryLoading}
+            />
 
-            {/* タブ切り替え */}
-            <div className={styles.equipmentTabs}>
-                <button 
-                className={`${styles.equipmentTab} ${equipmentViewMode === 'all' ? styles.activeEquipmentTab : ''}`}
-                onClick={() => setEquipmentViewMode('all')}
-                >
-                全機材
-                </button>
-              <button
-                className={`${styles.equipmentTab} ${equipmentViewMode === 'grouped' ? styles.activeEquipmentTab : ''}`}
-                onClick={() => setEquipmentViewMode('grouped')}
-              >
-                グループ別
-              </button>
-            </div>
-
-            {/* 全機材表示 */}
-            {equipmentViewMode === 'all' && (
-              <div className={styles.allEquipmentList}>
-                {equipment.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <p>機材がありません</p>
-                    <p>管理者ページから機材を追加してください</p>
-                  </div>
-                ) : (
-                  <div className={styles.equipmentTable}>
-                    <div className={styles.tableHeader}>
-                      <div className={styles.tableCell}>機材名</div>
-                      <div className={styles.tableCell}>在庫</div>
-                    </div>
-                    {equipment.map((eq) => (
-                      <div 
-                        key={eq.id} 
-                        className={styles.tableRow}
-                        draggable
-                        onDragStart={() => handleDragStart(eq)}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <div className={styles.tableCell}>
-                          <span className={styles.equipmentNumber}>#{eq.id}</span>
-                          <span className={styles.equipmentName}>{eq.name}</span>
-                        </div>
-                        <div className={styles.tableCell}>
-                          <span className={styles.equipmentStock}>{eq.stock}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* グループ別表示 */}
-            {equipmentViewMode === 'grouped' && (
-              <div className={styles.groupedEquipmentList}>
-                {/* グループ追加ボタン */}
-                <div className={styles.groupAddSection}>
-                <button 
-                  className={styles.addGroupButton}
-                  onClick={() => setShowAddGroup(true)}
-                >
-                  <Plus className={styles.icon} />
-                  グループ追加
-                </button>
-            </div>
-
-            {/* グループ追加フォーム */}
-            {showAddGroup && (
-              <div className={styles.addGroupForm}>
-                <input
-                  type="text"
-                  placeholder="グループ名を入力"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  className={styles.formInput}
-                  autoFocus
-                />
-                <div className={styles.formActions}>
-                  <button 
-                    className={styles.saveButton}
-                    onClick={handleAddGroup}
-                    disabled={addCategoryLoading || !newGroupName.trim()}
-                  >
-                    {addCategoryLoading ? '追加中...' : '追加'}
-                  </button>
-                  <button 
-                    className={styles.cancelButton}
-                    onClick={cancelAddGroup}
-                  >
-                    キャンセル
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className={styles.equipmentGroups}>
-              {filteredEquipmentGroups.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <p>機材グループがありません</p>
-                  <p>「グループ追加」ボタンから新しいグループを作成してください</p>
-                </div>
-              ) : (
-                filteredEquipmentGroups.map((group) => (
-                  <div key={group.id} className={styles.equipmentGroup}>
-                    <div className={styles.groupHeader}>
-                      <div 
-                        className={styles.groupHeaderContent}
-                        onClick={() => toggleGroup(group.id)}
-                      >
-                        <span className={styles.groupTitle}>{group.name}</span>
-                        <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
-                        <span className={styles.toggleButton}>
-                          {expandedGroups.has(group.id) ? '-' : '+'}
-                        </span>
-                      </div>
-                    </div>
-                    {expandedGroups.has(group.id) && (
-                      <div className={styles.equipmentTable}>
-                        <div className={styles.tableHeader}>
-                          <div className={styles.tableCell}>機材名</div>
-                          <div className={styles.tableCell}>在庫</div>
-                        </div>
-                        {group.equipment.length === 0 ? (
-                          <div className={styles.emptyEquipment}>
-                            <p>このグループに機材がありません</p>
-                          </div>
-                        ) : (
-                          group.equipment.map((equipment) => (
-                            <div 
-                              key={equipment.id} 
-                              className={styles.tableRow}
-                              draggable
-                              onDragStart={() => handleDragStart(equipment)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <div className={styles.tableCell}>
-                                <span className={styles.equipmentNumber}>#{equipment.id}</span>
-                                <span className={styles.equipmentName}>{equipment.name}</span>
-                              </div>
-                              <div className={styles.tableCell}>
-                                <span className={styles.equipmentStock}>{equipment.stock}</span>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-              </div>
-            )}
+            {/* 右側: 現場管理 */}
+            <EventManagement
+              events={events}
+              assignees={assignees}
+              eventData={eventData}
+              savedEvents={savedEvents}
+              editingEventId={editingEventId}
+              onEditEvent={(eventId) => {
+                setEditingEventId(eventId)
+              }}
+              onDeleteEvent={handleDeleteEvent}
+              onCreateEvent={handleCreateEvent}
+              onInitializeData={handleInitializeData}
+              loading={loading}
+            />
           </div>
+        )}
+      </div>
 
-          {/* 右側: 現場管理 */}
-          <div className={styles.eventsSection}>
-            <div className={styles.eventsHeader}>
-              <h2 className={styles.sectionTitle}>現場管理</h2>
-              <button 
-                className={styles.createEventButton}
-                onClick={handleCreateEvent}
-                disabled={loading}
-              >
-                <Plus className={styles.icon} />
-                {loading ? '作成中...' : '新しい現場を登録'}
-              </button>
-            </div>
-
-            
-            {events.length === 0 && (
-              <div className={styles.emptyState}>
-                <p>登録された現場がありません</p>
-                <button 
-                  className={styles.initButton}
-                  onClick={handleInitializeData}
-                >
-                  サンプルデータを初期化
-                </button>
-              </div>
-            )}
-
-
-            <div className={styles.eventsList}>
-              {events.reduce((acc, event) => {
-                // 重複を除去（同じIDのイベントが複数ある場合）
-                if (!acc.find(e => e.id === event.id)) {
-                  acc.push(event)
-                }
-                return acc
-              }, [] as typeof events).map((event) => {
-                const data = eventData[event.id] || {
-                  title: event.siteName,
-                  startDate: event.startDate,
-                  endDate: event.endDate,
-                  assigneeId: '',
-                  location: '',
-                  memo: '',
-                  equipment: []
-                }
-                const assignee = assignees.find(a => a.id === data.assigneeId)
-                const isSaved = savedEvents.has(event.id)
-                
-                return (
-                <div key={event.id} className={styles.eventCard}>
-                    {/* 編集中タブの表示 */}
-                    {editingEventId === event.id && (
-                      <div className={styles.editingTab}>
-                        <div className={styles.editingTabHeader}>
-                          <span className={styles.editingTabTitle}>編集中</span>
-                          <button 
-                            className={styles.cancelButton}
-                            onClick={() => {
-                              setEditingEventId(null)
-                              setExpandedEvents(prev => {
-                                const newSet = new Set(prev)
-                                newSet.delete(event.id)
-                                return newSet
-                              })
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                  <div 
-                    className={styles.eventHeader}
-                    onClick={() => toggleEvent(event.id)}
-                  >
-                    <div className={styles.eventTitle}>
-                        <h3>{data.title || event.siteName}</h3>
-                      <div className={styles.eventMeta}>
-                          <div className={styles.eventMetaItem}>
-                          <Calendar className={styles.icon} />
-                            {data.startDate === data.endDate 
-                              ? data.startDate 
-                              : `${data.startDate} - ${data.endDate}`
-                          }
-                        </div>
-                          {assignee && (
-                            <div className={styles.eventMetaItem}>
-                              <Users className={styles.icon} />
-                              {assignee.name}
-                        </div>
-                          )}
-                          {/* 保存状態の表示 */}
-                          {isSaved && (
-                            <div className={styles.eventMetaItem}>
-                              <span className={styles.savedStatus}>✅ 保存済み</span>
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                    <div className={styles.eventToggle}>
-                      {expandedEvents.has(event.id) ? (
-                        <ChevronUp className={styles.icon} />
-                      ) : (
-                        <ChevronDown className={styles.icon} />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {expandedEvents.has(event.id) && (
-                    <div className={styles.eventDetails}>
-                        {/* タイトル */}
-                        <div className={styles.inputSection}>
-                          <h4>現場名（タイトル）</h4>
-                          <input 
-                            type="text" 
-                            placeholder="現場名を入力"
-                            className={styles.titleInput}
-                            value={data.title}
-                            onChange={(e) => updateEventData(event.id, 'title', e.target.value)}
-                          />
-                        </div>
-
-                        {/* 日付 */}
-                        <div className={styles.inputSection}>
-                          <h4>日付</h4>
-                          {isSaved && editingEventId !== event.id ? (
-                            <div className={styles.readOnlyValue}>
-                              {data.startDate === data.endDate 
-                                ? data.startDate 
-                                : `${data.startDate} 〜 ${data.endDate}`}
-                            </div>
-                          ) : (
-                            <div className={styles.dateRow}>
-                              <div className={styles.dateField}>
-                                <label>開始日</label>
-                                <input 
-                                  type="date" 
-                                  value={data.startDate}
-                                  onChange={(e) => updateEventData(event.id, 'startDate', e.target.value)}
-                                  className={styles.dateInput}
-                                />
-                              </div>
-                              <div className={styles.dateField}>
-                                <label>終了日</label>
-                                <input 
-                                  type="date" 
-                                  value={data.endDate}
-                                  onChange={(e) => updateEventData(event.id, 'endDate', e.target.value)}
-                                  className={styles.dateInput}
-                                  min={data.startDate}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 担当者 */}
-                        <div className={styles.inputSection}>
-                          <h4>担当者</h4>
-                          {isSaved && editingEventId !== event.id ? (
-                            <div className={styles.readOnlyValue}>
-                              {assignee ? assignee.name : '未設定'}
-                            </div>
-                          ) : (
-                            <select 
-                              className={styles.assigneeSelect}
-                              value={data.assigneeId}
-                              onChange={(e) => updateEventData(event.id, 'assigneeId', e.target.value)}
-                            >
-                              <option value="">担当者を選択</option>
-                              {assignees.filter(a => a.isActive).map((assignee) => (
-                                <option key={assignee.id} value={assignee.id}>
-                                  {assignee.name}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-
-                        {/* 場所 */}
-                        <div className={styles.inputSection}>
-                          <h4>場所（Googleマップ紐付け）</h4>
-                          {isSaved && editingEventId !== event.id ? (
-                            <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
-                          ) : (
-                            <input 
-                              type="text" 
-                              placeholder="場所を入力"
-                              className={styles.locationInput}
-                              value={data.location}
-                              onChange={(e) => updateEventData(event.id, 'location', e.target.value)}
-                            />
-                          )}
-                        </div>
-
-                        {/* メモ */}
-                        <div className={styles.inputSection}>
-                          <h4>メモ</h4>
-                          {isSaved && editingEventId !== event.id ? (
-                            <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
-                          ) : (
-                            <textarea 
-                              placeholder="備考やメモを入力してください"
-                              className={styles.textarea}
-                              value={data.memo}
-                              onChange={(e) => updateEventData(event.id, 'memo', e.target.value)}
-                              rows={3}
-                            />
-                          )}
-                        </div>
-
-                        {/* 機材選択 */}
-                        <div className={styles.inputSection}>
-                          <h4>機材選択</h4>
-                          {isSaved && editingEventId !== event.id ? (
-                            <div className={styles.savedEquipmentSection}>
-                              <div className={styles.equipmentList}>
-                                {(data.equipment || []).length === 0 ? (
-                                  <div className={styles.emptyEquipmentMessage}>
-                                    機材が登録されていません
-                                  </div>
-                                ) : (
-                                  (data.equipment || []).map((eq) => (
-                                    <div key={eq.equipmentId} className={styles.equipmentCard}>
-                                      <div className={styles.equipmentCardHeader}>
-                                        <span className={styles.equipmentCardName}>
-                                          #{eq.equipmentId} {eq.name}
-                                        </span>
-                                        <span className={styles.equipmentQuantity}>
-                                          {eq.quantity}台
-                                        </span>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                              <button 
-                                className={styles.editEquipmentButton}
-                                onClick={() => handleOpenEquipmentEdit(event.id)}
-                              >
-                                ✏️ 機材編集
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <div 
-                                className={styles.equipmentInputContainer}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => handleDrop(event.id, e)}
-                        >
-                            <input 
-                              type="text" 
-                                  placeholder="例: #1*2 または #1*2,#2*5 （左の機材をドラッグ&ドロップも可）"
-                              className={styles.equipmentInputField}
-                              value={equipmentInputValue[event.id] || ''}
-                              onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleAddEquipmentByNumber(event.id)
-                                }
-                              }}
-                            />
-                            <button 
-                              className={styles.addEquipmentButton}
-                              onClick={() => handleAddEquipmentByNumber(event.id)}
-                              disabled={!equipmentInputValue[event.id]?.trim()}
-                            >
-                              追加
-                            </button>
-                          </div>
-                          <div className={styles.equipmentList}>
-                                {(data.equipment || []).length === 0 ? (
-                                  <div className={styles.emptyEquipmentMessage}>
-                                    機材Noを入力して機材を追加してください
-                                  </div>
-                                ) : (
-                                  (data.equipment || []).map((eq) => (
-                                    <div key={eq.equipmentId} className={styles.equipmentCard}>
-                                      <div className={styles.equipmentCardHeader}>
-                                        <span className={styles.equipmentCardName}>
-                                          #{eq.equipmentId} {eq.name}
-                                        </span>
-                                <button 
-                                          className={styles.equipmentCardRemove}
-                                          onClick={() => removeEquipment(event.id, eq.equipmentId)}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                                      <div className={styles.equipmentCardBody}>
-                                        <div className={styles.quantityControl}>
-                                          <label className={styles.quantityLabel}>数量:</label>
-                                          <button
-                                            className={styles.quantityButton}
-                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity - 1)}
-                                            disabled={eq.quantity <= 1}
-                                          >
-                                            -
-                                          </button>
-                                          <input
-                                            type="number"
-                                            className={styles.quantityInput}
-                                            value={eq.quantity}
-                                            onChange={(e) => updateEquipmentQuantity(event.id, eq.equipmentId, parseInt(e.target.value) || 1)}
-                                            min="1"
-                                            max={eq.maxStock}
-                                          />
-                                          <button
-                                            className={styles.quantityButton}
-                                            onClick={() => updateEquipmentQuantity(event.id, eq.equipmentId, eq.quantity + 1)}
-                                            disabled={eq.quantity >= eq.maxStock}
-                                          >
-                                            +
-                                          </button>
-                          </div>
-                                        <div className={styles.stockInfo}>
-                                          <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
-                                            在庫: {eq.maxStock}台
-                                          </span>
-                        </div>
-                      </div>
-                      </div>
-                                  ))
-                                )}
-                          </div>
-                            </>
-                          )}
-                            </div>
-
-                        {/* 保存・削除ボタン */}
-                        <div className={styles.eventActions}>
-                          {isSaved && editingEventId !== event.id ? (
-                            <button 
-                              className={styles.deleteEventButton}
-                              onClick={() => handleDeleteEvent(event.id)}
-                            >
-                              削除
-                            </button>
-                          ) : (
-                            <>
-                              <button 
-                                className={styles.saveEventButton}
-                                onClick={() => handleSaveEvent(event.id)}
-                              >
-                                {isSaved ? '更新' : '保存'}
-                              </button>
-                              <button 
-                                className={styles.deleteEventButton}
-                                onClick={() => handleDeleteEvent(event.id)}
-                              >
-                                削除
-                              </button>
-                            </>
-                          )}
-                        </div>
-                              </div>
-                            )}
-                          </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-                            )}
-                          </div>
+      {/* 現場編集モーダル */}
+      <EventEditModal
+        isOpen={!!editingEventId}
+        eventId={editingEventId}
+        event={editingEventId ? events.find(e => e.id === editingEventId) || null : null}
+        eventData={editingEventId ? eventData[editingEventId] || {
+          title: '',
+          startDate: '',
+          endDate: '',
+          assigneeId: '',
+          location: '',
+          memo: '',
+          equipment: []
+        } : {
+          title: '',
+          startDate: '',
+          endDate: '',
+          assigneeId: '',
+          location: '',
+          memo: '',
+          equipment: []
+        }}
+        assignees={assignees}
+        equipmentInputValue={editingEventId ? equipmentInputValue[editingEventId] || '' : ''}
+        onClose={() => {
+          setEditingEventId(null)
+        }}
+        onUpdateEventData={updateEventData}
+        onEquipmentInput={handleEquipmentInput}
+        onAddEquipmentByNumber={handleAddEquipmentByNumber}
+        onRemoveEquipment={removeEquipment}
+        onUpdateEquipmentQuantity={updateEquipmentQuantity}
+        onSaveEvent={handleSaveEvent}
+      />
 
       {/* 機材編集モーダル */}
       {showEquipmentEditModal && editingEquipmentEventId && (

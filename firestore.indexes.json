@@ -15,16 +15,6 @@
       ]
     },
     {
-      "collectionGroup": "processedData",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "processedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
