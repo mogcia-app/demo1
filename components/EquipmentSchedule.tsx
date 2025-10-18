@@ -34,6 +34,14 @@ export default function EquipmentSchedule({ equipment, onAddSchedule }: Equipmen
   const [showAddForm, setShowAddForm] = useState(false)
   const [draggedEquipment, setDraggedEquipment] = useState<any>(null)
   const [showEquipmentList, setShowEquipmentList] = useState(false)
+  const [showMoreModal, setShowMoreModal] = useState(false)
+  const [moreModalData, setMoreModalData] = useState<{
+    date: Date
+    equipmentName: string
+    schedules: ScheduleItem[]
+  } | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null)
 
   // サンプルスケジュールデータ
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
@@ -177,7 +185,14 @@ export default function EquipmentSchedule({ equipment, onAddSchedule }: Equipmen
 
   // スケジュールクリック
   const handleScheduleClick = (schedule: ScheduleItem) => {
-    alert(`イベント: ${schedule.eventName}\n機材: ${schedule.equipmentName}\n期間: ${schedule.startDate} - ${schedule.endDate}`)
+    setSelectedSchedule(schedule)
+    setShowDetailModal(true)
+  }
+
+  // 「他X個」クリック
+  const handleShowMoreClick = (date: Date, equipmentName: string, schedules: ScheduleItem[]) => {
+    setMoreModalData({ date, equipmentName, schedules })
+    setShowMoreModal(true)
   }
 
   // ランダムカラー生成
@@ -291,6 +306,7 @@ export default function EquipmentSchedule({ equipment, onAddSchedule }: Equipmen
                     scheduleItems={scheduleItems}
                     onDrop={handleDrop}
                     onScheduleClick={handleScheduleClick}
+                    onShowMoreClick={handleShowMoreClick}
                   />
                 )
               })}
@@ -363,6 +379,92 @@ export default function EquipmentSchedule({ equipment, onAddSchedule }: Equipmen
               >
                 キャンセル
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 「他X個」モーダル */}
+      {showMoreModal && moreModalData && (
+        <div className={styles.modalOverlay} onClick={() => setShowMoreModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>
+                {moreModalData.equipmentName} - {moreModalData.date.toLocaleDateString('ja-JP')}
+              </h3>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setShowMoreModal(false)}
+              >
+                <X className={styles.icon} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.scheduleList}>
+                {moreModalData.schedules.map((schedule) => (
+                  <div 
+                    key={schedule.id}
+                    className={styles.scheduleItem}
+                    style={{ backgroundColor: schedule.color }}
+                    onClick={() => {
+                      setSelectedSchedule(schedule)
+                      setShowMoreModal(false)
+                      setShowDetailModal(true)
+                    }}
+                  >
+                    <div className={styles.scheduleTitle}>{schedule.eventName}</div>
+                    <div className={styles.schedulePeriod}>
+                      {schedule.startDate} - {schedule.endDate}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 詳細モーダル */}
+      {showDetailModal && selectedSchedule && (
+        <div className={styles.modalOverlay} onClick={() => setShowDetailModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>予定詳細</h3>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setShowDetailModal(false)}
+              >
+                <X className={styles.icon} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.detailContent}>
+                <div className={styles.detailItem}>
+                  <label>イベント名</label>
+                  <div className={styles.detailValue}>{selectedSchedule.eventName}</div>
+                </div>
+                <div className={styles.detailItem}>
+                  <label>機材名</label>
+                  <div className={styles.detailValue}>{selectedSchedule.equipmentName}</div>
+                </div>
+                <div className={styles.detailItem}>
+                  <label>開始日</label>
+                  <div className={styles.detailValue}>{selectedSchedule.startDate}</div>
+                </div>
+                <div className={styles.detailItem}>
+                  <label>終了日</label>
+                  <div className={styles.detailValue}>{selectedSchedule.endDate}</div>
+                </div>
+                <div className={styles.detailItem}>
+                  <label>期間</label>
+                  <div className={styles.detailValue}>
+                    {new Date(selectedSchedule.endDate).getTime() - new Date(selectedSchedule.startDate).getTime() === 0 
+                      ? '1日' 
+                      : `${Math.ceil((new Date(selectedSchedule.endDate).getTime() - new Date(selectedSchedule.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1}日間`
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

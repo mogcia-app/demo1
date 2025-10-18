@@ -19,6 +19,7 @@ interface DroppableCalendarCellProps {
   scheduleItems: ScheduleItem[]
   onDrop: (equipmentName: string, date: Date, eventName: string) => void
   onScheduleClick: (schedule: ScheduleItem) => void
+  onShowMoreClick: (date: Date, equipmentName: string, schedules: ScheduleItem[]) => void
 }
 
 export default function DroppableCalendarCell({ 
@@ -26,7 +27,8 @@ export default function DroppableCalendarCell({
   equipmentName, 
   scheduleItems, 
   onDrop, 
-  onScheduleClick 
+  onScheduleClick,
+  onShowMoreClick
 }: DroppableCalendarCellProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showDropZone, setShowDropZone] = useState(false)
@@ -76,6 +78,18 @@ export default function DroppableCalendarCell({
     item.startDate === dateString
   )
 
+  // 連日予定を優先してソート（終了日が後のものを優先）
+  const sortedItems = itemsForThisDate.sort((a, b) => {
+    const aEndDate = new Date(a.endDate)
+    const bEndDate = new Date(b.endDate)
+    return bEndDate.getTime() - aEndDate.getTime()
+  })
+
+  // 最大3個まで表示、残りは「他X個」として表示
+  const maxDisplayItems = 3
+  const displayItems = sortedItems.slice(0, maxDisplayItems)
+  const remainingCount = sortedItems.length - maxDisplayItems
+
   return (
     <div
       className={`${styles.calendarCell} ${isDragOver ? styles.dragOver : ''} ${showDropZone ? styles.showDropZone : ''}`}
@@ -84,18 +98,29 @@ export default function DroppableCalendarCell({
       onDrop={handleDrop}
       onDragEnter={handleDragEnter}
     >
-      {itemsForThisDate.length > 0 ? (
-        itemsForThisDate.map((item, index) => (
-          <div
-            key={item.id}
-            className={styles.scheduleItem}
-            style={{ backgroundColor: item.color }}
-            onClick={() => onScheduleClick(item)}
-            title={`${item.eventName} (${item.startDate} - ${item.endDate})`}
-          >
-            {item.eventName}
-          </div>
-        ))
+      {sortedItems.length > 0 ? (
+        <>
+          {displayItems.map((item, index) => (
+            <div
+              key={item.id}
+              className={styles.scheduleItem}
+              style={{ backgroundColor: item.color }}
+              onClick={() => onScheduleClick(item)}
+              title={`${item.eventName} (${item.startDate} - ${item.endDate})`}
+            >
+              {item.eventName}
+            </div>
+          ))}
+          {remainingCount > 0 && (
+            <div
+              className={styles.moreItems}
+              onClick={() => onShowMoreClick(date, equipmentName, sortedItems)}
+              title={`他${remainingCount}個の予定を表示`}
+            >
+              他{remainingCount}個
+            </div>
+          )}
+        </>
       ) : (
         <div className={styles.emptyCell}>
           {showDropZone && (
