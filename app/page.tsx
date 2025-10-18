@@ -77,7 +77,6 @@ export default function Home() {
   const { equipment } = useEquipment()
   const { categories } = useEquipmentCategories()
   const { assignees } = useAssignees()
-  const { addDocument: addEvent, loading: addEventLoading } = useFirestoreOperations('events')
   const { addDocument: addCategory, loading: addCategoryLoading } = useFirestoreOperations('equipmentCategories')
 
   // イベントが読み込まれた時に初期データを設定
@@ -727,7 +726,7 @@ export default function Home() {
   const handleCreateEvent = async () => {
     // 仮の現場を作成してFirestoreに保存
     try {
-      const newEventId = await addEvent({
+      const newEventId = await createEvent({
         siteName: '新しい現場',
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
@@ -1054,10 +1053,10 @@ export default function Home() {
               <button 
                 className={styles.createEventButton}
                 onClick={handleCreateEvent}
-                disabled={addEventLoading}
+                disabled={loading}
               >
                 <Plus className={styles.icon} />
-                {addEventLoading ? '作成中...' : '新しい現場を登録'}
+                {loading ? '作成中...' : '新しい現場を登録'}
               </button>
             </div>
 
