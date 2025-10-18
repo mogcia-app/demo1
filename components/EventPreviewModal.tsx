@@ -1,0 +1,174 @@
+'use client'
+
+import { Calendar, Users, MapPin, Package } from 'lucide-react'
+import styles from './EventPreviewModal.module.css'
+
+interface Event {
+  id: string
+  siteName: string
+  startDate: string
+  endDate: string
+  location?: string
+  description?: string
+  equipment?: Array<{
+    equipmentId: string
+    equipmentName: string
+    quantity: number
+  }>
+}
+
+interface Assignee {
+  id: string
+  name: string
+  isActive: boolean
+}
+
+interface EventData {
+  title: string
+  startDate: string
+  endDate: string
+  assigneeId: string
+  location: string
+  memo: string
+  equipment: Array<{
+    equipmentId: string
+    name: string
+    quantity: number
+    maxStock: number
+  }>
+}
+
+interface EventPreviewModalProps {
+  isOpen: boolean
+  event: Event | null
+  eventData: EventData
+  assignees: Assignee[]
+  onClose: () => void
+  onEdit: () => void
+}
+
+export default function EventPreviewModal({
+  isOpen,
+  event,
+  eventData,
+  assignees,
+  onClose,
+  onEdit
+}: EventPreviewModalProps) {
+  if (!isOpen || !event) return null
+
+  const assignee = assignees.find(a => a.id === eventData.assigneeId)
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>現場詳細</h2>
+          <button className={styles.closeButton} onClick={onClose}>
+            ×
+          </button>
+        </div>
+        
+        <div className={styles.modalBody}>
+          {/* 基本情報 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>基本情報</h3>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>現場名</label>
+                <div className={styles.infoValue}>{eventData.title || event.siteName}</div>
+              </div>
+              
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>日付</label>
+                <div className={styles.infoValue}>
+                  <Calendar className={styles.icon} />
+                  {eventData.startDate === eventData.endDate 
+                    ? eventData.startDate 
+                    : `${eventData.startDate} 〜 ${eventData.endDate}`
+                  }
+                </div>
+              </div>
+              
+              {assignee && (
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>担当者</label>
+                  <div className={styles.infoValue}>
+                    <Users className={styles.icon} />
+                    {assignee.name}
+                  </div>
+                </div>
+              )}
+              
+              {eventData.location && (
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>場所</label>
+                  <div className={styles.infoValue}>
+                    <MapPin className={styles.icon} />
+                    {eventData.location}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 機材情報 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              <Package className={styles.icon} />
+              使用機材 ({eventData.equipment?.length || 0}種類)
+            </h3>
+            
+            {eventData.equipment && eventData.equipment.length > 0 ? (
+              <div className={styles.equipmentList}>
+                {eventData.equipment.map((eq) => (
+                  <div key={eq.equipmentId} className={styles.equipmentItem}>
+                    <div className={styles.equipmentInfo}>
+                      <span className={styles.equipmentNumber}>#{eq.equipmentId}</span>
+                      <span className={styles.equipmentName}>{eq.name}</span>
+                    </div>
+                    <div className={styles.equipmentQuantity}>
+                      {eq.quantity}台
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.emptyEquipment}>
+                機材が登録されていません
+              </div>
+            )}
+          </div>
+
+          {/* メモ */}
+          {eventData.memo && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>メモ・備考</h3>
+              <div className={styles.memoContent}>
+                {eventData.memo}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className={styles.modalActions}>
+          <button 
+            className={styles.editButton}
+            onClick={() => {
+              onEdit()
+              onClose()
+            }}
+          >
+            ✏️ 編集
+          </button>
+          <button 
+            className={styles.closeActionButton}
+            onClick={onClose}
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

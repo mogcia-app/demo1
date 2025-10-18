@@ -169,6 +169,7 @@
   margin-left: 16px;
 }
 
+.previewButton,
 .editButton,
 .deleteButton {
   padding: 6px 8px;
@@ -177,6 +178,18 @@
   cursor: pointer;
   font-size: 0.875rem;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.previewButton {
+  background: #e6f3ff;
+  color: #1a365d;
+}
+
+.previewButton:hover {
+  background: #bee3f8;
 }
 
 .editButton {

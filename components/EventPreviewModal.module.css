@@ -1,0 +1,277 @@
+/* EventPreviewModal.module.css */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #718096;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.modalBody {
+  padding: 28px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: #4a5568;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.infoValue {
+  font-size: 1rem;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.equipmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.equipmentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.equipmentItem:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.equipmentInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.equipmentNumber {
+  font-weight: 600;
+  color: #3182ce;
+  font-size: 0.875rem;
+  background: #e6fffa;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.equipmentName {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.equipmentQuantity {
+  font-weight: 600;
+  color: #38a169;
+  background: #c6f6d5;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.emptyEquipment {
+  text-align: center;
+  padding: 32px 16px;
+  color: #718096;
+  font-size: 0.875rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e0;
+}
+
+.memoContent {
+  background: #f7fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  color: #2d3748;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 28px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.editButton {
+  padding: 12px 24px;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editButton:hover {
+  background: #2c5aa0;
+}
+
+.closeActionButton {
+  padding: 12px 24px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.closeActionButton:hover {
+  background: #cbd5e0;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+  }
+  
+  .modalHeader {
+    padding: 20px;
+  }
+  
+  .modalBody {
+    padding: 20px;
+  }
+  
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .equipmentItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .equipmentQuantity {
+    align-self: flex-end;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+    padding: 16px 20px;
+  }
+  
+  .editButton,
+  .closeActionButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

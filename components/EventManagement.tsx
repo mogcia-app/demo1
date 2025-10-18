@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Calendar, Users, MapPin } from 'lucide-react'
+import { Plus, Calendar, Users, MapPin, Eye } from 'lucide-react'
 import styles from './EventManagement.module.css'
 
 interface Event {
@@ -46,6 +46,7 @@ interface EventManagementProps {
   savedEvents: Set<string>
   editingEventId: string | null
   onEditEvent: (eventId: string) => void
+  onPreviewEvent: (eventId: string) => void
   onDeleteEvent: (eventId: string) => void
   onCreateEvent: () => void
   onInitializeData: () => void
@@ -59,6 +60,7 @@ export default function EventManagement({
   savedEvents,
   editingEventId,
   onEditEvent,
+  onPreviewEvent,
   onDeleteEvent,
   onCreateEvent,
   onInitializeData,
@@ -160,6 +162,15 @@ export default function EventManagement({
                 </div>
                 
                 <div className={styles.eventActions}>
+                  {isSaved && (
+                    <button 
+                      className={styles.previewButton}
+                      onClick={() => onPreviewEvent(event.id)}
+                      title="詳細表示"
+                    >
+                      <Eye className={styles.icon} />
+                    </button>
+                  )}
                   <button 
                     className={styles.editButton}
                     onClick={() => onEditEvent(event.id)}

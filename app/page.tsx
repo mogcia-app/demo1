@@ -7,6 +7,7 @@ import EquipmentSchedule from '../components/EquipmentSchedule'
 import EquipmentManagement from '../components/EquipmentManagement'
 import EventManagement from '../components/EventManagement'
 import EventEditModal from '../components/EventEditModal'
+import EventPreviewModal from '../components/EventPreviewModal'
 import styles from './page.module.css'
 import { signOutUser, onAuthStateChange, isCompanyUser } from '../lib/auth'
 import { useEvents, useEquipment, useEquipmentCategories, useAssignees } from '../lib/hooks/useFirestore'
@@ -52,6 +53,7 @@ export default function Home() {
   const [equipmentInputValue, setEquipmentInputValue] = useState<{[key: string]: string}>({})
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  const [previewingEventId, setPreviewingEventId] = useState<string | null>(null)
   const [showEquipmentEditModal, setShowEquipmentEditModal] = useState(false)
   const [editingEquipmentEventId, setEditingEquipmentEventId] = useState<string | null>(null)
 
@@ -915,6 +917,9 @@ export default function Home() {
               onEditEvent={(eventId) => {
                 setEditingEventId(eventId)
               }}
+              onPreviewEvent={(eventId) => {
+                setPreviewingEventId(eventId)
+              }}
               onDeleteEvent={handleDeleteEvent}
               onCreateEvent={handleCreateEvent}
               onInitializeData={handleInitializeData}
@@ -923,6 +928,32 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* 現場プレビューモーダル */}
+      <EventPreviewModal
+        isOpen={!!previewingEventId}
+        event={previewingEventId ? events.find(e => e.id === previewingEventId) || null : null}
+        eventData={previewingEventId ? eventData[previewingEventId] || {
+          title: '',
+          startDate: '',
+          endDate: '',
+          assigneeId: '',
+          location: '',
+          memo: '',
+          equipment: []
+        } : {
+          title: '',
+          startDate: '',
+          endDate: '',
+          assigneeId: '',
+          location: '',
+          memo: '',
+          equipment: []
+        }}
+        assignees={assignees}
+        onClose={() => setPreviewingEventId(null)}
+        onEdit={() => setEditingEventId(previewingEventId)}
+      />
 
       {/* 現場編集モーダル */}
       <EventEditModal
