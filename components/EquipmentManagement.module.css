@@ -2,9 +2,11 @@
 .equipmentSection {
   flex: 1;
   padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: white;
+  border-radius: 0;
   margin-right: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .equipmentHeader {
@@ -77,9 +79,10 @@
 
 .equipmentTable {
   background: white;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 .tableHeader {
@@ -153,7 +156,7 @@
   background: #3182ce;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.875rem;
   transition: background-color 0.2s;
@@ -171,9 +174,10 @@
 .addGroupForm {
   background: white;
   padding: 16px;
-  border-radius: 6px;
+  border-radius: 0;
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 .formInput {
@@ -201,7 +205,7 @@
   background: #38a169;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.875rem;
   transition: background-color 0.2s;
@@ -221,7 +225,7 @@
   background: #e2e8f0;
   color: #4a5568;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.875rem;
   transition: background-color 0.2s;
@@ -239,9 +243,10 @@
 
 .equipmentGroup {
   background: white;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 .groupHeader {
