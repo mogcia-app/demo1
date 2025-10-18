@@ -83,9 +83,17 @@ export default function Home() {
   // イベントが読み込まれた時に初期データを設定
   useEffect(() => {
     if (events.length > 0) {
+      // 重複を除去（同じIDのイベントが複数ある場合）
+      const uniqueEvents = events.reduce((acc, event) => {
+        if (!acc.find(e => e.id === event.id)) {
+          acc.push(event)
+        }
+        return acc
+      }, [] as typeof events)
+
       setEventData(prev => {
         const newEventData = { ...prev }
-        events.forEach(event => {
+        uniqueEvents.forEach(event => {
           // 既存のeventDataがない場合のみ初期化
           if (!newEventData[event.id]) {
             newEventData[event.id] = {
@@ -93,9 +101,14 @@ export default function Home() {
               startDate: event.startDate || '',
               endDate: event.endDate || '',
               assigneeId: '',
-              location: '',
-              memo: '',
-              equipment: []
+              location: event.location || '',
+              memo: event.description || '',
+              equipment: event.equipment?.map(eq => ({
+                equipmentId: eq.equipmentId,
+                name: eq.equipmentName || '',
+                quantity: eq.quantity,
+                maxStock: 0 // 後で機材データから取得
+              })) || []
             }
           }
         })
@@ -726,22 +739,8 @@ export default function Home() {
         createdBy: user?.uid || ''
       })
 
-      // 新しい現場の初期データを設定
+      // 新しい現場の初期データを設定（Firestoreから取得されるので不要）
       if (newEventId) {
-        const today = new Date().toISOString().split('T')[0]
-        setEventData(prev => ({
-          ...prev,
-          [newEventId]: {
-            title: '新しい現場',
-            startDate: today,
-            endDate: today,
-            assigneeId: '',
-            location: '',
-            memo: '',
-            equipment: []
-          }
-        }))
-        
         // 自動的に開く
         setExpandedEvents(prev => new Set(prev).add(newEventId))
         
@@ -1077,7 +1076,13 @@ export default function Home() {
 
 
             <div className={styles.eventsList}>
-              {events.map((event) => {
+              {events.reduce((acc, event) => {
+                // 重複を除去（同じIDのイベントが複数ある場合）
+                if (!acc.find(e => e.id === event.id)) {
+                  acc.push(event)
+                }
+                return acc
+              }, [] as typeof events).map((event) => {
                 const data = eventData[event.id] || {
                   title: event.siteName,
                   startDate: event.startDate,
