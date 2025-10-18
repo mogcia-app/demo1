@@ -82,22 +82,26 @@ export default function Home() {
 
   // イベントが読み込まれた時に初期データを設定
   useEffect(() => {
-    events.forEach(event => {
-      if (!eventData[event.id]) {
-        setEventData(prev => ({
-          ...prev,
-          [event.id]: {
-            title: event.siteName || '',
-            startDate: event.startDate || '',
-            endDate: event.endDate || '',
-            assigneeId: '',
-            location: '',
-            memo: '',
-            equipment: []
+    if (events.length > 0) {
+      setEventData(prev => {
+        const newEventData = { ...prev }
+        events.forEach(event => {
+          // 既存のeventDataがない場合のみ初期化
+          if (!newEventData[event.id]) {
+            newEventData[event.id] = {
+              title: event.siteName || '',
+              startDate: event.startDate || '',
+              endDate: event.endDate || '',
+              assigneeId: '',
+              location: '',
+              memo: '',
+              equipment: []
+            }
           }
-        }))
-      }
-    })
+        })
+        return newEventData
+      })
+    }
   }, [events])
 
   // デバッグ用: 一時的に認証をスキップ（400エラーを回避）
@@ -744,18 +748,7 @@ export default function Home() {
         // 編集中状態に設定
         setEditingEventId(newEventId)
         
-        console.log('新しい現場データを設定:', {
-          eventId: newEventId,
-          eventData: {
-            title: '新しい現場',
-            startDate: today,
-            endDate: today,
-            assigneeId: '',
-            location: '',
-            memo: '',
-            equipment: []
-          }
-        })
+        console.log('新しい現場を作成しました:', newEventId)
       }
       
       setShowCreateEvent(false)
@@ -1175,37 +1168,96 @@ export default function Home() {
                         {/* 日付 */}
                         <div className={styles.inputSection}>
                           <h4>日付</h4>
-                          <div className={styles.readOnlyValue}>
-                            {data.startDate === data.endDate 
-                              ? data.startDate 
-                              : `${data.startDate} 〜 ${data.endDate}`}
-                          </div>
+                          {isSaved && editingEventId !== event.id ? (
+                            <div className={styles.readOnlyValue}>
+                              {data.startDate === data.endDate 
+                                ? data.startDate 
+                                : `${data.startDate} 〜 ${data.endDate}`}
+                            </div>
+                          ) : (
+                            <div className={styles.dateRow}>
+                              <div className={styles.dateField}>
+                                <label>開始日</label>
+                                <input 
+                                  type="date" 
+                                  value={data.startDate}
+                                  onChange={(e) => updateEventData(event.id, 'startDate', e.target.value)}
+                                  className={styles.dateInput}
+                                />
+                              </div>
+                              <div className={styles.dateField}>
+                                <label>終了日</label>
+                                <input 
+                                  type="date" 
+                                  value={data.endDate}
+                                  onChange={(e) => updateEventData(event.id, 'endDate', e.target.value)}
+                                  className={styles.dateInput}
+                                  min={data.startDate}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* 担当者 */}
                         <div className={styles.inputSection}>
                           <h4>担当者</h4>
-                          <div className={styles.readOnlyValue}>
-                            {assignee ? assignee.name : '未設定'}
-                          </div>
+                          {isSaved && editingEventId !== event.id ? (
+                            <div className={styles.readOnlyValue}>
+                              {assignee ? assignee.name : '未設定'}
+                            </div>
+                          ) : (
+                            <select 
+                              className={styles.assigneeSelect}
+                              value={data.assigneeId}
+                              onChange={(e) => updateEventData(event.id, 'assigneeId', e.target.value)}
+                            >
+                              <option value="">担当者を選択</option>
+                              {assignees.filter(a => a.isActive).map((assignee) => (
+                                <option key={assignee.id} value={assignee.id}>
+                                  {assignee.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
 
                         {/* 場所 */}
                         <div className={styles.inputSection}>
                           <h4>場所（Googleマップ紐付け）</h4>
-                          <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
+                          {isSaved && editingEventId !== event.id ? (
+                            <div className={styles.readOnlyValue}>{data.location || '未設定'}</div>
+                          ) : (
+                            <input 
+                              type="text" 
+                              placeholder="場所を入力"
+                              className={styles.locationInput}
+                              value={data.location}
+                              onChange={(e) => updateEventData(event.id, 'location', e.target.value)}
+                            />
+                          )}
                         </div>
 
                         {/* メモ */}
                         <div className={styles.inputSection}>
                           <h4>メモ</h4>
-                          <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
+                          {isSaved && editingEventId !== event.id ? (
+                            <div className={styles.readOnlyValue}>{data.memo || '未設定'}</div>
+                          ) : (
+                            <textarea 
+                              placeholder="備考やメモを入力してください"
+                              className={styles.textarea}
+                              value={data.memo}
+                              onChange={(e) => updateEventData(event.id, 'memo', e.target.value)}
+                              rows={3}
+                            />
+                          )}
                         </div>
 
                         {/* 機材選択 */}
-                      <div className={styles.inputSection}>
-                        <h4>機材選択</h4>
-                          {isSaved ? (
+                        <div className={styles.inputSection}>
+                          <h4>機材選択</h4>
+                          {isSaved && editingEventId !== event.id ? (
                             <div className={styles.savedEquipmentSection}>
                               <div className={styles.equipmentList}>
                                 {(data.equipment || []).length === 0 ? (
@@ -1322,7 +1374,7 @@ export default function Home() {
 
                         {/* 保存・削除ボタン */}
                         <div className={styles.eventActions}>
-                          {isSaved ? (
+                          {isSaved && editingEventId !== event.id ? (
                             <button 
                               className={styles.deleteEventButton}
                               onClick={() => handleDeleteEvent(event.id)}
@@ -1335,7 +1387,7 @@ export default function Home() {
                                 className={styles.saveEventButton}
                                 onClick={() => handleSaveEvent(event.id)}
                               >
-                                保存
+                                {isSaved ? '更新' : '保存'}
                               </button>
                               <button 
                                 className={styles.deleteEventButton}
