@@ -90,6 +90,7 @@ export default function DroppableCalendarCell({
     return duration === 1
   })
 
+
   // 連日予定のみを表示（日数が長い順）
   const sortedMultiDayItems = multiDayItems.sort((a, b) => {
     const aDuration = Math.ceil((new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
