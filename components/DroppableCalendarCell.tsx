@@ -79,11 +79,18 @@ export default function DroppableCalendarCell({
      (new Date(item.startDate) <= date && new Date(item.endDate) >= date))
   )
 
-  // 連日予定を優先してソート（終了日が後のものを優先）
+  // 日数が少ない予定を上に表示（1日 < 2日 < 3日）
   const sortedItems = itemsForThisDate.sort((a, b) => {
-    const aEndDate = new Date(a.endDate)
-    const bEndDate = new Date(b.endDate)
-    return bEndDate.getTime() - aEndDate.getTime()
+    const aDuration = Math.ceil((new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+    const bDuration = Math.ceil((new Date(b.endDate).getTime() - new Date(b.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+    
+    // 日数が少ないものを上に
+    if (aDuration !== bDuration) {
+      return aDuration - bDuration
+    }
+    
+    // 日数が同じ場合は開始日が早いものを上に
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   })
 
   // 最大3個まで表示、残りは「他X個」として表示
