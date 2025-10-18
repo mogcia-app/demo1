@@ -105,17 +105,25 @@ export const adjustInventory = async (
   newItems: InventoryItem[]
 ) => {
   try {
+    console.log('🔄 在庫調整処理開始')
+    console.log('前回の機材:', previousItems)
+    console.log('新しい機材:', newItems)
+
     // 差分を計算
     const adjustments = new Map<string, number>()
 
     // 前回の機材を在庫に戻す
     previousItems.forEach(item => {
-      adjustments.set(item.equipmentId, (adjustments.get(item.equipmentId) || 0) + item.quantity)
+      const current = adjustments.get(item.equipmentId) || 0
+      adjustments.set(item.equipmentId, current + item.quantity)
+      console.log(`機材 #${item.equipmentId}: +${item.quantity} (復元)`)
     })
 
     // 新しい機材を在庫から減らす
     newItems.forEach(item => {
-      adjustments.set(item.equipmentId, (adjustments.get(item.equipmentId) || 0) - item.quantity)
+      const current = adjustments.get(item.equipmentId) || 0
+      adjustments.set(item.equipmentId, current - item.quantity)
+      console.log(`機材 #${item.equipmentId}: -${item.quantity} (使用)`)
     })
 
     // 変更があるもののみ処理
@@ -126,12 +134,16 @@ export const adjustInventory = async (
         adjustment: diff
       }))
 
+    console.log('調整が必要な機材:', itemsToAdjust)
+
     if (itemsToAdjust.length === 0) {
-      console.log('在庫調整不要')
+      console.log('✅ 在庫調整不要 - 変更なし')
       return { success: true }
     }
 
     await runTransaction(db, async (transaction) => {
+      console.log('🔄 Firestoreトランザクション開始')
+      
       // 全ての機材データを取得
       const equipmentDocs = await Promise.all(
         itemsToAdjust.map(async (item) => {
@@ -150,11 +162,13 @@ export const adjustInventory = async (
           const currentStock = equipmentDoc.data().stock || 0
           const requiredStock = Math.abs(adjustment)
           
+          console.log(`在庫チェック - 機材 #${equipmentDoc.data().id}: 現在${currentStock}台, 必要${requiredStock}台`)
+          
           if (currentStock < requiredStock) {
             const equipmentName = equipmentDoc.data().name
-            throw new Error(
-              `⚠️ 在庫不足\n\n機材: ${equipmentName}\n要求数量: ${requiredStock}台\n現在の在庫: ${currentStock}台`
-            )
+            const errorMessage = `⚠️ 在庫不足\n\n機材: ${equipmentName}\n要求数量: ${requiredStock}台\n現在の在庫: ${currentStock}台\n\n在庫が不足しています。`
+            console.error('❌ 在庫不足エラー:', errorMessage)
+            throw new Error(errorMessage)
           }
         }
       }
@@ -163,6 +177,8 @@ export const adjustInventory = async (
       for (const { doc: equipmentDoc, adjustment } of equipmentDocs) {
         const currentStock = equipmentDoc.data().stock || 0
         const newStock = currentStock + adjustment
+
+        console.log(`在庫調整 - 機材 #${equipmentDoc.data().id}: ${currentStock} → ${newStock} (${adjustment > 0 ? '+' : ''}${adjustment})`)
 
         transaction.update(doc(db, 'equipment', equipmentDoc.id), {
           stock: newStock,

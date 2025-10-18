@@ -52,7 +52,7 @@ export default function Home() {
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [showEquipmentEditModal, setShowEquipmentEditModal] = useState(false)
   const [editingEquipmentEventId, setEditingEquipmentEventId] = useState<string | null>(null)
-  
+
   // 認証状態の確認
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user) => {
@@ -192,8 +192,11 @@ export default function Home() {
         quantity: eq.quantity
       }))
 
-      // 在庫調整処理
       console.log('機材編集 - 在庫調整開始...')
+      console.log('前回の機材:', previousEquipment)
+      console.log('新しい機材:', newEquipmentItems)
+
+      // 在庫調整処理
       const inventoryResult = await adjustInventory(previousEquipment, newEquipmentItems)
 
       if (!inventoryResult.success) {
@@ -470,16 +473,16 @@ export default function Home() {
     // 結果を反映
     if (newEquipment.length > currentEquipment.length) {
       setEventData(prev => ({
-        ...prev,
+          ...prev,
         [eventId]: {
           ...prev[eventId],
           equipment: newEquipment
         }
-      }))
-      setEquipmentInputValue(prev => ({
-        ...prev,
-        [eventId]: ''
-      }))
+        }))
+        setEquipmentInputValue(prev => ({
+          ...prev,
+          [eventId]: ''
+        }))
     }
 
     // 結果をユーザーに通知
@@ -487,7 +490,7 @@ export default function Home() {
       const message = `✅ ${added.length}件の機材を追加しました\n\n${added.join('\n')}`
       if (errors.length > 0) {
         alert(`${message}\n\n⚠️ エラー:\n${errors.join('\n')}`)
-      } else {
+    } else {
         console.log(message)
       }
     } else if (errors.length > 0) {
@@ -899,12 +902,12 @@ export default function Home() {
 
             {/* タブ切り替え */}
             <div className={styles.equipmentTabs}>
-              <button
+                <button 
                 className={`${styles.equipmentTab} ${equipmentViewMode === 'all' ? styles.activeEquipmentTab : ''}`}
                 onClick={() => setEquipmentViewMode('all')}
-              >
+                >
                 全機材
-              </button>
+                </button>
               <button
                 className={`${styles.equipmentTab} ${equipmentViewMode === 'grouped' ? styles.activeEquipmentTab : ''}`}
                 onClick={() => setEquipmentViewMode('grouped')}
@@ -954,76 +957,76 @@ export default function Home() {
               <div className={styles.groupedEquipmentList}>
                 {/* グループ追加ボタン */}
                 <div className={styles.groupAddSection}>
+                <button 
+                  className={styles.addGroupButton}
+                  onClick={() => setShowAddGroup(true)}
+                >
+                  <Plus className={styles.icon} />
+                  グループ追加
+                </button>
+            </div>
+
+            {/* グループ追加フォーム */}
+            {showAddGroup && (
+              <div className={styles.addGroupForm}>
+                <input
+                  type="text"
+                  placeholder="グループ名を入力"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  className={styles.formInput}
+                  autoFocus
+                />
+                <div className={styles.formActions}>
                   <button 
-                    className={styles.addGroupButton}
-                    onClick={() => setShowAddGroup(true)}
+                    className={styles.saveButton}
+                    onClick={handleAddGroup}
+                    disabled={addCategoryLoading || !newGroupName.trim()}
                   >
-                    <Plus className={styles.icon} />
-                    グループ追加
+                    {addCategoryLoading ? '追加中...' : '追加'}
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={cancelAddGroup}
+                  >
+                    キャンセル
                   </button>
                 </div>
+              </div>
+            )}
 
-                {/* グループ追加フォーム */}
-                {showAddGroup && (
-                  <div className={styles.addGroupForm}>
-                    <input
-                      type="text"
-                      placeholder="グループ名を入力"
-                      value={newGroupName}
-                      onChange={(e) => setNewGroupName(e.target.value)}
-                      className={styles.formInput}
-                      autoFocus
-                    />
-                    <div className={styles.formActions}>
-                      <button 
-                        className={styles.saveButton}
-                        onClick={handleAddGroup}
-                        disabled={addCategoryLoading || !newGroupName.trim()}
+            <div className={styles.equipmentGroups}>
+              {filteredEquipmentGroups.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>機材グループがありません</p>
+                  <p>「グループ追加」ボタンから新しいグループを作成してください</p>
+                </div>
+              ) : (
+                filteredEquipmentGroups.map((group) => (
+                  <div key={group.id} className={styles.equipmentGroup}>
+                    <div className={styles.groupHeader}>
+                      <div 
+                        className={styles.groupHeaderContent}
+                        onClick={() => toggleGroup(group.id)}
                       >
-                        {addCategoryLoading ? '追加中...' : '追加'}
-                      </button>
-                      <button 
-                        className={styles.cancelButton}
-                        onClick={cancelAddGroup}
-                      >
-                        キャンセル
-                      </button>
+                        <span className={styles.groupTitle}>{group.name}</span>
+                        <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
+                        <span className={styles.toggleButton}>
+                          {expandedGroups.has(group.id) ? '-' : '+'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                <div className={styles.equipmentGroups}>
-                  {filteredEquipmentGroups.length === 0 ? (
-                    <div className={styles.emptyState}>
-                      <p>機材グループがありません</p>
-                      <p>「グループ追加」ボタンから新しいグループを作成してください</p>
-                    </div>
-                  ) : (
-                    filteredEquipmentGroups.map((group) => (
-                      <div key={group.id} className={styles.equipmentGroup}>
-                        <div className={styles.groupHeader}>
-                          <div 
-                            className={styles.groupHeaderContent}
-                            onClick={() => toggleGroup(group.id)}
-                          >
-                            <span className={styles.groupTitle}>{group.name}</span>
-                            <span className={styles.groupSubtitle}>(+で開いて、-で閉じる) 在庫</span>
-                            <span className={styles.toggleButton}>
-                              {expandedGroups.has(group.id) ? '-' : '+'}
-                            </span>
-                          </div>
+                    {expandedGroups.has(group.id) && (
+                      <div className={styles.equipmentTable}>
+                        <div className={styles.tableHeader}>
+                          <div className={styles.tableCell}>機材名</div>
+                          <div className={styles.tableCell}>在庫</div>
                         </div>
-                        {expandedGroups.has(group.id) && (
-                          <div className={styles.equipmentTable}>
-                            <div className={styles.tableHeader}>
-                              <div className={styles.tableCell}>機材名</div>
-                              <div className={styles.tableCell}>在庫</div>
-                            </div>
-                            {group.equipment.length === 0 ? (
-                              <div className={styles.emptyEquipment}>
-                                <p>このグループに機材がありません</p>
-                              </div>
-                            ) : (
+                        {group.equipment.length === 0 ? (
+                          <div className={styles.emptyEquipment}>
+                            <p>このグループに機材がありません</p>
+                          </div>
+                        ) : (
                           group.equipment.map((equipment) => (
                             <div 
                               key={equipment.id} 
@@ -1041,13 +1044,13 @@ export default function Home() {
                               </div>
                             </div>
                           ))
-                            )}
-                          </div>
                         )}
                       </div>
-                    ))
-                  )}
-                </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
               </div>
             )}
           </div>
@@ -1095,7 +1098,7 @@ export default function Home() {
                 const isSaved = savedEvents.has(event.id)
                 
                 return (
-                  <div key={event.id} className={styles.eventCard}>
+                <div key={event.id} className={styles.eventCard}>
                     {/* 編集中タブの表示 */}
                     {editingEventId === event.id && (
                       <div className={styles.editingTab}>
@@ -1118,25 +1121,25 @@ export default function Home() {
                       </div>
                     )}
                     
-                    <div 
-                      className={styles.eventHeader}
-                      onClick={() => toggleEvent(event.id)}
-                    >
-                      <div className={styles.eventTitle}>
+                  <div 
+                    className={styles.eventHeader}
+                    onClick={() => toggleEvent(event.id)}
+                  >
+                    <div className={styles.eventTitle}>
                         <h3>{data.title || event.siteName}</h3>
-                        <div className={styles.eventMeta}>
+                      <div className={styles.eventMeta}>
                           <div className={styles.eventMetaItem}>
-                            <Calendar className={styles.icon} />
+                          <Calendar className={styles.icon} />
                             {data.startDate === data.endDate 
                               ? data.startDate 
                               : `${data.startDate} - ${data.endDate}`
-                            }
-                          </div>
+                          }
+                        </div>
                           {assignee && (
                             <div className={styles.eventMetaItem}>
                               <Users className={styles.icon} />
                               {assignee.name}
-                            </div>
+                        </div>
                           )}
                           {/* 保存状態の表示 */}
                           {isSaved && (
@@ -1144,19 +1147,19 @@ export default function Home() {
                               <span className={styles.savedStatus}>✅ 保存済み</span>
                             </div>
                           )}
-                        </div>
-                      </div>
-                      <div className={styles.eventToggle}>
-                        {expandedEvents.has(event.id) ? (
-                          <ChevronUp className={styles.icon} />
-                        ) : (
-                          <ChevronDown className={styles.icon} />
-                        )}
                       </div>
                     </div>
+                    <div className={styles.eventToggle}>
+                      {expandedEvents.has(event.id) ? (
+                        <ChevronUp className={styles.icon} />
+                      ) : (
+                        <ChevronDown className={styles.icon} />
+                      )}
+                    </div>
+                  </div>
                   
-                    {expandedEvents.has(event.id) && (
-                      <div className={styles.eventDetails}>
+                  {expandedEvents.has(event.id) && (
+                    <div className={styles.eventDetails}>
                         {/* タイトル */}
                         <div className={styles.inputSection}>
                           <h4>現場名（タイトル）</h4>
@@ -1200,8 +1203,8 @@ export default function Home() {
                         </div>
 
                         {/* 機材選択 */}
-                        <div className={styles.inputSection}>
-                          <h4>機材選択</h4>
+                      <div className={styles.inputSection}>
+                        <h4>機材選択</h4>
                           {isSaved ? (
                             <div className={styles.savedEquipmentSection}>
                               <div className={styles.equipmentList}>
@@ -1235,30 +1238,30 @@ export default function Home() {
                             <>
                               <div 
                                 className={styles.equipmentInputContainer}
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={(e) => handleDrop(event.id, e)}
-                              >
-                                <input 
-                                  type="text" 
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => handleDrop(event.id, e)}
+                        >
+                            <input 
+                              type="text" 
                                   placeholder="例: #1*2 または #1*2,#2*5 （左の機材をドラッグ&ドロップも可）"
-                                  className={styles.equipmentInputField}
-                                  value={equipmentInputValue[event.id] || ''}
-                                  onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleAddEquipmentByNumber(event.id)
-                                    }
-                                  }}
-                                />
-                                <button 
-                                  className={styles.addEquipmentButton}
-                                  onClick={() => handleAddEquipmentByNumber(event.id)}
-                                  disabled={!equipmentInputValue[event.id]?.trim()}
-                                >
-                                  追加
-                                </button>
-                              </div>
-                              <div className={styles.equipmentList}>
+                              className={styles.equipmentInputField}
+                              value={equipmentInputValue[event.id] || ''}
+                              onChange={(e) => handleEquipmentInput(event.id, e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleAddEquipmentByNumber(event.id)
+                                }
+                              }}
+                            />
+                            <button 
+                              className={styles.addEquipmentButton}
+                              onClick={() => handleAddEquipmentByNumber(event.id)}
+                              disabled={!equipmentInputValue[event.id]?.trim()}
+                            >
+                              追加
+                            </button>
+                          </div>
+                          <div className={styles.equipmentList}>
                                 {(data.equipment || []).length === 0 ? (
                                   <div className={styles.emptyEquipmentMessage}>
                                     機材Noを入力して機材を追加してください
@@ -1270,13 +1273,13 @@ export default function Home() {
                                         <span className={styles.equipmentCardName}>
                                           #{eq.equipmentId} {eq.name}
                                         </span>
-                                        <button 
+                                <button 
                                           className={styles.equipmentCardRemove}
                                           onClick={() => removeEquipment(event.id, eq.equipmentId)}
-                                        >
-                                          ×
-                                        </button>
-                                      </div>
+                                >
+                                  ×
+                                </button>
+                              </div>
                                       <div className={styles.equipmentCardBody}>
                                         <div className={styles.quantityControl}>
                                           <label className={styles.quantityLabel}>数量:</label>
@@ -1302,20 +1305,20 @@ export default function Home() {
                                           >
                                             +
                                           </button>
-                                        </div>
+                          </div>
                                         <div className={styles.stockInfo}>
                                           <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
                                             在庫: {eq.maxStock}台
                                           </span>
-                                        </div>
-                                      </div>
-                                    </div>
+                        </div>
+                      </div>
+                      </div>
                                   ))
                                 )}
-                              </div>
+                          </div>
                             </>
                           )}
-                        </div>
+                            </div>
 
                         {/* 保存・削除ボタン */}
                         <div className={styles.eventActions}>
@@ -1343,16 +1346,16 @@ export default function Home() {
                             </>
                           )}
                         </div>
-                      </div>
-                    )}
-                  </div>
+                              </div>
+                            )}
+                          </div>
                 )
               })}
             </div>
           </div>
         </div>
-        )}
-      </div>
+                            )}
+                          </div>
 
       {/* 機材編集モーダル */}
       {showEquipmentEditModal && editingEquipmentEventId && (
@@ -1363,7 +1366,7 @@ export default function Home() {
               <button className={styles.closeButton} onClick={handleCloseEquipmentEdit}>
                 ×
               </button>
-            </div>
+                        </div>
             
             <div className={styles.modalBody}>
               <div className={styles.equipmentEditSection}>
@@ -1392,7 +1395,7 @@ export default function Home() {
                           >
                             -
                           </button>
-                          <input
+                        <input 
                             type="number"
                             className={styles.quantityInput}
                             value={eq.quantity}
@@ -1412,15 +1415,20 @@ export default function Home() {
                           <span className={eq.quantity > eq.maxStock ? styles.stockWarning : styles.stockNormal}>
                             在庫: {eq.maxStock}台
                           </span>
+                          {eq.quantity > eq.maxStock && (
+                            <span className={styles.stockError}>
+                              ⚠️ 在庫不足
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))}
-                </div>
-                
+                      </div>
+                      
                 <div className={styles.equipmentInputContainer}>
-                  <input 
-                    type="text" 
+                        <input 
+                          type="text" 
                     placeholder="例: #1*2 または #1*2,#2*5"
                     className={styles.equipmentInputField}
                     value={equipmentInputValue[editingEquipmentEventId] || ''}
@@ -1439,26 +1447,34 @@ export default function Home() {
                     追加
                   </button>
                 </div>
-              </div>
-              
+                      </div>
+                      
               <div className={styles.modalActions}>
-                <button 
+                        <button 
                   className={styles.cancelButton}
                   onClick={handleCloseEquipmentEdit}
-                >
+                        >
                   キャンセル
-                </button>
+                        </button>
                 <button 
                   className={styles.saveButton}
-                  onClick={() => handleSaveEquipmentEdit(editingEquipmentEventId, eventData[editingEquipmentEventId]?.equipment || [])}
+                  onClick={() => {
+                    // 在庫チェック
+                    const hasStockIssue = (eventData[editingEquipmentEventId]?.equipment || []).some(eq => eq.quantity > eq.maxStock)
+                    if (hasStockIssue) {
+                      alert('⚠️ 在庫不足の機材があります。\n\n数量を調整してから保存してください。')
+                      return
+                    }
+                    handleSaveEquipmentEdit(editingEquipmentEventId, eventData[editingEquipmentEventId]?.equipment || [])
+                  }}
                 >
                   保存
                 </button>
-              </div>
-            </div>
+                      </div>
+                    </div>
           </div>
         </div>
-      )}
+        )}
     </main>
   )
 }
