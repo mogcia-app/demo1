@@ -1,7 +1,7 @@
 /* ドロップ可能なカレンダーセル */
 .calendarCell {
   position: relative;
-  min-height: 60px;
+  height: 120px; /* min-height → height で固定 */
   padding: 0.25rem;
   border-right: 1px solid #f1f5f9;
   display: flex;
@@ -9,6 +9,7 @@
   gap: 0.25rem;
   transition: all 0.2s ease;
   cursor: pointer;
+  overflow: hidden; /* はみ出しを防ぐ */
 }
 
 .calendarCell:hover {
@@ -79,7 +80,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
   cursor: pointer;
-  min-height: 24px;
+  height: 20px; /* min-height → height で固定 */
+  flex-shrink: 0; /* 縮小を防ぐ */
 }
 
 .scheduleItem.continued {
@@ -117,7 +119,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
   cursor: pointer;
-  min-height: 24px;
+  height: 20px; /* min-height → height で固定 */
+  flex-shrink: 0; /* 縮小を防ぐ */
 }
 
 .moreItems:hover {
