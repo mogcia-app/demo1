@@ -130,6 +130,33 @@
   z-index: 10;
 }
 
+.singleDayItems {
+  position: relative;
+  background: #10b981; /* 緑色背景で1日予定を区別 */
+  color: white;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.singleDayItems:hover {
+  background: #059669;
+  transform: scale(1.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
 /* アニメーション */
 @keyframes pulse {
   0%, 100% {
