@@ -43,39 +43,79 @@ export default function EquipmentSchedule({ equipment, onAddSchedule }: Equipmen
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null)
 
-  // サンプルスケジュールデータ
+  // サンプルスケジュールデータ（2025年10月に合わせて更新）
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
     {
       id: '1',
       equipmentName: 'YAMAHA QL5',
-      eventName: '高嶺のなでしこ 幕張',
-      startDate: '2024-09-04',
-      endDate: '2024-09-08',
+      eventName: 'テストC (3日間)',
+      startDate: '2025-10-16',
+      endDate: '2025-10-18',
       color: '#3b82f6'
     },
     {
       id: '2',
-      equipmentName: 'YAMAHA QL1',
-      eventName: 'じーこレンタル出し',
-      startDate: '2024-09-05',
-      endDate: '2024-09-08',
+      equipmentName: 'YAMAHA QL5',
+      eventName: '新しい現場D',
+      startDate: '2025-10-18',
+      endDate: '2025-10-18',
       color: '#10b981'
     },
     {
       id: '3',
-      equipmentName: 'AD4Q Z16-①',
-      eventName: '高嶺のなでしこ 幕張RH',
-      startDate: '2024-09-01',
-      endDate: '2024-09-03',
+      equipmentName: 'YAMAHA QL5',
+      eventName: '新しい現場E',
+      startDate: '2025-10-18',
+      endDate: '2025-10-18',
       color: '#f59e0b'
     },
     {
       id: '4',
-      equipmentName: 'YAMAHA Rio3224 D ①',
-      eventName: 'ハニフェス 日比谷野音',
-      startDate: '2024-09-07',
-      endDate: '2024-09-08',
+      equipmentName: 'YAMAHA QL5',
+      eventName: '新しい現場B (2日間)',
+      startDate: '2025-10-18',
+      endDate: '2025-10-19',
       color: '#ef4444'
+    },
+    {
+      id: '5',
+      equipmentName: 'YAMAHA QL5',
+      eventName: '新しい現場A (3日間)',
+      startDate: '2025-10-18',
+      endDate: '2025-10-20',
+      color: '#8b5cf6'
+    },
+    {
+      id: '6',
+      equipmentName: 'YAMAHA QL5',
+      eventName: '新しい現場F',
+      startDate: '2025-10-18',
+      endDate: '2025-10-18',
+      color: '#06b6d4'
+    },
+    {
+      id: '7',
+      equipmentName: 'YAMAHA QL1',
+      eventName: '新しい現場 (3日間)',
+      startDate: '2025-10-20',
+      endDate: '2025-10-22',
+      color: '#84cc16'
+    },
+    {
+      id: '8',
+      equipmentName: 'YAMAHA QL1',
+      eventName: '新しい現場 (2日間)',
+      startDate: '2025-10-22',
+      endDate: '2025-10-23',
+      color: '#f97316'
+    },
+    {
+      id: '9',
+      equipmentName: 'YAMAHA QL1',
+      eventName: '新しい現場 (2日間)',
+      startDate: '2025-10-22',
+      endDate: '2025-10-23',
+      color: '#ec4899'
     }
   ])
 
