@@ -2,7 +2,7 @@
 .main {
   min-height: 100vh;
   background: #ffffff;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .container {
@@ -27,13 +27,13 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .subtitle {
   font-size: 1.1rem;
   margin-bottom: 2rem;
-  color: #666;
+  color: #4a4a4a;
 }
 
 /* ヘッダー */
@@ -54,9 +54,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  color: #333;
-  border: 1px solid #e9ecef;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #d1d5db;
   border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -64,7 +64,8 @@
 }
 
 .backButton:hover {
-  background: #e9ecef;
+  background: #f3f4f6;
+  border-color: #9ca3af;
   transform: translateY(-1px);
 }
 
@@ -78,9 +79,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #007bff;
+  background: #1a1a1a;
   color: white;
-  border: none;
+  border: 1px solid #1a1a1a;
   border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -88,7 +89,8 @@
 }
 
 .actionButton:hover {
-  background: #0056b3;
+  background: #4a4a4a;
+  border-color: #4a4a4a;
   transform: translateY(-1px);
 }
 
@@ -97,9 +99,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #dc3545;
-  color: white;
-  border: none;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #d1d5db;
   border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -107,7 +109,8 @@
 }
 
 .deleteButton:hover {
-  background: #c82333;
+  background: #f3f4f6;
+  border-color: #9ca3af;
   transform: translateY(-1px);
 }
 
@@ -132,7 +135,7 @@
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
-  color: #333;
+  color: #1a1a1a;
   flex: 1;
 }
 
@@ -161,13 +164,13 @@
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
-  color: #666;
+  color: #4a4a4a;
 }
 
 .detailItem p {
   font-size: 1.1rem;
   margin: 0;
-  color: #333;
+  color: #1a1a1a;
 }
 
 /* 機材セクション */
@@ -184,13 +187,13 @@
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .emptyEquipment {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: #4a4a4a;
 }
 
 .equipmentList {
@@ -204,14 +207,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
+  background: #ffffff;
   border-radius: 0px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d1d5db;
   transition: all 0.2s ease;
 }
 
 .equipmentItem:hover {
-  background: #e9ecef;
+  background: #f3f4f6;
+  border-color: #9ca3af;
   transform: translateY(-1px);
 }
 
@@ -225,24 +229,25 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .equipmentCategory {
   font-size: 0.9rem;
-  color: #666;
-  background: #e3f2fd;
-  color: #1976d2;
+  color: #4a4a4a;
+  background: #f3f4f6;
+  color: #1a1a1a;
   padding: 0.25rem 0.75rem;
   border-radius: 0px;
   display: inline-block;
   width: fit-content;
+  border: 1px solid #d1d5db;
 }
 
 .equipmentQuantity {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #28a745;
+  color: #1a1a1a;
 }
 
 /* カレンダーセクション */
@@ -264,7 +269,7 @@
 
 .calendarInfo p {
   margin: 0;
-  color: #666;
+  color: #4a4a4a;
 }
 
 .calendarButton {
@@ -272,9 +277,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #28a745;
+  background: #1a1a1a;
   color: white;
-  border: none;
+  border: 1px solid #1a1a1a;
   border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -282,18 +287,19 @@
 }
 
 .calendarButton:hover {
-  background: #218838;
+  background: #4a4a4a;
+  border-color: #4a4a4a;
   transform: translateY(-1px);
 }
 
 /* メタ情報 */
 .metaInfo {
-  background: #f8f9fa;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 0px;
   padding: 1rem 1.5rem;
   text-align: center;
-  color: #666;
+  color: #4a4a4a;
   font-size: 0.9rem;
 }
 

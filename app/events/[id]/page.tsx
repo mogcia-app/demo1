@@ -85,12 +85,12 @@ export default function EventDetailPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft': return '#6c757d'
-      case 'confirmed': return '#28a745'
-      case 'in_progress': return '#ffc107'
-      case 'completed': return '#17a2b8'
-      case 'cancelled': return '#dc3545'
-      default: return '#6c757d'
+      case 'draft': return '#6b7280'
+      case 'confirmed': return '#1a1a1a'
+      case 'in_progress': return '#4a4a4a'
+      case 'completed': return '#6b7280'
+      case 'cancelled': return '#9ca3af'
+      default: return '#6b7280'
     }
   }
 
