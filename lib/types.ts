@@ -24,7 +24,8 @@ export interface Event {
   siteName: string
   startDate: string
   endDate: string
-  assigneeId?: string
+  assigneeId?: string // 後方互換性のため残す（非推奨）
+  assigneeIds?: string[] // 複数担当者対応
   equipment: {
     equipmentId: string
     equipmentName: string

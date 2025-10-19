@@ -35,7 +35,8 @@ export default function Home() {
     title: string
     startDate: string
     endDate: string
-    assigneeId: string
+    assigneeId: string // 後方互換性のため残す
+    assigneeIds: string[] // 複数担当者対応
     location: string
     memo: string
     equipment: {
@@ -108,7 +109,8 @@ export default function Home() {
               title: event.siteName || '',
               startDate: event.startDate || '',
               endDate: event.endDate || '',
-              assigneeId: event.assigneeId || '', // 修正: assigneeIdを正しく設定
+              assigneeId: event.assigneeId || '', // 後方互換性のため残す
+              assigneeIds: event.assigneeIds || (event.assigneeId ? [event.assigneeId] : []), // 複数担当者対応
               location: event.location || '',
               memo: event.description || '',
               equipment: event.equipment?.map(eq => ({
@@ -607,7 +609,8 @@ export default function Home() {
         createdBy: user?.uid || '',
         userName: user?.displayName || user?.email || '',
         location: data.location,
-        assigneeId: data.assigneeId
+        assigneeId: data.assigneeIds && data.assigneeIds.length > 0 ? data.assigneeIds[0] : data.assigneeId, // 後方互換性のため最初の担当者を設定
+        assigneeIds: data.assigneeIds // 複数担当者対応
       }
 
       if (isNewEvent) {
@@ -776,6 +779,7 @@ export default function Home() {
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
         assigneeId: '',
+        assigneeIds: [],
         location: '',
         memo: '',
         equipment: []
@@ -952,15 +956,17 @@ export default function Home() {
           title: '',
           startDate: '',
           endDate: '',
-                  assigneeId: '',
-                  location: '',
-                  memo: '',
-                  equipment: []
+          assigneeId: '',
+          assigneeIds: [],
+          location: '',
+          memo: '',
+          equipment: []
         } : {
           title: '',
           startDate: '',
           endDate: '',
           assigneeId: '',
+          assigneeIds: [],
           location: '',
           memo: '',
           equipment: []
@@ -980,6 +986,7 @@ export default function Home() {
           startDate: '',
           endDate: '',
           assigneeId: '',
+          assigneeIds: [],
           location: '',
           memo: '',
           equipment: []
@@ -988,6 +995,7 @@ export default function Home() {
           startDate: '',
           endDate: '',
           assigneeId: '',
+          assigneeIds: [],
           location: '',
           memo: '',
           equipment: []
@@ -1003,6 +1011,7 @@ export default function Home() {
         onRemoveEquipment={removeEquipment}
         onUpdateEquipmentQuantity={updateEquipmentQuantity}
         onSaveEvent={handleSaveEvent}
+        onDrop={handleDrop}
       />
 
       {/* 機材編集モーダル */}

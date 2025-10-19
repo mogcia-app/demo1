@@ -28,7 +28,8 @@ interface EventData {
   title: string
   startDate: string
   endDate: string
-  assigneeId: string
+  assigneeId: string // 後方互換性のため残す
+  assigneeIds: string[] // 複数担当者対応
   location: string
   memo: string
   equipment: Array<{
@@ -60,7 +61,12 @@ export default function EventPreviewModal({
 
   if (!isOpen || !event) return null
 
-  const assignee = assignees.find(a => a.id === eventData.assigneeId)
+  // 複数担当者対応
+  const assigneeList = (eventData.assigneeIds || []).length > 0
+    ? assignees.filter(a => (eventData.assigneeIds || []).includes(a.id))
+    : eventData.assigneeId 
+      ? [assignees.find(a => a.id === eventData.assigneeId)].filter(Boolean) as Assignee[]
+      : []
 
   // 印刷・PDF出力機能
   const handlePrint = () => {
@@ -108,12 +114,12 @@ export default function EventPreviewModal({
                 </div>
               </div>
               
-              {assignee && (
+              {assigneeList.length > 0 && (
                 <div className={styles.infoItem}>
                   <label className={styles.infoLabel}>担当者</label>
                   <div className={styles.infoValue}>
                     <Users className={styles.icon} />
-                    {assignee.name}
+                    {assigneeList.map(a => a.name).join(', ')}
                   </div>
                 </div>
               )}

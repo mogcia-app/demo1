@@ -14,8 +14,10 @@ interface EventSchedule {
   startDate: string
   endDate: string
   location: string
-  assigneeId: string
-  assigneeName: string
+  assigneeId: string // 後方互換性のため残す
+  assigneeIds: string[] // 複数担当者対応
+  assigneeName: string // 後方互換性のため残す
+  assigneeNames: string[] // 複数担当者対応
   equipment: {
     equipmentId: string
     name: string
@@ -100,9 +102,16 @@ export default function SchedulePage() {
         ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : 1
 
-      // 担当者名を取得
-      const assignee = assignees?.find(a => a.id === event.assigneeId)
-      const assigneeName = assignee?.name || '未設定'
+      // 複数担当者名を取得
+      const assigneeIdsList = event.assigneeIds && event.assigneeIds.length > 0 
+        ? event.assigneeIds 
+        : event.assigneeId 
+          ? [event.assigneeId]
+          : []
+      const assigneeNamesList = assigneeIdsList
+        .map(id => assignees?.find(a => a.id === id)?.name)
+        .filter(Boolean) as string[]
+      const assigneeName = assigneeNamesList.length > 0 ? assigneeNamesList.join(', ') : '未設定'
 
       return {
         eventId: event.id,
@@ -110,8 +119,10 @@ export default function SchedulePage() {
         startDate: event.startDate,
         endDate: event.endDate || event.startDate,
         location: event.location || '',
-        assigneeId: event.assigneeId || '',
-        assigneeName,
+        assigneeId: event.assigneeId || '', // 後方互換性のため残す
+        assigneeIds: assigneeIdsList, // 複数担当者対応
+        assigneeName, // 後方互換性のため残す（カンマ区切りで全担当者）
+        assigneeNames: assigneeNamesList, // 複数担当者対応
         equipment: (event.equipment || []).map(eq => ({
           equipmentId: eq.equipmentId,
           name: eq.equipmentName,
@@ -437,15 +448,10 @@ export default function SchedulePage() {
                                   }}
                                   title={`${event.eventName} (${event.startDate} ~ ${event.endDate})`}
                                 >
-                                  {isStart && (
-                                    <span className={styles.eventText}>
-                                      {event.eventName}
-                                      {event.isMultiDay && ` (${event.duration}日)`}
-                                    </span>
-                                  )}
-                                  {!isStart && event.isMultiDay && (
-                                    <span className={styles.eventText}>...</span>
-                                  )}
+                                  <span className={styles.eventText}>
+                                    {event.eventName}
+                                    {isStart && event.isMultiDay && ` (${event.duration}日)`}
+                                  </span>
                                 </div>
                               )
                             })}

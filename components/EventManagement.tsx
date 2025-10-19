@@ -28,7 +28,8 @@ interface EventData {
   title: string
   startDate: string
   endDate: string
-  assigneeId: string
+  assigneeId: string // 後方互換性のため残す
+  assigneeIds: string[] // 複数担当者対応
   location: string
   memo: string
   equipment: Array<{
@@ -105,11 +106,17 @@ export default function EventManagement({
             startDate: event.startDate,
             endDate: event.endDate,
             assigneeId: '',
+            assigneeIds: [],
             location: '',
             memo: '',
             equipment: []
           }
-          const assignee = assignees.find(a => a.id === data.assigneeId)
+          // 複数担当者対応
+          const assigneeList = (data.assigneeIds || []).length > 0
+            ? assignees.filter(a => (data.assigneeIds || []).includes(a.id))
+            : data.assigneeId 
+              ? [assignees.find(a => a.id === data.assigneeId)].filter(Boolean) as Assignee[]
+              : []
           const isSaved = savedEvents.has(event.id)
           
           return (
@@ -139,10 +146,10 @@ export default function EventManagement({
                       </span>
                     </div>
                     
-                    {assignee && (
+                    {assigneeList.length > 0 && (
                       <div className={styles.eventMetaItem}>
                         <Users className={styles.icon} />
-                        <span>{assignee.name}</span>
+                        <span>{assigneeList.map(a => a.name).join(', ')}</span>
                       </div>
                     )}
                     

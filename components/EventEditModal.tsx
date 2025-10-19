@@ -22,7 +22,8 @@ interface EventData {
   title: string
   startDate: string
   endDate: string
-  assigneeId: string
+  assigneeId: string // 後方互換性のため残す
+  assigneeIds: string[] // 複数担当者対応
   location: string
   memo: string
   equipment: Array<{
@@ -47,6 +48,7 @@ interface EventEditModalProps {
   onRemoveEquipment: (eventId: string, equipmentId: string) => void
   onUpdateEquipmentQuantity: (eventId: string, equipmentId: string, quantity: number) => void
   onSaveEvent: (eventId: string) => void
+  onDrop?: (eventId: string, e: React.DragEvent) => void
 }
 
 export default function EventEditModal({
@@ -62,13 +64,14 @@ export default function EventEditModal({
   onAddEquipmentByNumber,
   onRemoveEquipment,
   onUpdateEquipmentQuantity,
-  onSaveEvent
+  onSaveEvent,
+  onDrop
 }: EventEditModalProps) {
   if (!isOpen || !eventId) return null
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>
             {eventId.startsWith('temp-') ? '新しい現場を作成' : '現場編集'}
@@ -117,21 +120,39 @@ export default function EventEditModal({
             </div>
           </div>
 
-          {/* 担当者 */}
+          {/* 担当者（複数選択） */}
           <div className={styles.inputSection}>
-            <h4>担当者</h4>
-            <select 
-              className={styles.assigneeSelect}
-              value={eventData.assigneeId}
-              onChange={(e) => onUpdateEventData(eventId, 'assigneeId', e.target.value)}
-            >
-              <option value="">担当者を選択</option>
-              {assignees.filter(a => a.isActive).map((assignee) => (
-                <option key={assignee.id} value={assignee.id}>
-                  {assignee.name}
-                </option>
-              ))}
-            </select>
+            <h4>担当者（複数選択可）</h4>
+            <div className={styles.assigneeCheckboxList}>
+              {assignees.filter(a => a.isActive).length === 0 ? (
+                <div className={styles.emptyAssigneeMessage}>
+                  担当者が登録されていません
+                </div>
+              ) : (
+                assignees.filter(a => a.isActive).map((assignee) => (
+                  <label key={assignee.id} className={styles.assigneeCheckboxItem}>
+                    <input 
+                      type="checkbox"
+                      className={styles.assigneeCheckbox}
+                      checked={(eventData.assigneeIds || []).includes(assignee.id)}
+                      onChange={(e) => {
+                        const currentIds = eventData.assigneeIds || []
+                        const newIds = e.target.checked
+                          ? [...currentIds, assignee.id]
+                          : currentIds.filter(id => id !== assignee.id)
+                        onUpdateEventData(eventId, 'assigneeIds', newIds)
+                      }}
+                    />
+                    <span className={styles.assigneeName}>{assignee.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            {(eventData.assigneeIds || []).length > 0 && (
+              <div className={styles.selectedAssigneesCount}>
+                選択中: {(eventData.assigneeIds || []).length}人
+              </div>
+            )}
           </div>
 
           {/* 場所 */}
@@ -183,10 +204,17 @@ export default function EventEditModal({
               </button>
             </div>
             
-            <div className={styles.equipmentList}>
+            <div 
+              className={styles.equipmentList}
+              onDrop={(e) => onDrop?.(eventId, e)}
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+            >
               {(eventData.equipment || []).length === 0 ? (
                 <div className={styles.emptyEquipmentMessage}>
-                  機材Noを入力して機材を追加してください
+                  📦 機材Noを入力するか、左の機材リストからここにドラッグ&ドロップしてください
                 </div>
               ) : (
                 (eventData.equipment || []).map((eq) => (
