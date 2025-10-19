@@ -105,3 +105,22 @@ a {
     color-scheme: dark;
   }
 }
+
+/* 印刷用グローバルスタイル */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* 印刷時にページ全体を表示 */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

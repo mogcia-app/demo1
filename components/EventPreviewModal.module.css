@@ -40,6 +40,42 @@
   margin: 0;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.printButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #38a169;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.printButton:hover {
+  background: #2f855a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(56, 161, 105, 0.25);
+}
+
+.printButton .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.buttonText {
+  font-weight: 600;
+}
+
 .closeButton {
   background: none;
   border: none;
@@ -235,6 +271,160 @@
   background: #cbd5e0;
 }
 
+/* 印刷用CSS */
+@media print {
+  /* モーダルオーバーレイを完全に除外 */
+  .modalOverlay {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* モーダルコンテンツを全画面表示 */
+  .modalContent {
+    max-width: 100% !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* ヘッダーの印刷スタイル */
+  .modalHeader {
+    background: white !important;
+    border-bottom: 2px solid #000 !important;
+    padding: 20px !important;
+    border-radius: 0 !important;
+    page-break-after: avoid !important;
+  }
+  
+  .modalTitle {
+    color: #000 !important;
+    font-size: 1.75rem !important;
+  }
+  
+  /* ボタンを非表示 */
+  .headerActions,
+  .closeButton,
+  .printButton,
+  .modalActions {
+    display: none !important;
+  }
+  
+  /* 本文の印刷スタイル */
+  .modalBody {
+    padding: 20px !important;
+    color: #000 !important;
+    background: white !important;
+  }
+  
+  .section {
+    page-break-inside: avoid !important;
+    margin-bottom: 24px !important;
+    background: white !important;
+  }
+  
+  .sectionTitle {
+    color: #000 !important;
+    border-bottom: 1px solid #ccc !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+    font-weight: 600 !important;
+  }
+  
+  .icon {
+    color: #000 !important;
+  }
+  
+  /* 情報グリッドの印刷スタイル */
+  .infoGrid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .infoItem {
+    page-break-inside: avoid !important;
+  }
+  
+  .infoLabel {
+    color: #000 !important;
+    font-weight: 600 !important;
+  }
+  
+  .infoValue {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    padding: 8px !important;
+    color: #000 !important;
+  }
+  
+  /* 機材リストの印刷スタイル */
+  .equipmentList {
+    background: white !important;
+  }
+  
+  .equipmentItem {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    padding: 10px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .equipmentInfo {
+    color: #000 !important;
+  }
+  
+  .equipmentNumber {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .equipmentName {
+    color: #000 !important;
+  }
+  
+  .equipmentQuantity {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .emptyEquipment {
+    background: white !important;
+    color: #666 !important;
+    border: 1px dashed #ccc !important;
+  }
+  
+  /* メモの印刷スタイル */
+  .memoContent {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    padding: 12px !important;
+    color: #000 !important;
+    line-height: 1.6 !important;
+  }
+  
+  /* ページ区切り */
+  .section:last-child {
+    page-break-after: avoid !important;
+  }
+  
+  /* アイコンの印刷サイズ */
+  .icon {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .modalContent {
@@ -273,5 +463,23 @@
   .closeActionButton {
     width: 100%;
     justify-content: center;
+  }
+  
+  .headerActions {
+    gap: 8px;
+  }
+  
+  .printButton {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+  
+  .buttonText {
+    display: none;
+  }
+  
+  .printButton .icon {
+    width: 18px;
+    height: 18px;
   }
 }

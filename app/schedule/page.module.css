@@ -72,6 +72,31 @@
   gap: 1rem;
 }
 
+.printHeaderButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #38a169;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.printHeaderButton:hover {
+  background: #2f855a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(56, 161, 105, 0.25);
+}
+
+.printButtonText {
+  font-weight: 600;
+}
+
 .navButton {
   background: #fafafa;
   border: 1px solid #e0e0e0;
@@ -93,6 +118,10 @@
   width: 1rem;
   height: 1rem;
   color: #1a1a1a;
+}
+
+.printHeaderButton .navIcon {
+  color: white;
 }
 
 .monthDisplay {
@@ -126,47 +155,12 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* 凡例 */
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1rem 1.5rem;
+/* 凡例セクション削除（新しいUI/UXに不要） */
+
+/* 空のセル */
+.emptyDay {
   background: #fafafa;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #666666;
-}
-
-.legendColor {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 2px;
-  border: 1px solid #e0e0e0;
-}
-
-.singleDay {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
-  color: #495057;
-}
-
-.multiDay {
-  background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
-  border: 1px solid #dadce0;
-  color: #3c4043;
-}
-
-.warningIcon {
-  width: 1rem;
-  height: 1rem;
-  color: #f44336;
+  border-right: 1px solid #e0e0e0;
 }
 
 /* サマリー */
@@ -245,22 +239,31 @@
   position: relative;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid #ddd;
-  height: 140px;
-  margin-bottom: 4px;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 120px;
 }
 
 .dayCell {
-  border-right: 1px solid #eee;
-  padding: 4px 6px;
+  border-right: 1px solid #e0e0e0;
+  padding: 4px;
   background-color: #fff;
   position: relative;
-  height: 100%;
-  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .dayCell:hover {
+  background: #f5f5f5;
+}
+
+.dayCell.hasEvents {
   background: #fafafa;
+}
+
+.dayCell.hasEvents:hover {
+  background: #f0f0f0;
 }
 
 .dayCell.today {
@@ -284,86 +287,111 @@
 }
 
 .dateNumber {
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
   font-weight: 500;
-  margin-bottom: 4px;
-  position: relative;
-  z-index: 3;
+  margin-bottom: 2px;
+  text-align: center;
+  min-width: 24px;
+  padding: 2px;
 }
 
 .dayCell.today .dateNumber {
-  background: #1a1a1a;
+  background: #1a73e8;
   color: #ffffff;
   border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 3;
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
 }
 
-/* イベントバー（Googleカレンダー風） */
-.eventItem {
-  position: absolute;
-  height: 20px;
+/* 日付内のイベントコンテナ */
+.dayEvents {
   display: flex;
-  align-items: center;
-  background-color: #e8f5e8; /* 薄い緑背景 */
-  color: #1a1a1a;
-  font-size: 12px;
-  border-radius: 0; /* 角丸なし（角張り） */
-  padding: 0 6px;
-  z-index: 2;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
   overflow: hidden;
-  border-left: 3px solid #666666; /* 左にグレーのボーダー */
-  cursor: pointer; /* クリック可能であることを示す */
 }
 
-.eventItem:hover {
-  filter: brightness(1.1);
-}
-
-.eventItem.multiDay {
-  background-color: #e8f5e8; /* 薄い緑背景 */
-  color: #1a1a1a;
-  border-left: 3px solid #666666; /* 左にグレーのボーダー */
-}
-
-.eventItem.singleDay {
-  background-color: #e3f2fd; /* 薄い青背景 */
-  color: #1a1a1a;
-  border-left: 3px solid #666666; /* 左にグレーのボーダー */
-}
-
-.eventItem.spanningWeek {
-  background-color: #fff3e0; /* 薄いオレンジ背景 */
-  color: #1a1a1a;
-  border-left: 3px solid #666666; /* 左にグレーのボーダー */
-}
-
-.eventName {
+/* 各日のイベントアイテム */
+.dayEventItem {
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 600;
-  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
 
-.eventDuration {
-  margin-left: 4px;
-  font-size: 11px;
-  opacity: 0.8;
-  color: #1a1a1a;
+.dayEventItem:hover {
+  transform: translateX(2px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dayEventItem.singleDay {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-left-color: #1976d2;
+}
+
+.dayEventItem.multiDay {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-left-color: #388e3c;
+}
+
+/* イベントの開始日・終了日・継続のスタイル */
+.dayEventItem.eventStart {
+  border-radius: 2px 0 0 2px;
+}
+
+.dayEventItem.eventEnd {
+  border-radius: 0 2px 2px 0;
+}
+
+.dayEventItem.eventContinued {
+  border-radius: 0;
+  border-left-width: 2px;
+  opacity: 0.9;
+}
+
+.eventText {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 500;
 }
+
+/* +N件表示 */
+.moreEvents {
+  font-size: 11px;
+  color: #666;
+  padding: 2px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  background: #f5f5f5;
+  border-radius: 2px;
+  border: 1px solid #e0e0e0;
+}
+
+.moreEvents:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* 古いイベントバースタイルは削除（新しいセル内表示に変更） */
 
 /* ローディング・エラー状態 */
 .loading, .error {
@@ -510,6 +538,196 @@
   padding: 1rem;
 }
 
+/* 印刷用CSS */
+@media print {
+  /* ヘッダーの印刷スタイル */
+  .header {
+    background: white;
+    border-bottom: 2px solid #000;
+    box-shadow: none;
+  }
+  
+  .backButton,
+  .printHeaderButton,
+  .navButton,
+  .currentTime {
+    display: none !important;
+  }
+  
+  .headerActions {
+    justify-content: center;
+  }
+  
+  .title {
+    color: #000;
+  }
+  
+  /* コンテンツの印刷スタイル */
+  .content {
+    padding: 20px;
+  }
+  
+  .scheduleContainer {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .summary {
+    background: white;
+    border-bottom: 2px solid #000;
+    page-break-inside: avoid;
+  }
+  
+  .summaryLabel,
+  .summaryValue {
+    color: #000;
+  }
+  
+  /* カレンダーの印刷スタイル */
+  .calendarContainer {
+    border: 1px solid #ccc;
+  }
+  
+  .calendarHeader {
+    background: white;
+    border-bottom: 2px solid #000;
+  }
+  
+  .calendarTitle {
+    color: #000;
+  }
+  
+  .dayHeader {
+    background: #f0f0f0;
+    color: #000;
+  }
+  
+  .calendarWeek {
+    border-bottom: 1px solid #000;
+    page-break-inside: avoid;
+  }
+  
+  .dayCell {
+    border-right: 1px solid #ccc;
+    background: white !important;
+  }
+  
+  .dayCell.today .dateNumber {
+    background: #000;
+    color: white;
+  }
+  
+  .dateNumber {
+    color: #000;
+  }
+  
+  .dayEventItem {
+    page-break-inside: avoid;
+  }
+  
+  .dayEventItem.singleDay {
+    background: #f0f0f0;
+    color: #000;
+    border-left-color: #000;
+  }
+  
+  .dayEventItem.multiDay {
+    background: #f5f5f5;
+    color: #000;
+    border-left-color: #000;
+  }
+  
+  .moreEvents {
+    background: #e0e0e0;
+    color: #000;
+    border-color: #000;
+  }
+  
+  /* モーダルを非表示 */
+  .modalOverlay {
+    display: none !important;
+  }
+}
+
+/* 日付別イベント一覧 */
+.dayEventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dayEventCard {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid #1976d2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dayEventCard:hover {
+  background: #f0f0f0;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.eventCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.eventCardTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.eventBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.singleDayBadge {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.multiDayBadge {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.eventCardDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.eventCardRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eventCardLabel {
+  font-weight: 600;
+  color: #666666;
+  min-width: 60px;
+  font-size: 0.875rem;
+}
+
+.eventCardValue {
+  color: #1a1a1a;
+  font-size: 0.875rem;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 1200px) {
   .headerContent {
@@ -526,11 +744,11 @@
   }
   
   .calendarWeek {
-    height: 120px;
+    min-height: 100px;
   }
   
-  .eventItem {
-    font-size: 11px;
+  .dayEventItem {
+    font-size: 10px;
   }
 }
 
@@ -543,21 +761,42 @@
   
   .headerActions {
     justify-content: center;
+    flex-wrap: wrap;
   }
   
-  .legend {
-    flex-direction: column;
-    align-items: flex-start;
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .printHeaderButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .printButtonText {
+    display: none;
+  }
+  
+  .summary {
+    flex-wrap: wrap;
     gap: 0.75rem;
   }
   
   .calendarWeek {
-    height: 100px;
+    min-height: 90px;
   }
   
-  .eventItem {
+  .dayEventItem {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+  
+  .dateNumber {
+    font-size: 11px;
+  }
+  
+  .moreEvents {
     font-size: 10px;
-    height: 18px;
   }
 }
 
@@ -567,15 +806,29 @@
   }
   
   .calendarWeek {
-    height: 80px;
+    min-height: 80px;
   }
   
-  .eventItem {
-    font-size: 9px;
-    height: 16px;
+  .dayEventItem {
+    font-size: 8px;
+    padding: 1px 2px;
   }
   
   .dateNumber {
     font-size: 10px;
+  }
+  
+  .dayCell.today .dateNumber {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .moreEvents {
+    font-size: 9px;
+  }
+  
+  .eventCardTitle {
+    font-size: 1rem;
   }
 }

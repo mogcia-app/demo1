@@ -1,7 +1,8 @@
 'use client'
 
-import { Calendar, Users, MapPin, Package } from 'lucide-react'
+import { Calendar, Users, MapPin, Package, Printer, FileDown } from 'lucide-react'
 import styles from './EventPreviewModal.module.css'
+import { useRef } from 'react'
 
 interface Event {
   id: string
@@ -55,18 +56,35 @@ export default function EventPreviewModal({
   onClose,
   onEdit
 }: EventPreviewModalProps) {
+  const printRef = useRef<HTMLDivElement>(null)
+
   if (!isOpen || !event) return null
 
   const assignee = assignees.find(a => a.id === eventData.assigneeId)
 
+  // 印刷・PDF出力機能
+  const handlePrint = () => {
+    window.print()
+  }
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} ref={printRef}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>現場詳細</h2>
-          <button className={styles.closeButton} onClick={onClose}>
-            ×
-          </button>
+          <div className={styles.headerActions}>
+            <button 
+              className={styles.printButton}
+              onClick={handlePrint}
+              title="印刷・PDF保存"
+            >
+              <Printer className={styles.icon} />
+              <span className={styles.buttonText}>印刷/PDF</span>
+            </button>
+            <button className={styles.closeButton} onClick={onClose}>
+              ×
+            </button>
+          </div>
         </div>
         
         <div className={styles.modalBody}>
@@ -100,15 +118,13 @@ export default function EventPreviewModal({
                 </div>
               )}
               
-              {eventData.location && (
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>場所</label>
-                  <div className={styles.infoValue}>
-                    <MapPin className={styles.icon} />
-                    {eventData.location}
-                  </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>場所</label>
+                <div className={styles.infoValue}>
+                  <MapPin className={styles.icon} />
+                  {eventData.location || event.location || '未設定'}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -141,14 +157,12 @@ export default function EventPreviewModal({
           </div>
 
           {/* メモ */}
-          {eventData.memo && (
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>メモ・備考</h3>
-              <div className={styles.memoContent}>
-                {eventData.memo}
-              </div>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>メモ・備考</h3>
+            <div className={styles.memoContent}>
+              {eventData.memo || event.description || 'メモなし'}
             </div>
-          )}
+          </div>
         </div>
         
         <div className={styles.modalActions}>

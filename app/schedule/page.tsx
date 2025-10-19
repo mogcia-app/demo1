@@ -5,7 +5,7 @@ import { onAuthStateChange } from '@/lib/auth'
 import { useEvents, useEquipment, useAssignees } from '@/lib/hooks/useFirestore'
 import { Equipment } from '@/lib/types'
 import styles from './page.module.css'
-import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, AlertTriangle, Info, ArrowLeft, Printer } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface EventSchedule {
@@ -53,6 +53,9 @@ export default function SchedulePage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState<EventSchedule | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isDayModalOpen, setIsDayModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'list'>('month')
 
   // 認証状態を監視
   useEffect(() => {
@@ -208,6 +211,35 @@ export default function SchedulePage() {
     setSelectedEvent(null)
   }
 
+  // 特定の日のイベントを取得
+  const getEventsForDate = (date: Date): EventSchedule[] => {
+    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD形式
+    return eventSchedules.filter(event => {
+      const eventStartDate = event.startDate
+      const eventEndDate = event.endDate
+      return dateStr >= eventStartDate && dateStr <= eventEndDate
+    })
+  }
+
+  // 日付セルクリック時のハンドラー
+  const handleDayClick = (date: Date) => {
+    const eventsOnDay = getEventsForDate(date)
+    if (eventsOnDay.length > 0) {
+      setSelectedDate(date)
+      setIsDayModalOpen(true)
+    }
+  }
+
+  const closeDayModal = () => {
+    setIsDayModalOpen(false)
+    setSelectedDate(null)
+  }
+
+  // 印刷機能
+  const handlePrint = () => {
+    window.print()
+  }
+
   const formatDate = (date: Date) => {
     return date.getDate().toString()
   }
@@ -280,6 +312,14 @@ export default function SchedulePage() {
           </div>
           <div className={styles.headerActions}>
             <button 
+              className={styles.printHeaderButton}
+              onClick={handlePrint}
+              title="印刷・PDF保存"
+            >
+              <Printer className={styles.navIcon} />
+              <span className={styles.printButtonText}>印刷/PDF</span>
+            </button>
+            <button 
               className={styles.navButton}
               onClick={() => navigateMonth('prev')}
             >
@@ -348,25 +388,17 @@ export default function SchedulePage() {
                 const weekStart = weekIndex * 7
                 const weekDays = days.slice(weekStart, weekStart + 7)
                 
-                // この週のイベントを取得（週をまたぐイベントも含む）
-                const weekEvents = eventSchedules.filter(event => {
-                  const eventStartDate = new Date(event.startDate)
-                  const eventEndDate = new Date(event.endDate)
-                  const startOfWeek = weekDays[0]
-                  const endOfWeek = weekDays[6]
-                  
-                  // イベントがこの週と重なる場合（週の前後にまたがっても含む）
-                  return eventEndDate >= startOfWeek && eventStartDate <= endOfWeek
-                })
-
                 return (
                   <div key={weekIndex} className={styles.calendarWeek}>
                     {/* 日付セル */}
-                    {Array.from({ length: 7 }).map((_, dayIndex) => {
-                      const day = weekDays[dayIndex]
+                    {weekDays.map((day, dayIndex) => {
                       if (!day) return <div key={dayIndex} className={styles.emptyDay}></div>
                       
-                      const dateStr = day.toISOString().split('T')[0]
+                      const dateStr = day.toLocaleDateString('en-CA') // YYYY-MM-DD
+                      const eventsOnDay = getEventsForDate(day)
+                      const MAX_VISIBLE_EVENTS = 2 // 最大表示件数
+                      const visibleEvents = eventsOnDay.slice(0, MAX_VISIBLE_EVENTS)
+                      const remainingCount = eventsOnDay.length - MAX_VISIBLE_EVENTS
                       
                       return (
                         <div 
@@ -375,125 +407,62 @@ export default function SchedulePage() {
                             !isCurrentMonth(day) ? styles.otherMonth : ''
                           } ${isToday(day) ? styles.today : ''} ${
                             isPastDate(day) ? styles.pastDate : ''
-                          } ${isFutureDate(day) ? styles.futureDate : ''}`}
+                          } ${isFutureDate(day) ? styles.futureDate : ''} ${
+                            eventsOnDay.length > 0 ? styles.hasEvents : ''
+                          }`}
+                          onClick={() => handleDayClick(day)}
                         >
                           <div className={styles.dateNumber}>
                             {formatDate(day)}
                           </div>
-                        </div>
-                      )
-                    })}
-                    
-                    {/* 日跨ぎイベント */}
-                    {weekEvents.map((event, eventIndex) => {
-                      const eventStartDate = new Date(event.startDate)
-                      const eventEndDate = new Date(event.endDate)
-                      
-                      // この週での開始位置と終了位置を計算
-                      let startIndex = -1
-                      let endIndex = -1
-                      
-                      weekDays.forEach((day, index) => {
-                        // タイムゾーンを考慮した日付文字列の比較
-                        const dayStr = day.toLocaleDateString('en-CA') // YYYY-MM-DD形式
-                        const eventStartStr = eventStartDate.toLocaleDateString('en-CA')
-                        const eventEndStr = eventEndDate.toLocaleDateString('en-CA')
-                        
-                        if (dayStr >= eventStartStr && dayStr <= eventEndStr) {
-                          if (startIndex === -1) startIndex = index
-                          endIndex = index
-                        }
-                      })
-                      
-                      if (startIndex === -1) return null
-                      
-                      // 週をまたぐイベントの処理
-                      const weekStartDate = weekDays[0]
-                      const weekEndDate = weekDays[6]
-                      
-                      // イベントが週の境界をまたぐかチェック
-                      const spansMultipleWeeks = eventStartDate < weekStartDate || eventEndDate > weekEndDate
-                      
-                      // この週でイベントが開始するかチェック（新しい週での現場名表示用）
-                      const startsInThisWeek = eventStartDate >= weekStartDate && eventStartDate <= weekEndDate
-                      
-                      // 調整された期間を事前に計算
-                      const adjustedStartDate = eventStartDate < weekStartDate ? weekStartDate : eventStartDate
-                      const adjustedEndDate = eventEndDate > weekEndDate ? weekEndDate : eventEndDate
-                      
-                      let leftPercent, widthPercent
-                      
-                      if (spansMultipleWeeks) {
-                        // 週をまたぐ場合：この週での実際の開始・終了位置を計算
-                        
-                        // 調整された期間でのインデックスを再計算
-                        let adjustedStartIndex = -1
-                        let adjustedEndIndex = -1
-                        
-                        weekDays.forEach((day, index) => {
-                          // タイムゾーンを考慮した日付文字列の比較
-                          const dayStr = day.toLocaleDateString('en-CA') // YYYY-MM-DD形式
-                          const adjustedStartStr = adjustedStartDate.toLocaleDateString('en-CA')
-                          const adjustedEndStr = adjustedEndDate.toLocaleDateString('en-CA')
                           
-                          if (dayStr >= adjustedStartStr && dayStr <= adjustedEndStr) {
-                            if (adjustedStartIndex === -1) adjustedStartIndex = index
-                            adjustedEndIndex = index
-                          }
-                        })
-                        
-                        // 調整された期間で表示
-                        leftPercent = (adjustedStartIndex / 7) * 100
-                        widthPercent = ((adjustedEndIndex - adjustedStartIndex + 1) / 7) * 100
-                      } else {
-                        // 週内のみの場合：通常の計算
-                        leftPercent = (startIndex / 7) * 100
-                        widthPercent = ((endIndex - startIndex + 1) / 7) * 100
-                      }
-                      
-                      // デバッグ情報（開発時のみ）
-                      if (event.isMultiDay) {
-                        console.log(`日跨ぎイベント: ${event.eventName}`, {
-                          duration: event.duration,
-                          spansMultipleWeeks,
-                          startsInThisWeek,
-                          showEventName: startsInThisWeek || !spansMultipleWeeks,
-                          leftPercent: leftPercent.toFixed(1) + '%',
-                          widthPercent: widthPercent.toFixed(1) + '%',
-                          weekRange: `${weekStartDate.toISOString().split('T')[0]} ~ ${weekEndDate.toISOString().split('T')[0]}`,
-                          eventRange: `${event.startDate} ~ ${event.endDate}`,
-                          adjustedRange: spansMultipleWeeks ? 
-                            `${adjustedStartDate.toISOString().split('T')[0]} ~ ${adjustedEndDate.toISOString().split('T')[0]}` : 
-                            '週内のみ',
-                          // デバッグ用：実際の日付比較
-                          weekDays: weekDays.map(d => d.toLocaleDateString('en-CA')),
-                          eventStartDate: eventStartDate.toLocaleDateString('en-CA'),
-                          eventEndDate: eventEndDate.toLocaleDateString('en-CA')
-                        })
-                      }
-                      
-                      return (
-                        <div
-                          key={`${event.eventId}-${weekIndex}`}
-                          className={`${styles.eventItem} ${
-                            event.isMultiDay ? styles.multiDay : styles.singleDay
-                          } ${spansMultipleWeeks ? styles.spanningWeek : ''}`}
-                          style={{
-                            left: `${leftPercent}%`,
-                            width: `${widthPercent}%`,
-                            top: `${32 + eventIndex * 22}px`,
-                          }}
-                          onClick={() => handleEventClick(event)}
-                        >
-                          {/* この週で開始する場合、または単日イベントの場合は現場名を表示 */}
-                          {(startsInThisWeek || !spansMultipleWeeks) && (
-                            <span className={styles.eventName}>{event.eventName}</span>
-                          )}
-                          {event.isMultiDay && (
-                            <span className={styles.eventDuration}>
-                              ({event.duration}日間)
-                            </span>
-                          )}
+                          {/* イベント表示（最大2件） */}
+                          <div className={styles.dayEvents}>
+                            {visibleEvents.map((event, idx) => {
+                              const isStart = event.startDate === dateStr
+                              const isEnd = event.endDate === dateStr
+                              const isContinued = !isStart && !isEnd
+                              
+                              return (
+                                <div
+                                  key={event.eventId}
+                                  className={`${styles.dayEventItem} ${
+                                    event.isMultiDay ? styles.multiDay : styles.singleDay
+                                  } ${isStart ? styles.eventStart : ''} ${
+                                    isEnd ? styles.eventEnd : ''
+                                  } ${isContinued ? styles.eventContinued : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEventClick(event)
+                                  }}
+                                  title={`${event.eventName} (${event.startDate} ~ ${event.endDate})`}
+                                >
+                                  {isStart && (
+                                    <span className={styles.eventText}>
+                                      {event.eventName}
+                                      {event.isMultiDay && ` (${event.duration}日)`}
+                                    </span>
+                                  )}
+                                  {!isStart && event.isMultiDay && (
+                                    <span className={styles.eventText}>...</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                            
+                            {/* +N件表示 */}
+                            {remainingCount > 0 && (
+                              <div 
+                                className={styles.moreEvents}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDayClick(day)
+                                }}
+                              >
+                                +{remainingCount}件
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )
                     })}
@@ -504,6 +473,82 @@ export default function SchedulePage() {
           </div>
         </div>
       </div>
+
+      {/* 日付別イベント一覧モーダル */}
+      {isDayModalOpen && selectedDate && (
+        <div className={styles.modalOverlay} onClick={closeDayModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>
+                {selectedDate.toLocaleDateString('ja-JP', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'long'
+                })} の予定
+              </h2>
+              <button className={styles.closeButton} onClick={closeDayModal}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.dayEventsList}>
+                {getEventsForDate(selectedDate).map((event) => (
+                  <div 
+                    key={event.eventId} 
+                    className={styles.dayEventCard}
+                    onClick={() => {
+                      closeDayModal()
+                      handleEventClick(event)
+                    }}
+                  >
+                    <div className={styles.eventCardHeader}>
+                      <h3 className={styles.eventCardTitle}>{event.eventName}</h3>
+                      <span className={`${styles.eventBadge} ${
+                        event.isMultiDay ? styles.multiDayBadge : styles.singleDayBadge
+                      }`}>
+                        {event.isMultiDay ? `${event.duration}日間` : '単日'}
+                      </span>
+                    </div>
+                    
+                    <div className={styles.eventCardDetails}>
+                      <div className={styles.eventCardRow}>
+                        <span className={styles.eventCardLabel}>期間:</span>
+                        <span className={styles.eventCardValue}>
+                          {event.startDate === event.endDate 
+                            ? event.startDate
+                            : `${event.startDate} ~ ${event.endDate}`
+                          }
+                        </span>
+                      </div>
+                      
+                      {event.location && (
+                        <div className={styles.eventCardRow}>
+                          <span className={styles.eventCardLabel}>場所:</span>
+                          <span className={styles.eventCardValue}>{event.location}</span>
+                        </div>
+                      )}
+                      
+                      <div className={styles.eventCardRow}>
+                        <span className={styles.eventCardLabel}>担当:</span>
+                        <span className={styles.eventCardValue}>{event.assigneeName}</span>
+                      </div>
+                      
+                      <div className={styles.eventCardRow}>
+                        <span className={styles.eventCardLabel}>機材:</span>
+                        <span className={styles.eventCardValue}>
+                          {event.equipment.length}種類
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* イベント詳細モーダル */}
       {isModalOpen && selectedEvent && (
