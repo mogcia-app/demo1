@@ -212,3 +212,197 @@
 .deleteButton:hover {
   background: #feb2b2;
 }
+
+/* レスポンシブ対応 */
+
+/* タブレット（1024px以下） */
+@media (max-width: 1024px) {
+  .eventsSection {
+    margin-bottom: 20px;
+  }
+}
+
+/* スマホ（768px以下） */
+@media (max-width: 768px) {
+  .eventsSection {
+    padding: 16px;
+  }
+
+  .eventsHeader {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .createEventButton {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+
+  .initButton {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .eventCard {
+    margin-bottom: 8px;
+  }
+
+  .eventHeader {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .eventTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .eventTitle {
+    font-size: 1rem;
+  }
+
+  .savedBadge,
+  .draftBadge {
+    align-self: flex-start;
+  }
+
+  .eventMeta {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .eventMetaItem {
+    font-size: 0.85rem;
+  }
+
+  .eventMetaItem .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .eventActions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .previewButton,
+  .editButton,
+  .deleteButton {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .emptyState {
+    padding: 32px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* 小型スマホ（480px以下） */
+@media (max-width: 480px) {
+  .eventsSection {
+    padding: 12px;
+  }
+
+  .eventsHeader {
+    gap: 10px;
+  }
+
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+
+  .createEventButton {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .initButton {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .eventCard {
+    margin-bottom: 6px;
+  }
+
+  .eventHeader {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .eventTitleRow {
+    gap: 6px;
+  }
+
+  .eventTitle {
+    font-size: 0.95rem;
+  }
+
+  .savedBadge,
+  .draftBadge {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+  }
+
+  .eventMeta {
+    gap: 10px;
+  }
+
+  .eventMetaItem {
+    font-size: 0.8rem;
+  }
+
+  .eventMetaItem .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .equipmentCount {
+    font-size: 0.8rem;
+  }
+
+  .eventActions {
+    gap: 6px;
+  }
+
+  .previewButton,
+  .editButton,
+  .deleteButton {
+    min-width: 70px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .emptyState {
+    padding: 24px 12px;
+    font-size: 0.85rem;
+  }
+
+  .emptyState p {
+    font-size: 0.85rem;
+  }
+}
