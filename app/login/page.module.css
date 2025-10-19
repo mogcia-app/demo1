@@ -168,16 +168,80 @@
 }
 
 /* レスポンシブ対応 */
-@media (max-width: 640px) {
+/* タブレット */
+@media (max-width: 768px) {
+  .main {
+    padding: 1.5rem;
+  }
+
   .authContainer {
-    padding: 2rem;
+    padding: 2.5rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+/* スマホ */
+@media (max-width: 480px) {
+  .main {
+    padding: 1rem;
+  }
+
+  .authContainer {
+    padding: 1.75rem;
+    max-width: 100%;
   }
 
   .title {
     font-size: 1.5rem;
   }
 
-  .main {
-    padding: 1rem;
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .authForm {
+    gap: 1.25rem;
+  }
+
+  .label {
+    font-size: 0.7rem;
+  }
+
+  .input {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.9rem;
+  }
+
+  .passwordToggle {
+    right: 0.625rem;
+    padding: 0.375rem;
+  }
+
+  .eyeIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .errorMessage {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  .authButton {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
   }
 }
