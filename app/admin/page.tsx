@@ -416,26 +416,28 @@ export default function AdminPage() {
               </div>
               {equipment.map((eq) => (
                 <div key={eq.id} className={styles.tableRow}>
-                  <div className={styles.tableCell}>#{eq.id}</div>
-                  <div className={styles.tableCell}>{eq.name}</div>
-                  <div className={styles.tableCell}>
+                  <div className={styles.tableCell} data-label="ID">#{eq.id}</div>
+                  <div className={styles.tableCell} data-label="機材名">{eq.name}</div>
+                  <div className={styles.tableCell} data-label="カテゴリ">
                     {(eq.categories || (eq.category ? [eq.category] : []))
                       .map(catId => categories.find(c => c.id === catId)?.name)
                       .filter(Boolean)
                       .join(', ') || '-'}
                   </div>
-                  <div className={styles.tableCell}>{eq.stock}</div>
-                  <div className={styles.tableCell}>{eq.description || '-'}</div>
+                  <div className={styles.tableCell} data-label="在庫数">{eq.stock}</div>
+                  <div className={styles.tableCell} data-label="説明">{eq.description || '-'}</div>
                   <div className={styles.tableCell}>
                     <button 
                       className={styles.editButton}
                       onClick={() => handleEditEquipment(eq)}
+                      aria-label="編集"
                     >
                       <Edit className={styles.smallIcon} />
                     </button>
                     <button 
                       className={styles.deleteButton}
                       onClick={() => handleDeleteEquipment(eq.id)}
+                      aria-label="削除"
                     >
                       <Trash2 className={styles.smallIcon} />
                     </button>
@@ -469,20 +471,22 @@ export default function AdminPage() {
                 })
                 return (
                   <div key={category.id} className={styles.categoryTableRow}>
-                    <div className={styles.tableCell}>{category.name}</div>
-                    <div className={styles.tableCell}>
+                    <div className={styles.tableCell} data-label="グループ名">{category.name}</div>
+                    <div className={styles.tableCell} data-label="機材数">
                       {equipmentCategories.length}件
                     </div>
                     <div className={styles.tableCell}>
                       <button 
                         className={styles.editButton}
                         onClick={() => handleEditCategory(category)}
+                        aria-label="編集"
                       >
                         <Edit className={styles.smallIcon} />
                       </button>
                       <button 
                         className={styles.deleteButton}
                         onClick={() => handleDeleteCategory(category.id)}
+                        aria-label="削除"
                       >
                         <Trash2 className={styles.smallIcon} />
                       </button>
@@ -512,8 +516,8 @@ export default function AdminPage() {
             </div>
             {assignees.map((assignee) => (
               <div key={assignee.id} className={styles.tableRow} style={{gridTemplateColumns: '3fr 1fr 1fr'}}>
-                <div className={styles.tableCell}>{assignee.name}</div>
-                <div className={styles.tableCell}>
+                <div className={styles.tableCell} data-label="名前">{assignee.name}</div>
+                <div className={styles.tableCell} data-label="状態">
                   <span className={assignee.isActive ? styles.activeBadge : styles.inactiveBadge}>
                     {assignee.isActive ? '有効' : '無効'}
                   </span>
@@ -522,12 +526,14 @@ export default function AdminPage() {
                   <button 
                     className={styles.editButton}
                     onClick={() => handleEditAssignee(assignee)}
+                    aria-label="編集"
                   >
                     <Edit className={styles.smallIcon} />
                   </button>
                   <button 
                     className={styles.deleteButton}
                     onClick={() => handleDeleteAssignee(assignee.id)}
+                    aria-label="削除"
                   >
                     <Trash2 className={styles.smallIcon} />
                   </button>
