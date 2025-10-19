@@ -127,7 +127,9 @@ export default function AdminPage() {
         })
         alert('機材を更新しました')
       } else {
+        const nextId = getNextId()
         await createEquipment({
+          id: nextId, // 数字のIDを指定
           name: equipmentForm.name,
           categories: equipmentForm.categories,
           stock: equipmentForm.stock,
