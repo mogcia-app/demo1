@@ -40,7 +40,8 @@
   --card-border-rgb: 131, 134, 135;
 }
 
-@media (prefers-color-scheme: dark) {
+/* ダークモード対応を無効化（常にライトモードで表示） */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
@@ -71,7 +72,7 @@
     --card-rgb: 100, 100, 100;
     --card-border-rgb: 200, 200, 200;
   }
-}
+} */
 
 * {
   box-sizing: border-box;
@@ -100,11 +101,12 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
+/* ダークモード対応を無効化（常にライトモードで表示） */
+/* @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
   }
-}
+} */
 
 /* 印刷用グローバルスタイル */
 @media print {
