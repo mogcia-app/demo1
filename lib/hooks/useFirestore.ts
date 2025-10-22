@@ -194,25 +194,14 @@ export const useEquipment = () => {
 
   const createEquipment = async (equipmentData: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
     try {
-      // IDが指定されている場合はsetDocを使用、指定されていない場合はaddDocを使用
-      if (equipmentData.id) {
-        const customId = equipmentData.id
-        const { id, ...dataWithoutId } = equipmentData
-        const equipmentRef = doc(db, COLLECTIONS.EQUIPMENT, customId)
-        await setDoc(equipmentRef, {
-          ...dataWithoutId,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        })
-        return customId
-      } else {
-        const docRef = await addDoc(collection(db, COLLECTIONS.EQUIPMENT), {
-          ...equipmentData,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        })
-        return docRef.id
-      }
+      // 常にaddDocを使用して自動生成IDでドキュメントを作成し、フィールド内にidを含める
+      const docRef = await addDoc(collection(db, COLLECTIONS.EQUIPMENT), {
+        ...equipmentData,
+        id: equipmentData.id || 'auto-generated', // フィールド内にidを含める
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      })
+      return docRef.id
     } catch (err) {
       setError(err instanceof Error ? err.message : '機材作成に失敗しました')
       throw err

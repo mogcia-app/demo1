@@ -1,4 +1,4 @@
-import { doc, runTransaction } from 'firebase/firestore'
+import { doc, runTransaction, collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from './firebase'
 
 // 在庫減算用のトランザクション処理
@@ -10,15 +10,30 @@ export interface InventoryItem {
 // 在庫を減算（現場登録時）
 export const decreaseInventory = async (items: InventoryItem[]) => {
   try {
+    console.log('🔍 在庫減算開始 - 対象機材:', items)
+    
     await runTransaction(db, async (transaction) => {
-      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
+      // 全ての機材データを取得（フィールド内のidで検索）
       const equipmentDocs = await Promise.all(
         items.map(async (item) => {
-          const equipmentRef = doc(db, 'equipment', item.equipmentId)
-          const equipmentDoc = await transaction.get(equipmentRef)
-          if (!equipmentDoc.exists()) {
+          console.log(`🔍 機材 #${item.equipmentId} を検索中...`)
+          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
+          const snapshot = await getDocs(q)
+          if (snapshot.empty) {
+            console.error(`❌ 機材 #${item.equipmentId} が見つかりません`)
+            // デバッグ: 全ての機材をリストアップ
+            const allEquipmentRef = collection(db, 'equipment')
+            const allEquipmentSnapshot = await transaction.get(allEquipmentRef)
+            console.log('📋 Firestoreに存在する機材:', allEquipmentSnapshot.docs.map(doc => ({
+              docId: doc.id,
+              fieldId: doc.data().id,
+              name: doc.data().name,
+              stock: doc.data().stock
+            })))
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
+          const equipmentDoc = snapshot.docs[0]
+          console.log(`✅ 機材 #${item.equipmentId} が見つかりました:`, equipmentDoc.data().name)
           return equipmentDoc
         })
       )
@@ -64,15 +79,15 @@ export const decreaseInventory = async (items: InventoryItem[]) => {
 export const increaseInventory = async (items: InventoryItem[]) => {
   try {
     await runTransaction(db, async (transaction) => {
-      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
+      // 全ての機材データを取得（フィールド内のidで検索）
       const equipmentDocs = await Promise.all(
         items.map(async (item) => {
-          const equipmentRef = doc(db, 'equipment', item.equipmentId)
-          const equipmentDoc = await transaction.get(equipmentRef)
-          if (!equipmentDoc.exists()) {
+          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
+          const snapshot = await getDocs(q)
+          if (snapshot.empty) {
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
-          return equipmentDoc
+          return snapshot.docs[0]
         })
       )
 
@@ -144,15 +159,15 @@ export const adjustInventory = async (
     await runTransaction(db, async (transaction) => {
       console.log('🔄 Firestoreトランザクション開始')
       
-      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
+      // 全ての機材データを取得（フィールド内のidで検索）
       const equipmentDocs = await Promise.all(
         itemsToAdjust.map(async (item) => {
-          const equipmentRef = doc(db, 'equipment', item.equipmentId)
-          const equipmentDoc = await transaction.get(equipmentRef)
-          if (!equipmentDoc.exists()) {
+          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
+          const snapshot = await getDocs(q)
+          if (snapshot.empty) {
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
-          return { doc: equipmentDoc, adjustment: item.adjustment }
+          return { doc: snapshot.docs[0], adjustment: item.adjustment }
         })
       )
 
