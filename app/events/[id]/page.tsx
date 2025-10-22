@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, MapPin, Edit, Trash2, ExternalLink, User } from 'lucide-react'
 import styles from './page.module.css'
-import { useEvent } from '../../../lib/hooks/useFirestore'
+import { useEvent, useAssignees } from '../../../lib/hooks/useFirestore'
 import { onAuthStateChange, isCompanyUser } from '../../../lib/auth'
 
 export default function EventDetailPage() {
@@ -12,6 +12,7 @@ export default function EventDetailPage() {
   const router = useRouter()
   const eventId = params.id as string
   const { event, loading, error } = useEvent(eventId)
+  const { assignees } = useAssignees()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // 認証状態の確認
@@ -105,6 +106,21 @@ export default function EventDetailPage() {
     }
   }
 
+  // 担当者名を取得する関数
+  const getAssigneeNames = (assigneeIds: string[] | undefined, assigneeId: string | undefined) => {
+    if (assigneeIds && assigneeIds.length > 0) {
+      // 複数担当者対応
+      return assigneeIds
+        .map(id => assignees.find(a => a.id === id)?.name)
+        .filter(Boolean)
+        .join(', ')
+    } else if (assigneeId) {
+      // 単一担当者（後方互換性）
+      return assignees.find(a => a.id === assigneeId)?.name || assigneeId
+    }
+    return null
+  }
+
   return (
     <main className={styles.main}>
       <div className={styles.container}>
@@ -165,12 +181,12 @@ export default function EventDetailPage() {
               </div>
             )}
 
-            {event.assigneeId && (
+            {getAssigneeNames(event.assigneeIds, event.assigneeId) && (
               <div className={styles.detailItem}>
                 <User className={styles.icon} />
                 <div>
                   <h3>担当者</h3>
-                  <p>{event.assigneeId}</p>
+                  <p>{getAssigneeNames(event.assigneeIds, event.assigneeId)}</p>
                 </div>
               </div>
             )}

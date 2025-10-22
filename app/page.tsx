@@ -697,12 +697,6 @@ export default function Home() {
         // 保存成功メッセージを表示
         const message = `✅ 現場が保存されました！\n\n在庫が減算されました。\nGoogleカレンダーに登録されました。`
         alert(message)
-        
-        // 新規作成の場合は詳細ページへリダイレクト
-        if (isNewEvent) {
-          console.log('新規作成のため詳細ページへリダイレクト:', eventUrl)
-          router.push(`/events/${actualEventId}`)
-        }
       } else {
         console.error('現場保存失敗:', result.error)
         alert(`保存に失敗しました: ${result.error}`)
