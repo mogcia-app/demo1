@@ -1,4 +1,4 @@
-import { doc, runTransaction, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, runTransaction } from 'firebase/firestore'
 import { db } from './firebase'
 
 // 在庫減算用のトランザクション処理
@@ -11,15 +11,15 @@ export interface InventoryItem {
 export const decreaseInventory = async (items: InventoryItem[]) => {
   try {
     await runTransaction(db, async (transaction) => {
-      // 全ての機材データを取得
+      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
       const equipmentDocs = await Promise.all(
         items.map(async (item) => {
-          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
-          const snapshot = await getDocs(q)
-          if (snapshot.empty) {
+          const equipmentRef = doc(db, 'equipment', item.equipmentId)
+          const equipmentDoc = await transaction.get(equipmentRef)
+          if (!equipmentDoc.exists()) {
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
-          return snapshot.docs[0]
+          return equipmentDoc
         })
       )
 
@@ -64,15 +64,15 @@ export const decreaseInventory = async (items: InventoryItem[]) => {
 export const increaseInventory = async (items: InventoryItem[]) => {
   try {
     await runTransaction(db, async (transaction) => {
-      // 全ての機材データを取得
+      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
       const equipmentDocs = await Promise.all(
         items.map(async (item) => {
-          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
-          const snapshot = await getDocs(q)
-          if (snapshot.empty) {
+          const equipmentRef = doc(db, 'equipment', item.equipmentId)
+          const equipmentDoc = await transaction.get(equipmentRef)
+          if (!equipmentDoc.exists()) {
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
-          return snapshot.docs[0]
+          return equipmentDoc
         })
       )
 
@@ -144,15 +144,15 @@ export const adjustInventory = async (
     await runTransaction(db, async (transaction) => {
       console.log('🔄 Firestoreトランザクション開始')
       
-      // 全ての機材データを取得
+      // 全ての機材データを取得（ドキュメントIDで直接アクセス）
       const equipmentDocs = await Promise.all(
         itemsToAdjust.map(async (item) => {
-          const q = query(collection(db, 'equipment'), where('id', '==', item.equipmentId))
-          const snapshot = await getDocs(q)
-          if (snapshot.empty) {
+          const equipmentRef = doc(db, 'equipment', item.equipmentId)
+          const equipmentDoc = await transaction.get(equipmentRef)
+          if (!equipmentDoc.exists()) {
             throw new Error(`機材 #${item.equipmentId} が見つかりません`)
           }
-          return { doc: snapshot.docs[0], adjustment: item.adjustment }
+          return { doc: equipmentDoc, adjustment: item.adjustment }
         })
       )
 
