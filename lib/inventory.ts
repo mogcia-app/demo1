@@ -23,7 +23,7 @@ export const decreaseInventory = async (items: InventoryItem[]) => {
             console.error(`❌ 機材 #${item.equipmentId} が見つかりません`)
             // デバッグ: 全ての機材をリストアップ
             const allEquipmentRef = collection(db, 'equipment')
-            const allEquipmentSnapshot = await transaction.get(allEquipmentRef)
+            const allEquipmentSnapshot = await getDocs(allEquipmentRef)
             console.log('📋 Firestoreに存在する機材:', allEquipmentSnapshot.docs.map(doc => ({
               docId: doc.id,
               fieldId: doc.data().id,
