@@ -678,12 +678,18 @@ export default function Home() {
         result = await updateCalendarEvent(calendarEventIds[actualEventId], calendarData)
       } else {
         // 新しいイベントを作成
+        console.log('📅 Googleカレンダーに新しいイベントを作成中...')
         result = await createCalendarEvent(calendarData)
+        console.log('📅 作成結果:', result)
+        
         if (result.success && result.eventId) {
+          console.log('📅 カレンダーイベントIDを保存:', result.eventId)
           setCalendarEventIds(prev => ({
             ...prev,
             [actualEventId]: result.eventId!
           }))
+        } else {
+          console.error('❌ Googleカレンダー作成失敗:', result.error)
         }
       }
 
@@ -734,15 +740,27 @@ export default function Home() {
       }
 
       // Googleカレンダーから削除
+      console.log('🗑️ 現場削除開始:', eventId)
+      console.log('📅 保存されているカレンダーイベントID:', calendarEventIds[eventId])
+      
       if (calendarEventIds[eventId]) {
+        console.log('📅 Googleカレンダーから削除中...')
         const result = await deleteCalendarEvent(calendarEventIds[eventId])
+        console.log('📅 削除結果:', result)
+        
         if (result.success) {
+          console.log('✅ Googleカレンダーから削除成功')
           setCalendarEventIds(prev => {
             const newIds = { ...prev }
             delete newIds[eventId]
             return newIds
           })
+        } else {
+          console.error('❌ Googleカレンダー削除失敗:', result.error)
+          alert(`Googleカレンダーからの削除に失敗しました: ${result.error}`)
         }
+      } else {
+        console.log('⚠️ カレンダーイベントIDが見つかりません')
       }
 
       // Firestoreからイベントを削除
