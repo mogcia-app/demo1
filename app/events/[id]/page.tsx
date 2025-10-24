@@ -221,7 +221,7 @@ export default function EventDetailPage() {
                     <span className={styles.equipmentCategory}>機材ID: {equipment.equipmentId}</span>
                   </div>
                   <div className={styles.equipmentQuantity}>
-                    ×{equipment.quantity}
+                    {equipment.quantity}台
                   </div>
                 </div>
               ))}
