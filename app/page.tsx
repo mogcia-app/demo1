@@ -689,7 +689,13 @@ export default function Home() {
             [actualEventId]: result.eventId!
           }))
         } else {
-          console.error('❌ Googleカレンダー作成失敗:', result.error)
+          console.error('❌ Googleカレンダー作成失敗:', result)
+          console.error('❌ 詳細:', {
+            success: result.success,
+            eventId: result.eventId,
+            error: result.error,
+            fullResult: result
+          })
         }
       }
 
