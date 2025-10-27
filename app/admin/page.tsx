@@ -88,6 +88,11 @@ export default function AdminPage() {
   }
 
   const handleEditEquipment = (eq: any) => {
+    console.log('handleEditEquipment called with:', {
+      id: eq.id,
+      docId: eq.docId,
+      name: eq.name
+    })
     setEditingEquipment(eq)
     setEquipmentForm({
       name: eq.name,
@@ -118,7 +123,30 @@ export default function AdminPage() {
       }
 
       if (editingEquipment) {
-        await updateEquipment(editingEquipment.id, {
+        // 機材番号で機材を検索してFirestoreドキュメントIDを取得
+        const targetEquipment = equipment.find(eq => eq.id === editingEquipment.id)
+        const docId = targetEquipment?.docId || editingEquipment.docId || editingEquipment.id
+        
+        console.log('handleSaveEquipment - editingEquipment:', {
+          id: editingEquipment.id,
+          docId: editingEquipment.docId,
+          name: editingEquipment.name
+        })
+        console.log('handleSaveEquipment - targetEquipment:', {
+          docId: targetEquipment?.docId,
+          id: targetEquipment?.id
+        })
+        console.log('handleSaveEquipment - docId to use:', docId)
+        console.log('Updating equipment with docId:', docId)
+        console.log('Update data:', {
+          name: equipmentForm.name,
+          categories: equipmentForm.categories,
+          stock: equipmentForm.stock,
+          quantity: equipmentForm.stock,
+          description: equipmentForm.description
+        })
+        
+        await updateEquipment(docId, {
           name: equipmentForm.name,
           categories: equipmentForm.categories,
           stock: equipmentForm.stock,
@@ -143,7 +171,7 @@ export default function AdminPage() {
       setShowEquipmentModal(false)
     } catch (error) {
       console.error('機材保存エラー:', error)
-      alert('機材の保存に失敗しました')
+      alert('機材の保存に失敗しました: ' + (error instanceof Error ? error.message : '不明なエラー'))
     }
   }
 
@@ -151,7 +179,11 @@ export default function AdminPage() {
     if (!confirm('この機材を削除しますか？')) return
     
     try {
-      await deleteEquipment(equipmentId)
+      // docIdを使用して削除（なければequipmentIdを使用）
+      const targetEquipment = equipment.find(eq => eq.id === equipmentId)
+      const docId = targetEquipment?.docId || equipmentId
+      
+      await deleteEquipment(docId)
       alert('機材を削除しました')
     } catch (error) {
       console.error('機材削除エラー:', error)

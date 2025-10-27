@@ -166,12 +166,25 @@ export const useEquipment = () => {
 
       unsubscribeSnapshot = onSnapshot(q, 
         (snapshot) => {
-          const equipmentData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate() || new Date(),
-            updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-          })) as Equipment[]
+          const equipmentData = snapshot.docs.map(doc => {
+            const data = doc.data()
+            // 機材番号を保存（元のidフィールド）
+            const equipmentNumber = data.id
+            const equipment = {
+              ...data, // 元のデータを展開（idフィールドは機材番号を含む）
+              docId: doc.id, // FirestoreのドキュメントIDを追加
+              id: equipmentNumber || doc.id, // 機材番号（なければドキュメントID）で元のidを上書き
+              createdAt: data.createdAt?.toDate() || new Date(),
+              updatedAt: data.updatedAt?.toDate() || new Date(),
+            }
+            console.log('機材データ:', {
+              docId: doc.id,
+              equipmentNumber: equipmentNumber,
+              id: equipment.id,
+              name: data.name
+            })
+            return equipment
+          }) as Equipment[]
           
           console.log('useEquipment: データ取得成功', equipmentData.length, '件')
           setEquipment(equipmentData)
@@ -210,12 +223,47 @@ export const useEquipment = () => {
 
   const updateEquipment = async (equipmentId: string, equipmentData: Partial<Equipment>) => {
     try {
-      const equipmentRef = doc(db, COLLECTIONS.EQUIPMENT, equipmentId)
-      await updateDoc(equipmentRef, {
-        ...equipmentData,
-        updatedAt: Timestamp.now(),
-      })
+      console.log('updateEquipment called with:', { equipmentId, equipmentData })
+      
+      // タイムスタンプやDateオブジェクトは除外
+      const updateData: any = {
+        ...equipmentData
+      }
+      
+      // Dateオブジェクトを除外
+      delete updateData.createdAt
+      delete updateData.updatedAt
+      
+      // Timestampを設定
+      updateData.updatedAt = Timestamp.now()
+      
+      // 機材番号が渡された場合は、Firestoreを検索してFirestoreドキュメントIDを取得
+      let firestoreDocId = equipmentId
+      
+      // equipmentIdが数値または文字列の数値の場合、機材番号として扱う
+      const isEquipmentNumber = /^\d+$/.test(equipmentId)
+      
+      if (isEquipmentNumber) {
+        console.log('equipmentId is equipment number, searching Firestore for docId')
+        const q = query(collection(db, COLLECTIONS.EQUIPMENT), where('id', '==', equipmentId))
+        const snapshot = await getDocs(q)
+        
+        if (snapshot.empty) {
+          throw new Error(`機材番号 #${equipmentId} のドキュメントが見つかりませんでした`)
+        }
+        
+        firestoreDocId = snapshot.docs[0].id
+        console.log('Found Firestore docId:', firestoreDocId)
+      }
+      
+      const equipmentRef = doc(db, COLLECTIONS.EQUIPMENT, firestoreDocId)
+      console.log('Updating equipment ref:', equipmentRef.path)
+      console.log('Update data:', updateData)
+      
+      await updateDoc(equipmentRef, updateData)
+      console.log('Equipment updated successfully')
     } catch (err) {
+      console.error('updateEquipment error:', err)
       setError(err instanceof Error ? err.message : '機材更新に失敗しました')
       throw err
     }
@@ -223,8 +271,31 @@ export const useEquipment = () => {
 
   const deleteEquipment = async (equipmentId: string) => {
     try {
-      await deleteDoc(doc(db, COLLECTIONS.EQUIPMENT, equipmentId))
+      console.log('deleteEquipment called with:', equipmentId)
+      
+      // 機材番号が渡された場合は、Firestoreを検索してFirestoreドキュメントIDを取得
+      let firestoreDocId = equipmentId
+      
+      // equipmentIdが数値または文字列の数値の場合、機材番号として扱う
+      const isEquipmentNumber = /^\d+$/.test(equipmentId)
+      
+      if (isEquipmentNumber) {
+        console.log('equipmentId is equipment number, searching Firestore for docId')
+        const q = query(collection(db, COLLECTIONS.EQUIPMENT), where('id', '==', equipmentId))
+        const snapshot = await getDocs(q)
+        
+        if (snapshot.empty) {
+          throw new Error(`機材番号 #${equipmentId} のドキュメントが見つかりませんでした`)
+        }
+        
+        firestoreDocId = snapshot.docs[0].id
+        console.log('Found Firestore docId:', firestoreDocId)
+      }
+      
+      await deleteDoc(doc(db, COLLECTIONS.EQUIPMENT, firestoreDocId))
+      console.log('Equipment deleted successfully')
     } catch (err) {
+      console.error('deleteEquipment error:', err)
       setError(err instanceof Error ? err.message : '機材削除に失敗しました')
       throw err
     }

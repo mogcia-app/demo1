@@ -1,7 +1,8 @@
 // 機材管理システムの型定義
 
 export interface Equipment {
-  id: string
+  id: string // 機材番号（#1, #2など）
+  docId?: string // FirestoreのドキュメントID（更新・削除時に使用）
   name: string
   category?: string // 後方互換性のため残す（非推奨）
   categories: string[] // 複数カテゴリ対応
