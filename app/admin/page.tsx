@@ -115,11 +115,24 @@ export default function AdminPage() {
 
   const handleSaveEquipment = async () => {
     try {
-      // 次の機材番号を取得
+      // 次の機材番号を取得（削除された番号を再利用）
       const getNextId = () => {
         if (equipment.length === 0) return '1'
-        const numbers = equipment.map(eq => parseInt(eq.id)).filter(n => !isNaN(n))
-        return String(Math.max(...numbers, 0) + 1)
+        
+        // 使用中の機材番号を取得
+        const usedNumbers = new Set(equipment.map(eq => parseInt(eq.id)).filter(n => !isNaN(n)))
+        const maxNumber = Math.max(...equipment.map(eq => parseInt(eq.id)).filter(n => !isNaN(n)), 0)
+        
+        // 削除された番号（1から最大値までの間で使用されていない番号）を探す
+        for (let i = 1; i <= maxNumber; i++) {
+          if (!usedNumbers.has(i)) {
+            console.log(`機材番号 #${i} は削除されているので再利用します`)
+            return String(i)
+          }
+        }
+        
+        // 削除された番号がなければ、最大値+1を使用
+        return String(maxNumber + 1)
       }
 
       if (editingEquipment) {

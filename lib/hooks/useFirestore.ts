@@ -186,6 +186,13 @@ export const useEquipment = () => {
             return equipment
           }) as Equipment[]
           
+          // 機材番号順にソート（数値として比較）
+          equipmentData.sort((a, b) => {
+            const numA = parseInt(a.id) || 0
+            const numB = parseInt(b.id) || 0
+            return numA - numB
+          })
+          
           console.log('useEquipment: データ取得成功', equipmentData.length, '件')
           setEquipment(equipmentData)
           setLoading(false)
